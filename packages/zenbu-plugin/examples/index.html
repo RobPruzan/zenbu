@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zenbu Plugin Demo</title>
+    <style>
+      :root {
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #252525;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --accent: #6366f1;
+        --accent-hover: #4f46e5;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      nav {
+        background-color: var(--bg-secondary);
+        padding: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      nav ul {
+        display: flex;
+        justify-content: space-between;
+        list-style: none;
+      }
+
+      nav a {
+        color: var(--text-primary);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+      }
+
+      nav a:hover {
+        background-color: var(--accent);
+      }
+
+      .hero {
+        text-align: center;
+        padding: 4rem 0;
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, var(--accent), #9333ea);
+        -webkit-text-fill-color: transparent;
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 4rem 0;
+      }
+
+      .feature-card {
+        background-color: var(--bg-secondary);
+        padding: 2rem;
+        border-radius: 8px;
+        transition: transform 0.2s;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .feature-card h3 {
+        color: var(--accent);
+        margin-bottom: 1rem;
+      }
+
+      .cta-section {
+        text-align: center;
+        padding: 4rem 0;
+      }
+
+      .button {
+        display: inline-block;
+        padding: 1rem 2rem;
+        background-color: var(--accent);
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+      }
+
+      .button:hover {
+        background-color: var(--accent-hover);
+      }
+
+      footer {
+        background-color: var(--bg-secondary);
+        padding: 2rem;
+        text-align: center;
+        margin-top: 4rem;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+
+    <div class="container">
+      <section class="hero">
+        <h1>Welcome to Zenbu Plugin</h1>
+        <p>A powerful solution for your development needs</p>
+      </section>
+
+      <section class="features" id="features">
+        <div class="feature-card">
+          <h3>Easy Integration</h3>
+          <p>
+            Seamlessly integrate with your existing projects using our simple
+            API
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Performance First</h3>
+          <p>
+            Built with performance in mind, ensuring your applications run
+            smoothly
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3>Developer Friendly</h3>
+          <p>Comprehensive documentation and excellent developer experience</p>
+        </div>
+      </section>
+
+      <section class="cta-section">
+        <h2>Ready to Get Started?</h2>
+        <p>Join thousands of developers already using Zenbu Plugin</p>
+        <a href="#" class="button">Get Started</a>
+      </section>
+    </div>
+
+    <footer>
+      <p>&copy; 2024 Zenbu Plugin. All rights reserved.</p>
+    </footer>
+  </body>
+</html>
