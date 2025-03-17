@@ -18,7 +18,7 @@ import {
 // } from "./components/DevtoolsOverlay";
 // import { useIFrameMessenger } from "./hooks/use-iframe-listener.ts";
 
-const AppStore: {
+export const DevtoolFrontendStore: {
   publish: (state: InspectorState) => void;
   subscribe: (callback: (state: InspectorState) => void) => () => void;
   subscribers: Set<(state: InspectorState) => void>;
@@ -31,20 +31,22 @@ const AppStore: {
   subscribers: new Set(),
   state: { kind: "off" },
   publish(state) {
-    AppStore.state = state;
-    AppStore.subscribers.forEach((callback) => callback(state));
+    DevtoolFrontendStore.state = state;
+    DevtoolFrontendStore.subscribers.forEach((callback) => callback(state));
   },
   subscribe(callback) {
-    AppStore.subscribers.add(callback);
-    return () => AppStore.subscribers.delete(callback);
+    DevtoolFrontendStore.subscribers.add(callback);
+    return () => DevtoolFrontendStore.subscribers.delete(callback);
   },
   getState() {
-    return AppStore.state;
+    return DevtoolFrontendStore.state;
   },
   setState(action) {
     const nextState =
-      typeof action === "function" ? action(AppStore.state) : action;
-    AppStore.publish(nextState);
+      typeof action === "function"
+        ? action(DevtoolFrontendStore.state)
+        : action;
+    DevtoolFrontendStore.publish(nextState);
   },
 };
 const snapshot = { kind: "off" as const };
@@ -52,14 +54,14 @@ const snapshot = { kind: "off" as const };
 export const IFrameWrapper = () => {
   const iframeRef = useDevtoolsListener();
   const inspectorState = useSyncExternalStore(
-    AppStore.subscribe,
-    AppStore.getState,
+    DevtoolFrontendStore.subscribe,
+    DevtoolFrontendStore.getState,
     () => snapshot
   );
-  const setInspectorState = AppStore.setState;
+  const setInspectorState = DevtoolFrontendStore.setState;
   const refEventCatcher = useRef<HTMLDivElement | null>(null);
 
-  const sendMessage = useIFrameMessenger({ iframe: iframeRef.current });
+  const sendMessage = useIFrameMessenger();
 
   const makeRequest = useMakeRequest({ iframeRef });
 
@@ -121,53 +123,40 @@ export const IFrameWrapper = () => {
         setInspectorState,
       }}
     >
+      <button
+        style={{
+          width: "fit-content",
+        }}
+        onClick={() => {
+          setInspectorState((prev) => ({
+            kind: prev.kind === "inspecting" ? "off" : "inspecting",
+          }));
+        }}
+      >
+        {inspectorState.kind}ing
+      </button>
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           width: "100%",
           height: "100%",
+          position: "relative",
         }}
       >
-        <button
-          style={{
-            width: "fit-content",
-          }}
-          onClick={() => {
-            setInspectorState((prev) => ({
-              kind: prev.kind === "inspecting" ? "off" : "inspecting",
-            }));
-          }}
-        >
-          {inspectorState.kind}ing
-        </button>
-
         {/* <div */}
-        <div
-          onClick={() => {
-            console.log("bruh");
-          }}
+
+        <iframe
+          id="child-iframe"
+          key={lastUpdate}
+          ref={iframeRef}
+          src="http://localhost:4200"
           style={{
-            pointerEvents: "auto",
-            position: "relative",
-            width: "100%",
             height: "100%",
+            width: "100%",
           }}
-        >
-          <iframe
-            id="child-iframe"
-            key={lastUpdate}
-            ref={iframeRef}
-            src="http://localhost:4200"
-            style={{
-              height: "100%",
-              width: "100%",
-              pointerEvents:
-                inspectorState.kind === "inspecting" ? "none" : "auto",
-            }}
-          />
-          <DevtoolsOverlay iframeRef={iframeRef} />
-        </div>
+        />
+        <DevtoolsOverlay iframeRef={iframeRef} />
       </div>
     </InspectorStateContext.Provider>
   );

@@ -16,6 +16,7 @@ import {
   InspectorState,
   ParentToChildMessage,
 } from "zenbu-devtools";
+import { DevtoolFrontendStore } from "@/app/iframe-wrapper";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -87,6 +88,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
       cancelAnimationFrame(rafId);
     };
   }, [inspectorState.kind]);
+  const sendMessage = useIFrameMessenger({ iframe: iframeRef.current });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -99,32 +101,49 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
       if (event.origin !== "http://localhost:4200") return;
 
-      if (event.data.kind === "mouse-position-update") {
-        const now = Date.now();
-        const throttleInterval = 50;
+      switch (event.data.kind) {
+        case "mouse-position-update": {
+          const now = Date.now();
+          const throttleInterval = 50;
 
-        if (now - lastThrottleTimeRef.current >= throttleInterval) {
-          const iframeRect = iframe.getBoundingClientRect();
-          const { rect } = event.data;
+          if (now - lastThrottleTimeRef.current >= throttleInterval) {
+            const iframeRect = iframe.getBoundingClientRect();
+            const { rect } = event.data;
 
-          targetRectRef.current = {
-            x: rect.x,
-            y: rect.y,
-            width: rect.width,
-            height: rect.height,
-          };
+            targetRectRef.current = {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+            };
 
-          if (!currentRectRef.current) {
-            currentRectRef.current = { ...targetRectRef.current };
+            if (!currentRectRef.current) {
+              currentRectRef.current = { ...targetRectRef.current };
+            }
+
+            if (rafIdRef.current === null) {
+              rafIdRef.current = requestAnimationFrame(animateRect);
+            }
+
+            lastThrottleTimeRef.current = now;
           }
 
-          if (rafIdRef.current === null) {
-            rafIdRef.current = requestAnimationFrame(animateRect);
-          }
+          return;
+        }
+        case "get-state-request": {
+          console.log("get state request", event);
 
-          lastThrottleTimeRef.current = now;
+          sendMessage({
+            kind: "get-state-response",
+            state: DevtoolFrontendStore.getState(),
+            id: event.data.id!,
+          });
+          console.log("sent");
         }
       }
+
+      // if (event.data.kind === "mouse-position-update") {
+      // }
     };
 
     const lerp = (start: number, end: number, t: number): number => {
@@ -254,7 +273,7 @@ export const useMakeRequest = ({
 }: {
   iframeRef: RefObject<HTMLIFrameElement | null>;
 }) => {
-  const sendMessage = useIFrameMessenger({ iframe: iframeRef.current });
+  const sendMessage = useIFrameMessenger();
 
   return async (
     message: Omit<ParentToChildMessage, "id"> & { responsePossible: true }

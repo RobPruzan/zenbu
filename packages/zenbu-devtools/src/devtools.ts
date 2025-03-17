@@ -1,20 +1,8 @@
-import { nanoid } from "nanoid";
+// import { nanoid } from "nanoid";
 
-let z: any = { ref: null };
-z.ref = z;
 const TARGET_ORIGIN = "http://localhost:3000";
 
 let currentMouseOverElement: Element | null = null;
-
-const eventCatcher = document.createElement("div");
-eventCatcher.style.position = "fixed";
-eventCatcher.style.top = "0";
-eventCatcher.style.left = "0";
-eventCatcher.style.width = "100%";
-eventCatcher.style.height = "100%";
-eventCatcher.style.pointerEvents = "none";
-eventCatcher.style.zIndex = "2147483647";
-document.documentElement.appendChild(eventCatcher);
 
 document.addEventListener("mousemove", (e) => {
   const target = e.target;
@@ -77,23 +65,32 @@ const sendMessage = (message: ChildToParentMessage) => {
 
 document.addEventListener(
   "pointerdown",
-  () => {
-    eventCatcher.style.pointerEvents = "auto";
+  (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    console.log("hello yay");
+    const target = e.target;
+
+    if (!(target instanceof Element)) {
+      // todo: determine correct behavior
+      return;
+    }
   },
   {
     capture: true,
   }
 );
 
-document.addEventListener(
-  "pointerup",
-  () => {
-    eventCatcher.style.pointerEvents = "none";
-  },
-  {
-    capture: true,
-  }
-);
+// document.addEventListener(
+//   "pointerup",
+//   () => {
+//     eventCatcher.style.pointerEvents = "none";
+//   },
+//   {
+//     capture: true,
+//   }
+// );
 
 const handleParentMessage = (message: ParentToChildMessage) => {
   // console.log("the message", message);
@@ -134,7 +131,6 @@ window.addEventListener("message", (event) => {
   handleParentMessage(event.data as any);
 });
 
-
 // const inspectorState =
 /**
  *
@@ -149,9 +145,15 @@ window.addEventListener("message", (event) => {
 /**
  *
  * - get state async is not what we want, we want sync from the parent reactively so we don't have to pull, async get is pull
- * - todo: we need to read from the parent if we are in inspecting state, if we read a click while in inspecting we add an event capture, block it, then feed back to the parent the element that was clicked (pretty nice API)
+ * - todo: we need to read from the parent if we are in inspecting state,
+ *  if we read a click while in inspecting we add an event capture, block it,
+ *  then feed back to the parent the element that was clicked (pretty nice API)
  *
  */
+
+// document.addEventListener("pointerdown", () => {
+//   console.log("hello mayut sup");
+// });
 
 const getState: () => Promise<InspectorState> = async () => {
   const response = await makeRequest({
@@ -178,7 +180,7 @@ export type InspectorState =
     };
 
 const makeRequest = async <
-  T extends ChildToParentMessage & { responsePossible: true }
+  T extends ChildToParentMessage & { responsePossible: true },
 >(
   message: T
 ) => {
@@ -187,7 +189,7 @@ const makeRequest = async <
       "Invariant: response not available for request kind:" + message.kind
     );
   }
-  const messageId = nanoid();
+  const messageId = genId();
 
   sendMessage({
     ...message,
@@ -196,7 +198,11 @@ const makeRequest = async <
 
   return new Promise<ParentToChildMessage>((res, rej) => {
     const handleMessage = (event: MessageEvent<ParentToChildMessage>) => {
-      if (event.origin !== "http://localhost:4200") return;
+      console.log("yay", event.origin);
+
+      if (event.origin !== "http://localhost:3000") return;
+
+      console.log("got event back", event.data);
 
       if (event.data.id === messageId) {
         res(event.data);
@@ -209,4 +215,10 @@ const makeRequest = async <
       rej();
     }, 1000);
   });
+};
+
+let last = 0;
+
+const genId = () => {
+  return `${last++}`;
 };
