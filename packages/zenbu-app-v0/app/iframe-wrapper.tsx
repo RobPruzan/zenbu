@@ -1,5 +1,12 @@
 "use client";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  ReactElement,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 // import lastUpdate from "./hot-reload.ts";
 import { InspectorState } from "zenbu-devtools";
 import { useIFrameMessenger } from "@/hooks/use-iframe-listener";
@@ -52,14 +59,9 @@ export const DevtoolFrontendStore: {
 const snapshot = { kind: "off" as const };
 
 export const IFrameWrapper = () => {
-  const iframeRef = useDevtoolsListener();
-  const inspectorState = useSyncExternalStore(
-    DevtoolFrontendStore.subscribe,
-    DevtoolFrontendStore.getState,
-    () => snapshot
-  );
-  const setInspectorState = DevtoolFrontendStore.setState;
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const refEventCatcher = useRef<HTMLDivElement | null>(null);
+  const { inspectorState, setInspectorState } = useInspectorStateContext();
 
   const sendMessage = useIFrameMessenger();
 
@@ -92,6 +94,7 @@ export const IFrameWrapper = () => {
       const response = await makeRequest({
         kind: "clicked-element-info-request",
         responsePossible: true,
+        id: "",
       });
 
       if (response.kind !== "clicked-element-info-response") {
@@ -116,13 +119,7 @@ export const IFrameWrapper = () => {
   }, []);
 
   return (
-    // @ts-expect-error
-    <InspectorStateContext.Provider
-      value={{
-        inspectorState,
-        setInspectorState,
-      }}
-    >
+    <>
       <button
         style={{
           width: "fit-content",
@@ -158,23 +155,33 @@ export const IFrameWrapper = () => {
         />
         <DevtoolsOverlay iframeRef={iframeRef} />
       </div>
+    </>
+  );
+};
+
+export const InspectorStateProvider = ({
+  children,
+}: {
+  children: ReactElement;
+}) => {
+  const inspectorState = useSyncExternalStore(
+    DevtoolFrontendStore.subscribe,
+    DevtoolFrontendStore.getState,
+    () => snapshot
+  );
+  const setInspectorState = DevtoolFrontendStore.setState;
+
+  return (
+    // @ts-expect-error
+    <InspectorStateContext.Provider
+      value={{
+        inspectorState,
+        setInspectorState,
+      }}
+    >
+      {children}
     </InspectorStateContext.Provider>
   );
 };
 
-const useDevtoolsListener = () => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    const handleMessage = (event: any) => {
-      if (event.origin !== "http://localhost:4200") return;
-      // console.log("Message received:", event.data);
-    };
-
-    window.addEventListener("message", handleMessage);
-
-    return () => window.removeEventListener("message", handleMessage);
-  }, [lastUpdate, iframeRef.current]);
-
-  return iframeRef;
-};
+export const useInspectorStateContext = () => useContext(InspectorStateContext);

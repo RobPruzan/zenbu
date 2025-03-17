@@ -13,6 +13,7 @@ import { useIFrameMessenger } from "../hooks/use-iframe-listener";
 import { nanoid } from "nanoid";
 import {
   ChildToParentMessage,
+  FocusedInfo,
   InspectorState,
   ParentToChildMessage,
 } from "zenbu-devtools";
@@ -64,7 +65,9 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
   const lastElementRef = useRef<Element | null>(null);
 
   const makeRequest = useMakeRequest({ iframeRef });
-  const { inspectorState } = useContext(InspectorStateContext);
+  const { inspectorState, setInspectorState } = useContext(
+    InspectorStateContext
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -88,7 +91,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
       cancelAnimationFrame(rafId);
     };
   }, [inspectorState.kind]);
-  const sendMessage = useIFrameMessenger({ iframe: iframeRef.current });
+  const sendMessage = useIFrameMessenger();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -101,14 +104,19 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
       if (event.origin !== "http://localhost:4200") return;
 
-      switch (event.data.kind) {
+      const data = event.data;
+
+      switch (data.kind) {
         case "mouse-position-update": {
+          if (DevtoolFrontendStore.getState().kind !== "inspecting") {
+            return;
+          }
           const now = Date.now();
           const throttleInterval = 50;
 
           if (now - lastThrottleTimeRef.current >= throttleInterval) {
             const iframeRect = iframe.getBoundingClientRect();
-            const { rect } = event.data;
+            const { rect } = data;
 
             targetRectRef.current = {
               x: rect.x,
@@ -139,15 +147,47 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
             id: event.data.id!,
           });
           console.log("sent");
+          return;
+        }
+        case "click-element-info": {
+          console.log("got focused info", data.focusedInfo);
+
+          if (rafIdRef.current) {
+            cancelAnimationFrame(rafIdRef.current);
+          }
+
+          setInspectorState((prev) => ({
+            ...prev,
+            focusedInfo: data.focusedInfo,
+            kind: "focused",
+          }));
+
+          drawFocusedRect(data.focusedInfo);
         }
       }
-
-      // if (event.data.kind === "mouse-position-update") {
-      // }
     };
 
     const lerp = (start: number, end: number, t: number): number => {
       return start * (1 - t) + end * t;
+    };
+
+    const drawFocusedRect = (focusedInfo: FocusedInfo) => {
+      if (
+        !ctx ||
+        !canvas ||
+        !currentRectRef.current ||
+        !targetRectRef.current
+      ) {
+        rafIdRef.current = null;
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "rgba(138, 43, 226, 0.8)";
+      ctx.lineWidth = 2;
+      const { domRect } = focusedInfo;
+      ctx.strokeRect(domRect.x, domRect.y, domRect.width, domRect.height);
     };
 
     const animateRect = () => {
@@ -275,8 +315,8 @@ export const useMakeRequest = ({
 }) => {
   const sendMessage = useIFrameMessenger();
 
-  return async (
-    message: Omit<ParentToChildMessage, "id"> & { responsePossible: true }
+  return async <T extends ParentToChildMessage & { responsePossible: true }>(
+    message: T
   ) => {
     if (!message.responsePossible) {
       throw new Error(

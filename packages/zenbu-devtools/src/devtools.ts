@@ -4,6 +4,8 @@ const TARGET_ORIGIN = "http://localhost:3000";
 
 let currentMouseOverElement: Element | null = null;
 
+// it would be nice in high freq calls to read the cached mouse move so we don't have to
+// create a promise every time, so implicitly syncing the stores together
 document.addEventListener("mousemove", (e) => {
   const target = e.target;
 
@@ -29,6 +31,7 @@ export type ChildToParentMessage =
     }
   | {
       kind: "click-element-info";
+      focusedInfo: FocusedInfo;
       id?: string;
     }
   | {
@@ -61,26 +64,39 @@ const sendMessage = (message: ChildToParentMessage) => {
   window.parent.postMessage(message, TARGET_ORIGIN);
 };
 
+const iife = <T>(f: () => T): T => f();
+
 // todo: need RPC to share store between parent and child
 
-document.addEventListener(
-  "pointerdown",
-  (e) => {
-    e.stopPropagation();
-    e.preventDefault();
+const blockClick = (shouldHandle: boolean) => (e: MouseEvent) => {
+  e.stopPropagation();
+  e.preventDefault();
 
-    console.log("hello yay");
-    const target = e.target;
+  console.log("hello yay");
+  const target = e.target;
 
-    if (!(target instanceof Element)) {
-      // todo: determine correct behavior
-      return;
-    }
-  },
-  {
-    capture: true,
+  if (!(target instanceof Element)) {
+    // todo: determine correct behavior
+    return;
   }
-);
+  if (!shouldHandle) {
+    return;
+  }
+  iife(async () => {
+    console.log("state", target, await getState());
+    sendMessage({
+      kind: "click-element-info",
+      focusedInfo: {
+        domRect: target.getBoundingClientRect(),
+        name: target.tagName,
+      },
+    });
+  });
+};
+
+document.addEventListener("pointerdown", blockClick(false));
+
+document.addEventListener("click", blockClick(true));
 
 // document.addEventListener(
 //   "pointerup",
