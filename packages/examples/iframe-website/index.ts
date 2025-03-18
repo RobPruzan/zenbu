@@ -39,6 +39,23 @@ serve({
       margin: 15px 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
+    .feature-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .feature-card {
+      background-color: #3d3d3d;
+      border-radius: 6px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
     .button {
       background-color: #bb86fc;
       color: #121212;
@@ -71,11 +88,11 @@ serve({
 </head>
 <body>
   <div class="container">
-    <h1>Welcome to Iframe Website</h1>
+    <h1>Welcome to the Demo Website</h1>
     <p>This is a simple website served by Bun yo.</p>
     
     <div class="card">
-      <h2>About This Project</h2>
+      <h2>About</h2>
       <p>This is a demonstration of a simple website that can be embedded in an iframe. It's built with Bun and serves static HTML content.</p>
       <button class="button">Learn More</button>
     </div>
@@ -86,12 +103,24 @@ serve({
     
     <div class="card">
       <h2>Features</h2>
-      <ul>
-        <li>Fast serving with Bun</li>
-        <li>Dark mode interface</li>
-        <li>Responsive design</li>
-        <li>Simple and clean layout</li>
-      </ul>
+      <div class="feature-cards">
+        <div class="feature-card">
+          <h3>Fast Serving</h3>
+          <p>Powered by Bun</p>
+        </div>
+        <div class="feature-card">
+          <h3>Dark Mode</h3>
+          <p>Easy on the eyes</p>
+        </div>
+        <div class="feature-card">
+          <h3>Responsive</h3>
+          <p>Works on all devices</p>
+        </div>
+        <div class="feature-card">
+          <h3>Clean Layout</h3>
+          <p>Simple and elegant</p>
+        </div>
+      </div>
     </div>
     
     <div class="card">

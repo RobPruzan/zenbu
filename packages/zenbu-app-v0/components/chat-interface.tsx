@@ -2,7 +2,15 @@
 
 import type React from "react";
 
-import { useState, useRef, useEffect } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useContext,
+} from "react";
 import {
   SendIcon,
   ImageIcon,
@@ -31,6 +39,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useInspectorStateContext } from "@/app/iframe-wrapper";
+import { pluginRPC } from "@/app/rpc";
+import { useFocusContext } from "react-day-picker";
+import { ChatMessage } from "zenbu-plugin";
+import { flushSync } from "react-dom";
 
 interface Message {
   role: "user" | "assistant";
@@ -39,19 +51,19 @@ interface Message {
 }
 
 export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([
-    // {
-    //   role: "assistant",
-    //   content: "Hello! I'm your website building assistant. How can I help you today?",
-    //   status: "done",
-    // },
-    {
-      role: "user",
-      content: "keep it black vercel design!",
-      status: "done",
-    },
-  ]);
-  const [input, setInput] = useState("");
+  const { messages, setMessages, input, setInput } = useChatContext();
+  // const [messages, setMessages] = useState<Message[]>([
+  //   // {
+  //   //   role: "assistant",
+  //   //   content: "Hello! I'm your website building assistant. How can I help you today?",
+  //   //   status: "done",
+  //   // },
+  //   {
+  //     role: "user",
+  //     content: "keep it black vercel design!",
+  //     status: "done",
+  //   },
+  // ]);
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
   const [activeDevTool, setActiveDevTool] = useState<string | null>(null);
   const [activeDevToolsTab, setActiveDevToolsTab] = useState<string>("console");
@@ -316,22 +328,6 @@ export default function ChatInterface() {
                     <span className="text-[11px] font-medium text-zinc-300">
                       Claude
                     </span>
-                  </div>
-                  <div className="pl-5.5">
-                    {message.status === "generating" ? (
-                      <div className="flex items-center gap-1.5 text-zinc-400">
-                        <span className="text-xs">•••</span>
-                        <span className="text-xs">Generating</span>
-                        <div className="flex-1"></div>
-                        <button className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
-                          Stop
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-xs text-zinc-200 whitespace-pre-wrap font-sans leading-tight">
-                        {message.content}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -746,7 +742,39 @@ export default function ChatInterface() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button
-                    onClick={handleSendMessage}
+                    onClick={async () => {
+                      // flushSync(() => {
+                      // handleSendMessage();
+                      // });
+                      const newMessages: typeof messages = [
+                        ...messages,
+                        {
+                          role: "user",
+                          content: input,
+                        },
+                      ];
+                      setMessages(newMessages);
+                      if (inspectorState.kind === "focused") {
+                        console.log("req");
+
+                        const res = await pluginRPC.edit.$post({
+                          json: {
+                            messages: newMessages,
+                            focusedInfo: inspectorState.focusedInfo,
+                          },
+                        });
+                        console.log("done", await res.json());
+
+                        const iframe = document.getElementById(
+                          "child-iframe"
+                        )! as HTMLIFrameElement;
+
+                        iframe.src = iframe.src;
+
+                        return;
+                      }
+                      handleSendMessage();
+                    }}
                     disabled={!input.trim()}
                     className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-[11px] text-zinc-200 ${!input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
@@ -777,3 +805,23 @@ export default function ChatInterface() {
     </div>
   );
 }
+
+export const ChatContext = createContext<{
+  messages: Array<ChatMessage>;
+  setMessages: Dispatch<SetStateAction<Array<ChatMessage>>>;
+  input: string;
+  setInput: Dispatch<SetStateAction<string>>;
+}>(null!);
+
+export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
+  const [messages, setMessages] = useState<Array<ChatMessage>>([]);
+  const [input, setInput] = useState("");
+
+  return (
+    <ChatContext.Provider value={{ messages, setMessages, input, setInput }}>
+      {children}
+    </ChatContext.Provider>
+  );
+};
+
+export const useChatContext = () => useContext(ChatContext);

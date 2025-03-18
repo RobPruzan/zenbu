@@ -1,16 +1,45 @@
-import { anthropic } from '@ai-sdk/anthropic';
-import { generateText } from 'ai';
+import { anthropic } from "@ai-sdk/anthropic";
+import { generateObject, generateText } from "ai";
+import { ChatMessage } from "./create-server.js";
+import { z } from "zod";
 
-const { text, reasoning, reasoningDetails } = await generateText({
-  model: anthropic('claude-3-7-sonnet-20250219'),
-  prompt: 'How many people will live in the world in 2040?',
-  // providerOptions: {
-  //   anthropic: {
-  //     thinking: { type: 'enabled', budgetTokens: 12000 },
-  //   },
-  // },
-});
+import { config } from "dotenv";
 
-console.log(reasoning); // reasoning text
-console.log(reasoningDetails); // reasoning details including redacted reasoning
-console.log(text); // text response
+config();
+
+if (!process.env.ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY is required");
+}
+
+export const makeEdit = async ({
+  file,
+  messages,
+}: {
+  file: string;
+  messages: Array<ChatMessage>;
+}) => {
+  const cleanedMessages = messages.map((m) => ({
+    content: m.content,
+    role: m.role,
+  }));
+  cleanedMessages.push({
+    role: "assistant",
+    content:
+      "Here is the file I want you to edit on. Given what I selected (im giving you the outer HTML of the element I want you to edit, and some metadata about it) and the edit I requested in my message please return the entire file back with the change applied. Do not omit any code since I will be writing your output directly to the file" +
+      "\n" +
+      file,
+  });
+
+  return {res: await generateObject({
+    messages: cleanedMessages,
+
+    model: anthropic("claude-3-5-sonnet-latest"),
+    schema: z.object({
+      newFile: z.string(),
+    }),
+    // prompt: "How many people will live in the world in 2040?",
+  }),
+
+ input: cleanedMessages 
+  };
+};

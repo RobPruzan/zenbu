@@ -5,6 +5,9 @@ import { z } from "zod";
 import { type FocusedInfo } from "zenbu-devtools";
 import type { InputToDataByTarget } from "hono/types";
 import { shim } from "./validator-shim.js";
+import { cors } from "hono/cors";
+import { makeEdit } from "./ai.js";
+import { readFile, writeFile } from "node:fs/promises";
 
 const operateOnPath =
   "/Users/robby/zenbu/packages/examples/iframe-website/index.ts";
@@ -14,26 +17,44 @@ const operateOnPath =
 //   bottom: 'Type definitions must be strings or objects (was number) '
 // }
 
-export const createServer = () => {
-  const app = new Hono<
-    {},
-    {
-      "/edit": {
-        post: {
-          req: { name: string; age: number };
-          res: { message: string };
-        };
-      };
+export type ChatMessage =
+  | {
+      role: "user";
+      content: string;
     }
-  >();
+  | {
+      role: "assistant";
+      content: string;
+    };
+export const createServer = () => {
+  const app = new Hono();
+  app.use("*", cors());
 
-  const route = app.post("/edit", shim<FocusedInfo>(), async (opts) => {
-    const focusedInfo = await opts.req.valid("json");
+  const route = app.post(
+    "/edit",
+    shim<{
+      messages: Array<ChatMessage>;
+      focusedInfo: FocusedInfo;
+    }>(),
+    async (opts) => {
+      const body = await opts.req.valid("json");
 
-    return opts.json({
-      success: true,
-    });
-  });
+      const { res, input } = await makeEdit({
+        file: await readFile(operateOnPath, "utf-8"),
+        messages: body.messages,
+      });
+
+      // console.log("new file", newFile);
+
+      await writeFile(operateOnPath, res.object.newFile);
+
+      return opts.json({
+        success: true,
+        input,
+        res,
+      });
+    }
+  );
   serve(
     {
       fetch: app.fetch,
@@ -45,7 +66,7 @@ export const createServer = () => {
   );
 
   process.on("exit", () => {
-    console.log("im done for lol");
+    console.log("im done for");
   });
 
   return route;

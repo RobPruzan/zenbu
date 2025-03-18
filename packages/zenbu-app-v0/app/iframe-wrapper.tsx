@@ -78,8 +78,6 @@ export const IFrameWrapper = () => {
 
   useEffect(() => {
     const handleMouseClick = async (e: MouseEvent) => {
-      console.log("wat");
-
       if (
         !e
           .composedPath()
@@ -89,7 +87,6 @@ export const IFrameWrapper = () => {
       ) {
         return;
       }
-      console.log("sent");
 
       const response = await makeRequest({
         kind: "clicked-element-info-request",
@@ -172,7 +169,6 @@ export const InspectorStateProvider = ({
   const setInspectorState = DevtoolFrontendStore.setState;
 
   return (
-    // @ts-expect-error
     <InspectorStateContext.Provider
       value={{
         inspectorState,

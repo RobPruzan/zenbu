@@ -2,6 +2,8 @@
 
 const TARGET_ORIGIN = "http://localhost:3000";
 
+console.log("pls");
+
 let currentMouseOverElement: Element | null = null;
 
 // it would be nice in high freq calls to read the cached mouse move so we don't have to
@@ -58,6 +60,7 @@ export type ParentToChildMessage =
 export type FocusedInfo = {
   domRect: DOMRect;
   name: string;
+  outerHTML: string;
 };
 
 const sendMessage = (message: ChildToParentMessage) => {
@@ -72,7 +75,6 @@ const blockClick = (shouldHandle: boolean) => (e: MouseEvent) => {
   e.stopPropagation();
   e.preventDefault();
 
-  console.log("hello yay");
   const target = e.target;
 
   if (!(target instanceof Element)) {
@@ -83,12 +85,12 @@ const blockClick = (shouldHandle: boolean) => (e: MouseEvent) => {
     return;
   }
   iife(async () => {
-    console.log("state", target, await getState());
     sendMessage({
       kind: "click-element-info",
       focusedInfo: {
         domRect: target.getBoundingClientRect(),
         name: target.tagName,
+        outerHTML: target.outerHTML,
       },
     });
   });
@@ -108,44 +110,41 @@ document.addEventListener("click", blockClick(true));
 //   }
 // );
 
-const handleParentMessage = (message: ParentToChildMessage) => {
-  // console.log("the message", message);
+// const handleParentMessage = (message: ParentToChildMessage) => {
+//   switch (message.kind) {
+//     case "clicked-element-info-request": {
+//       if (!currentMouseOverElement) {
+//         // should return an error but don't support errors yet, let the timeout handle it for now
+//         return;
+//       }
+//       console.log("wat");
 
-  console.log("got message");
+//       sendMessage({
+//         kind: "clicked-element-info-response",
+//         id: message.id,
+//         focusedInfo: {
+//           domRect: currentMouseOverElement.getBoundingClientRect(),
+//           name: currentMouseOverElement.tagName,
+//           outerHTML: currentMouseOverElement.outerHTML,
+//         },
+//       });
 
-  switch (message.kind) {
-    case "clicked-element-info-request": {
-      if (!currentMouseOverElement) {
-        // should return an error but don't support errors yet, let the timeout handle it for now
-        return;
-      }
-      console.log("recv", currentMouseOverElement);
+//       return;
+//     }
+//     case "get-state-response": {
+//       // not handled here
+//       return null;
+//     }
+//   }
+//   message satisfies never;
+// };
 
-      sendMessage({
-        kind: "clicked-element-info-response",
-        id: message.id,
-        focusedInfo: {
-          domRect: currentMouseOverElement.getBoundingClientRect(),
-          name: currentMouseOverElement.tagName,
-        },
-      });
-
-      return;
-    }
-    case "get-state-response": {
-      // not handled here
-      return null;
-    }
-  }
-  message satisfies never;
-};
-
-window.addEventListener("message", (event) => {
-  if (event.origin !== TARGET_ORIGIN) {
-    return;
-  }
-  handleParentMessage(event.data as any);
-});
+// window.addEventListener("message", (event) => {
+//   if (event.origin !== TARGET_ORIGIN) {
+//     return;
+//   }
+//   handleParentMessage(event.data as any);
+// });
 
 // const inspectorState =
 /**
@@ -168,7 +167,6 @@ window.addEventListener("message", (event) => {
  */
 
 // document.addEventListener("pointerdown", () => {
-//   console.log("hello mayut sup");
 // });
 
 const getState: () => Promise<InspectorState> = async () => {
@@ -214,11 +212,7 @@ const makeRequest = async <
 
   return new Promise<ParentToChildMessage>((res, rej) => {
     const handleMessage = (event: MessageEvent<ParentToChildMessage>) => {
-      console.log("yay", event.origin);
-
       if (event.origin !== "http://localhost:3000") return;
-
-      console.log("got event back", event.data);
 
       if (event.data.id === messageId) {
         res(event.data);

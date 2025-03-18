@@ -18,6 +18,7 @@ import {
   ParentToChildMessage,
 } from "zenbu-devtools";
 import { DevtoolFrontendStore } from "@/app/iframe-wrapper";
+import { useChatContext } from "./chat-interface";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -92,6 +93,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     };
   }, [inspectorState.kind]);
   const sendMessage = useIFrameMessenger();
+  const { setMessages, setInput } = useChatContext();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -139,19 +141,14 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
           return;
         }
         case "get-state-request": {
-          console.log("get state request", event);
-
           sendMessage({
             kind: "get-state-response",
             state: DevtoolFrontendStore.getState(),
             id: event.data.id!,
           });
-          console.log("sent");
           return;
         }
         case "click-element-info": {
-          console.log("got focused info", data.focusedInfo);
-
           if (rafIdRef.current) {
             cancelAnimationFrame(rafIdRef.current);
           }
@@ -161,6 +158,19 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
             focusedInfo: data.focusedInfo,
             kind: "focused",
           }));
+
+          // setMessages((prev) => [
+          //   ...prev,
+          //   {
+          //     role: "user",
+          //     content: JSON.stringify(data.focusedInfo),
+          //   },
+          // ]);
+          console.log("why", data);
+
+          setInput(
+            (prev) => prev + "\n" + JSON.stringify(data.focusedInfo) + "\n\n"
+          );
 
           drawFocusedRect(data.focusedInfo);
         }

@@ -5,6 +5,8 @@ import { join } from "path";
 serve({
   port: 42069,
   fetch() {
+    console.log("fetch");
+
     const filePath = join(__dirname, "../../dist/devtools.global.js");
     const content = readFileSync(filePath, "utf-8");
 
