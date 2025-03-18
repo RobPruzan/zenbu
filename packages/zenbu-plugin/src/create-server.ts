@@ -1,41 +1,39 @@
 import { serve } from "@hono/node-server";
 import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
-import {type FocusedInfo} from 'zenbu-devtools'
+import { type FocusedInfo } from "zenbu-devtools";
+import type { InputToDataByTarget } from "hono/types";
+import { shim } from "./validator-shim.js";
 
 const operateOnPath =
   "/Users/robby/zenbu/packages/examples/iframe-website/index.ts";
 
-
 // const someSchema = type<FocusedInfo>({
 //   domRect: {
 //   bottom: 'Type definitions must be strings or objects (was number) '
-// } 
-// });
+// }
 
 export const createServer = () => {
-  const app = new Hono();
-
- const route = app.post(
-    "/edit",
-    zValidator(
-      "json",
-      z.object({
-        test: z.string(),
-      })
-    ),
-    async (opts) => {
-      const body = await opts.req.json();
-      const { test } = body;
-      console.log("Received test value:", test);
-
-      return opts.json({
-        success: true,
-        message: `Processed test value: ${test}`,
-      });
+  const app = new Hono<
+    {},
+    {
+      "/edit": {
+        post: {
+          req: { name: string; age: number };
+          res: { message: string };
+        };
+      };
     }
-  );
+  >();
+
+  const route = app.post("/edit", shim<FocusedInfo>(), async (opts) => {
+    const focusedInfo = await opts.req.valid("json");
+
+    return opts.json({
+      success: true,
+    });
+  });
   serve(
     {
       fetch: app.fetch,
@@ -53,9 +51,7 @@ export const createServer = () => {
   return route;
 };
 
-
-export type AppType = ReturnType<typeof createServer>
-
+export type AppType = ReturnType<typeof createServer>;
 
 /**
  *
