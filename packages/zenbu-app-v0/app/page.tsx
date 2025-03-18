@@ -18,7 +18,7 @@ import { useState } from "react";
 import { scan } from "react-scan";
 
 scan({
-  // showNotificationCount: false,
+  showNotificationCount: false,
 });
 
 export default function Home() {

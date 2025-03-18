@@ -2,8 +2,15 @@
   "name": "zenbu",
   "version": "0.0.0",
   "description": "",
-  "scripts": {},
+  "scripts": {
+
+    "dev": "pnpm -r run dev"
+
+
+
+  },
   "keywords": [],
   "author": "",
   "license": "ISC"
+
 }
