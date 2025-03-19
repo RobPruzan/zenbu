@@ -33,6 +33,7 @@ import {
   Copy,
   PenTool,
   PanelRightOpen,
+  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -179,8 +180,8 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
         {/* Subtle color tints */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/10 via-slate-800/5 to-slate-900/10 opacity-30"></div>
         
-        {/* Noise texture overlay for glass-like effect */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=')]"></div>
+        {/* Noise texture overlay with mild graininess */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDgiLz48L3N2Zz4=')] opacity-50"></div>
       </div>
 
       {/* Header with improved glassy effect */}
@@ -276,12 +277,12 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                     <div className="border-b border-[#333333] px-3 py-1 flex items-center overflow-hidden">
                       <FileText className="h-3 w-3 mr-1.5 flex-shrink-0 text-[#a0a0a5]" />
                       <span className="text-[10px] text-[#e0e0e3] font-medium truncate">Context</span>
-                    </div>
+                        </div>
                     
                     {/* User message */}
                     <div className="px-3 py-2 text-xs text-[#e0e0e3] whitespace-pre-wrap font-sans leading-relaxed break-words overflow-auto">
                       {message.content}
-                    </div>
+                      </div>
                     
                     {/* Footer with actions */}
                     <div className="flex items-center justify-between text-[9px] px-3 py-1 text-[#6e6e76]">
@@ -327,7 +328,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                     ) : (
                       <div className="overflow-hidden">
                         {message.content}
-                      </div>
+                    </div>
                     )}
                   </div>
                 </div>
@@ -342,15 +343,15 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
       <div className="px-3 pb-3 relative z-10 w-full">
         <div className="rounded-[6px] backdrop-blur-xl bg-[#232326]/60 border border-[#323236] shadow-sm shadow-black/5 overflow-hidden w-full">
           {/* Page interaction tools with improved glassy effect */}
-          <div className="flex items-center px-2 py-1 border-b border-[#323236] bg-[#1e1e20]/30">
-            <div className="flex-1 flex items-center gap-1">
+          <div className="flex items-center px-1 py-0.5 border-b border-[#323236] bg-[#1e1e20]/30">
+            <div className="flex-1 flex items-center gap-1 justify-between">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                 <Button
-                      variant="ghost"
+                  variant="ghost"
                   size="sm"
-                      className={`h-6 w-6 p-0 rounded-full ${inspectorState.kind === "inspecting" ? "text-[#949bf8] bg-[#949bf8]/10" : "text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"}`}
+                      className={`h-6 px-1.5 py-0.5 rounded-md flex items-center ${inspectorState.kind === "inspecting" ? "text-[#949bf8] bg-[#949bf8]/10" : "text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"}`}
                       onClick={() =>
                         setInspectorState({
                           kind:
@@ -360,7 +361,8 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                         })
                       }
                 >
-                  <Inspect className="h-3.5 w-3.5" />
+                  <Inspect className="h-3 w-3 mr-0.5" />
+                  <span className="text-[10px]">Select</span>
                 </Button>
                   </TooltipTrigger>
                   <TooltipContent
@@ -378,9 +380,10 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 rounded-full text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                      className="h-6 px-1.5 py-0.5 rounded-md flex items-center text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
                     >
-                      <BarChart2 className="h-3.5 w-3.5" />
+                      <Video className="h-3 w-3 mr-0.5" />
+                      <span className="text-[10px]">Record</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
@@ -398,16 +401,17 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 rounded-full text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                      className="h-6 px-1.5 py-0.5 rounded-md flex items-center text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
                     >
-                      <Camera className="h-3.5 w-3.5" />
+                      <Camera className="h-3 w-3 mr-0.5" />
+                      <span className="text-[10px]">Screenshot</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"
                     className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
                   >
-                    Screenshot
+                    Take screenshot
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -418,9 +422,10 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 rounded-full text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                      className="h-6 px-1.5 py-0.5 rounded-md flex items-center text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
                     >
-                      <PenTool className="h-3.5 w-3.5" />
+                      <PenTool className="h-3 w-3 mr-0.5" />
+                      <span className="text-[10px]">Draw</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
@@ -432,27 +437,23 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                 </Tooltip>
               </TooltipProvider>
             </div>
-
-            <div className="text-[10px] text-[#808085] flex items-center">
-              <span className="px-1.5">Page Tools</span>
             </div>
-          </div>
 
           {/* Text input area with improved glassy effect */}
             <div className="flex flex-col text-xs">
-              <div className="relative min-h-[52px] w-full">
+              <div className="relative min-h-[44px] w-full">
                 <textarea
                   ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask me anything..."
-                  className="absolute top-0 left-0 w-full h-full pt-3 pl-3 pr-3 pb-1 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#e0e0e3] placeholder:text-[#808085] overflow-auto"
+                  className="absolute top-0 left-0 w-full h-full pt-2.5 pl-3 pr-3 pb-1 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#e0e0e3] placeholder:text-[#808085] overflow-auto"
                   style={{
                     lineHeight: "1.5",
                     textAlign: "left",
                     boxSizing: "border-box",
-                    minHeight: "52px",
+                    minHeight: "44px",
                     wordWrap: "break-word",
                     overflowWrap: "break-word",
                     maxHeight: "100px"
@@ -461,7 +462,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
               </div>
 
             {/* Send controls with improved glassy effect */}
-            <div className="flex items-center justify-between px-3 py-2 border-t border-[#323236]">
+            <div className="flex items-center justify-between px-3 py-1.5 border-t border-[#323236]">
               <div className="text-[10px] text-[#a0a0a5] flex items-center gap-1">
                 <span>claude-3.7-sonnet</span>
                 <ChevronDown className="h-3 w-3" />
@@ -469,10 +470,10 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                   <button
                 onClick={handleSendMessage}
                     disabled={!input.trim()}
-                className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[11px] font-medium backdrop-blur-xl bg-[#505057]/30 border border-[#606067]/30 hover:bg-[#606067]/40 text-[#e0e0e3] ${!input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[11px] font-medium backdrop-blur-xl bg-[#505057]/30 border border-[#606067]/30 hover:bg-[#606067]/40 text-[#e0e0e3] ${!input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <span>Send</span>
-                <SendIcon className="ml-1.5 h-3 w-3" />
+                <SendIcon className="ml-1 h-3 w-3" />
                   </button>
             </div>
           </div>

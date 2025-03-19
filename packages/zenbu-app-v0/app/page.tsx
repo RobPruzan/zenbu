@@ -141,7 +141,7 @@ export default function Home() {
                     >
                       <X className="h-3.5 w-3.5" />
                     </Button>
-                    <DevTools />
+                    <DevTools onClose={toggleDevtools} />
                   </div>
                 </ResizablePanel>
               </>
