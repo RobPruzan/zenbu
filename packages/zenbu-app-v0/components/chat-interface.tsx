@@ -13,22 +13,26 @@ import {
 } from "react";
 import {
   SendIcon,
-  ImageIcon,
-  HistoryIcon,
   ChevronDown,
   ChevronUp,
   Search,
   Plus,
   Minimize,
   Menu,
-  Inspect,
-  Terminal,
-  Activity,
   X,
-  BarChart,
+  Code,
+  MessageSquare,
+  FileText,
+  Bug,
+  Sparkles,
+  RefreshCw,
+  Zap,
+  Inspect,
+  BarChart2,
   Camera,
-  Video,
-  Pencil,
+  Copy,
+  PenTool,
+  PanelRightOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,75 +44,54 @@ import {
 } from "@/components/ui/tooltip";
 import { useInspectorStateContext } from "@/app/iframe-wrapper";
 import { pluginRPC } from "@/app/rpc";
-import { useFocusContext } from "react-day-picker";
 import { ChatMessage } from "zenbu-plugin";
 import { flushSync } from "react-dom";
 
+// Define local message type that includes status
 interface Message {
   role: "user" | "assistant";
   content: string;
   status?: "generating" | "done";
 }
 
-export default function ChatInterface() {
-  const { messages, setMessages, input, setInput } = useChatContext();
-  // const [messages, setMessages] = useState<Message[]>([
-  //   // {
-  //   //   role: "assistant",
-  //   //   content: "Hello! I'm your website building assistant. How can I help you today?",
-  //   //   status: "done",
-  //   // },
-  //   {
-  //     role: "user",
-  //     content: "keep it black vercel design!",
-  //     status: "done",
-  //   },
-  // ]);
+// Ensure ChatMessage type includes our necessary properties
+type EnhancedChatMessage = ChatMessage & {
+  status?: "generating" | "done";
+};
+
+export const ChatContext = createContext<{
+  messages: Array<ChatMessage>;
+  setMessages: Dispatch<SetStateAction<Array<ChatMessage>>>;
+  input: string;
+  setInput: Dispatch<SetStateAction<string>>;
+}>(null!);
+
+// Define additional props for external control
+interface ChatInterfaceProps {
+  onClose?: () => void;
+}
+
+export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
+  const {
+    messages: rawMessages,
+    setMessages: setRawMessages,
+    input,
+    setInput,
+  } = useChatContext();
+
+  // Cast messages to include status property
+  const messages = rawMessages as EnhancedChatMessage[];
+  const setMessages = setRawMessages as Dispatch<
+    SetStateAction<EnhancedChatMessage[]>
+  >;
+
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
-  const [activeDevTool, setActiveDevTool] = useState<string | null>(null);
-  const [activeDevToolsTab, setActiveDevToolsTab] = useState<string>("console");
-  const [devToolHeight, setDevToolHeight] = useState<number>(120);
-  const [isAnimating, setIsAnimating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // System prompt content
   const systemPromptContent =
     "You are a powerful agentic AI coding assistant, powered by Claude 3.7 Sonnet. You operate exclusively in Cursor, the world's best IDE. You are pair programming with a USER to solve their coding task. The task may require creating a new codebase, modifying or debugging an existing codebase, or simply answering a question. Focus on building a modern website with a clean dark interface similar to Vercel's design aesthetic.";
-
-  // Toggle dev tool
-  const toggleDevTool = (tool: string) => {
-    if (activeDevTool === tool) {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setActiveDevTool(null);
-        setIsAnimating(false);
-      }, 150); // Match animation duration
-    } else {
-      setIsAnimating(true);
-      setActiveDevTool(tool);
-      // Set different heights based on the tool
-      if (tool === "devtools") {
-        setDevToolHeight(120);
-      } else if (
-        tool === "screenshot" ||
-        tool === "record" ||
-        tool === "draw"
-      ) {
-        setDevToolHeight(120);
-      } else {
-        setDevToolHeight(120);
-      }
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 150); // Match animation duration
-    }
-  };
-
-  // Switch between devtools tabs
-  const switchDevToolsTab = (tab: string) => {
-    setActiveDevToolsTab(tab);
-  };
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -127,11 +110,18 @@ export default function ChatInterface() {
     }
   }, [input]);
 
+  // Ensure system prompt is visible when chat is empty
+  // useEffect(() => {
+  //   if (messages.length === 0 && !showSystemPrompt) {
+  //     setShowSystemPrompt(true);
+  //   }
+  // }, [messages.length, showSystemPrompt]);
+
   const handleSendMessage = () => {
     if (!input.trim()) return;
 
     // Add user message
-    const userMessage: Message = {
+    const userMessage: EnhancedChatMessage = {
       role: "user",
       content: input,
       status: "done",
@@ -139,7 +129,7 @@ export default function ChatInterface() {
     setMessages((prev) => [...prev, userMessage]);
 
     // Add assistant message with generating status
-    const assistantMessage: Message = {
+    const assistantMessage: EnhancedChatMessage = {
       role: "assistant",
       content: "",
       status: "generating",
@@ -178,156 +168,167 @@ export default function ChatInterface() {
   const { inspectorState, setInspectorState } = useInspectorStateContext();
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Chat toolbar */}
-      <div className="border-b border-zinc-800/50 bg-[#0a0a0a] px-2 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
-                >
-                  <Menu className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px] py-1 px-1.5">
-                Chat options
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+    <div className="flex flex-col h-full bg-[#151515] relative overflow-hidden">
+      {/* Improved subtle background gradients - less blocky, more smooth */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {/* Using larger, more diffused gradients with gentler opacity */}
+        <div className="absolute top-[-50%] left-[-30%] w-[100%] h-[100%] opacity-30 bg-gradient-to-br from-slate-800/20 via-slate-800/5 to-transparent blur-[150px]"></div>
+        <div className="absolute bottom-[-30%] right-[-20%] w-[100%] h-[80%] opacity-20 bg-gradient-to-tl from-slate-700/10 via-slate-700/5 to-transparent blur-[180px]"></div>
+        <div className="absolute top-[10%] right-[5%] w-[50%] h-[50%] opacity-10 bg-gradient-to-bl from-indigo-800/5 via-slate-700/5 to-transparent blur-[120px]"></div>
+        
+        {/* Subtle color tints */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/10 via-slate-800/5 to-slate-900/10 opacity-30"></div>
+        
+        {/* Noise texture overlay for glass-like effect */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDUiLz48L3N2Zz4=')]"></div>
+      </div>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
+      {/* Header with improved glassy effect */}
+      <div className="relative z-10 backdrop-blur-xl bg-[#1a1a1c]/70 border-b border-[#2a2a2c]">
+        {/* URL bar with Xcode-style layout */}
+        <div className="flex items-center justify-between h-9 px-2">
+          <div className="flex-1"></div>
+          {/* Centered URL bar with softer corners and better glass effect */}
+          <div className="flex items-center bg-[#232326]/60 backdrop-blur-xl border border-[#323236] rounded-[6px] h-6 w-[280px] px-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-2"></div>
+            <span className="font-mono text-[11px] text-[#e0e0e3]">
+              localhost:4200
+            </span>
+            <div className="flex-1"></div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+              className="h-5 w-5 p-0 text-[#a0a0a5] hover:text-[#e0e0e3]"
                 >
-                  <Minimize className="h-3.5 w-3.5" />
+              <Copy className="h-3 w-3" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px] py-1 px-1.5">
-                Collapse chat
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
-
-        <div className="flex items-center">
+          <div className="flex-1 flex items-center justify-end gap-1">
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[11px] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 flex items-center gap-0.5"
-            onClick={() => setShowSystemPrompt(!showSystemPrompt)}
-          >
-            {showSystemPrompt ? "Hide" : "Show"} prompt
-            {showSystemPrompt ? (
-              <ChevronUp className="h-3 w-3 ml-0.5" />
-            ) : (
-              <ChevronDown className="h-3 w-3 ml-0.5" />
-            )}
+              className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
+            >
+              <Search className="h-3.5 w-3.5" />
           </Button>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+              className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
                 >
-                  <Search className="h-3.5 w-3.5" />
+              <MessageSquare className="h-3.5 w-3.5" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px] py-1 px-1.5">
-                Search in chat
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 p-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
+              className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
+              onClick={onClose}
                 >
-                  <Plus className="h-3.5 w-3.5" />
+              <PanelRightOpen className="h-3.5 w-3.5" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10px] py-1 px-1.5">
-                New chat
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          </div>
         </div>
       </div>
 
-      {/* System prompt content */}
-      {showSystemPrompt && (
-        <div className="px-3 py-2 text-[11px] text-zinc-400 border-b border-zinc-800/50 bg-zinc-900/30">
-          <div className="flex items-center mb-1.5">
-            <div className="w-4 h-4 rounded-full bg-zinc-700 flex items-center justify-center mr-1.5">
-              <span className="text-[8px] text-zinc-300">U</span>
-            </div>
-            <span className="text-[11px] font-medium text-zinc-300">User</span>
-          </div>
-          <p className="pl-5.5 text-[11px] text-zinc-300 leading-tight">
-            {systemPromptContent}
-          </p>
-        </div>
-      )}
+      {/* Chat messages with improved glassy effect */}
+      <ScrollArea className="flex-1 px-3 py-2 relative z-10 w-full overflow-x-hidden">
+        <div className="space-y-3 pt-2 pb-1 w-full">
+          {/* System Prompt with improved glass styling */}
+          <div className="mb-3 w-full">
+            <div
+              className={`group cursor-pointer rounded-[6px] backdrop-blur-xl w-full ${showSystemPrompt ? "bg-[#232326]/60 border border-[#323236]" : "bg-[#1e1e20]/50 border border-[#2a2a2c] hover:bg-[#232326]/40"}`}
+              onClick={() => setShowSystemPrompt(!showSystemPrompt)}
+            >
+              <div className="flex items-center px-3 py-1.5 gap-1.5">
+                <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                  <FileText className="h-3 w-3 text-[#a0a0a5]" />
+                </div>
+                <div className="flex-1 flex items-center justify-between min-w-0">
+                  <span className="text-[11px] font-medium text-[#c0c0c5]">
+                    System Prompt
+                  </span>
+                  <div className="flex items-center text-[#808085]">
+                    {showSystemPrompt ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                  </div>
+                </div>
+              </div>
 
-      {/* Chat messages */}
-      <ScrollArea className="flex-1 p-2">
-        <div className="space-y-2 py-2">
+      {showSystemPrompt && (
+                <div className="px-8 pb-3 pt-1 text-[11px] text-[#a0a0a5] leading-relaxed border-t border-[#323236]">
+                  {systemPromptContent}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Regular messages with improved glassy effect */}
           {messages.map((message, index) => (
-            <div key={index}>
+            <div key={index} className="mb-4 max-w-full">
               {message.role === "user" ? (
-                <div className="group mb-3">
-                  <div className="rounded-md border border-zinc-800 bg-[#111111] overflow-hidden">
-                    <div className="flex items-center px-2 py-1 border-b border-zinc-800/50 bg-zinc-800/10">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-4 h-4 rounded-full bg-zinc-700 flex items-center justify-center">
-                          <span className="text-[8px] text-zinc-300">U</span>
-                        </div>
-                        <span className="text-[11px] font-medium text-zinc-300">
-                          User
-                        </span>
-                      </div>
-                      <div className="ml-auto">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-5 w-5 p-0 text-zinc-500 hover:text-zinc-300"
-                        >
-                          <HistoryIcon className="h-3 w-3" />
-                        </Button>
-                      </div>
+                <div className="group">
+                  {/* Message container with distinct background */}
+                  <div className="rounded-md bg-[#1e1e1e] border border-[#333333] overflow-hidden max-w-full">
+                    {/* File context indicator */}
+                    <div className="border-b border-[#333333] px-3 py-1 flex items-center overflow-hidden">
+                      <FileText className="h-3 w-3 mr-1.5 flex-shrink-0 text-[#a0a0a5]" />
+                      <span className="text-[10px] text-[#e0e0e3] font-medium truncate">Context</span>
                     </div>
-                    <div className="px-3 py-2">
-                      <div className="text-xs text-zinc-200 whitespace-pre-wrap font-sans leading-tight">
-                        {message.content}
+                    
+                    {/* User message */}
+                    <div className="px-3 py-2 text-xs text-[#e0e0e3] whitespace-pre-wrap font-sans leading-relaxed break-words overflow-auto">
+                      {message.content}
+                    </div>
+                    
+                    {/* Footer with actions */}
+                    <div className="flex items-center justify-between text-[9px] px-3 py-1 text-[#6e6e76]">
+                      <div className="flex items-center">
+                        <ChevronDown className="h-2.5 w-2.5 mr-1" />
+                        <span>gpt-4o</span>
+                      </div>
+                      <div className="flex items-center">
+                        <button className="hover:text-[#a0a0a5] transition-colors">
+                          <span className="flex items-center gap-1">
+                            <RefreshCw className="h-2.5 w-2.5" />
+                            Restore
+                          </span>
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="group mb-3">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <div className="w-4 h-4 rounded-full bg-indigo-600/20 flex items-center justify-center">
-                      <span className="text-[8px] text-indigo-400">AI</span>
-                    </div>
-                    <span className="text-[11px] font-medium text-zinc-300">
-                      Claude
-                    </span>
+                <div className="group max-w-full">
+                  {/* AI response with streamlined design */}
+                  <div className="text-xs text-[#e0e0e3] whitespace-pre-wrap font-sans leading-relaxed px-2 py-1 break-words overflow-auto">
+                    {message.status === "generating" ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block animate-pulse text-[#949bf8]">
+                          Thinking
+                        </span>
+                        <span className="flex space-x-1">
+                          <span
+                            className="h-1 w-1 bg-[#949bf8]/70 rounded-full animate-bounce"
+                            style={{ animationDelay: "0ms" }}
+                          ></span>
+                          <span
+                            className="h-1 w-1 bg-[#949bf8]/70 rounded-full animate-bounce"
+                            style={{ animationDelay: "150ms" }}
+                          ></span>
+                          <span
+                            className="h-1 w-1 bg-[#949bf8]/70 rounded-full animate-bounce"
+                            style={{ animationDelay: "300ms" }}
+                          ></span>
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="overflow-hidden">
+                        {message.content}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -337,481 +338,189 @@ export default function ChatInterface() {
         </div>
       </ScrollArea>
 
-      <div className="px-2 pb-2">
-        {/* Integrated chat input with dev tools */}
-        <div className="relative">
-          {/* Chat input with integrated toolbar */}
-          <div className="rounded-md bg-[#111111] border border-zinc-800 overflow-hidden">
-            {/* Dev tools toolbar - integrated at the top of the input */}
-            <div
-              className={`flex items-center px-2 py-1 border-b border-zinc-800/50 transition-colors duration-150 ${activeDevTool ? "bg-zinc-800/20" : ""}`}
-            >
-              <div className="flex items-center gap-1">
+      {/* Integrated chat input with improved glassy effect */}
+      <div className="px-3 pb-3 relative z-10 w-full">
+        <div className="rounded-[6px] backdrop-blur-xl bg-[#232326]/60 border border-[#323236] shadow-sm shadow-black/5 overflow-hidden w-full">
+          {/* Page interaction tools with improved glassy effect */}
+          <div className="flex items-center px-2 py-1 border-b border-[#323236] bg-[#1e1e20]/30">
+            <div className="flex-1 flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                 <Button
+                      variant="ghost"
                   size="sm"
-                  variant="ghost"
-                  className={`h-6 w-6 p-0 ${
-                    activeDevTool === "elements"
-                      ? "bg-zinc-800 text-zinc-200"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
-                  }`}
-                  onClick={() => !isAnimating && toggleDevTool("elements")}
+                      className={`h-6 w-6 p-0 rounded-full ${inspectorState.kind === "inspecting" ? "text-[#949bf8] bg-[#949bf8]/10" : "text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"}`}
+                      onClick={() =>
+                        setInspectorState({
+                          kind:
+                            inspectorState.kind === "inspecting"
+                              ? "off"
+                              : "inspecting",
+                        })
+                      }
                 >
                   <Inspect className="h-3.5 w-3.5" />
                 </Button>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={`text-[11px] font-medium h-6 px-2 ${
-                    activeDevTool === "devtools"
-                      ? "bg-zinc-800 text-zinc-200"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
-                  }`}
-                  onClick={() => !isAnimating && toggleDevTool("devtools")}
-                >
-                  DevTools
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={`text-[11px] font-medium h-6 px-2 ${
-                    activeDevTool === "screenshot"
-                      ? "bg-zinc-800 text-zinc-200"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
-                  }`}
-                  onClick={() => !isAnimating && toggleDevTool("screenshot")}
-                >
-                  Screenshot
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={`text-[11px] font-medium h-6 px-2 ${
-                    activeDevTool === "record"
-                      ? "bg-zinc-800 text-zinc-200"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
-                  }`}
-                  onClick={() => !isAnimating && toggleDevTool("record")}
-                >
-                  Record
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={`text-[11px] font-medium h-6 px-2 ${
-                    activeDevTool === "draw"
-                      ? "bg-zinc-800 text-zinc-200"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
-                  }`}
-                  onClick={() => !isAnimating && toggleDevTool("draw")}
-                >
-                  Draw
-                </Button>
-              </div>
-
-              {activeDevTool && (
-                <div className="ml-auto flex items-center">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"
-                    onClick={() =>
-                      !isAnimating && toggleDevTool(activeDevTool || "")
-                    }
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
                   >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              )}
+                    Inspect element
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 rounded-full text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                    >
+                      <BarChart2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
+                  >
+                    Record interactions
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 rounded-full text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                    >
+                      <Camera className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
+                  >
+                    Screenshot
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 rounded-full text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                    >
+                      <PenTool className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
+                  >
+                    Draw on page
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
-            {/* Dev tool content area */}
-            <div
-              className={`overflow-y-auto transition-all duration-150 ease-in-out ${
-                activeDevTool
-                  ? "px-3 py-2 text-[11px] text-zinc-400 border-b border-zinc-800/50 opacity-100"
-                  : "p-0 border-0 opacity-0 h-0 pointer-events-none"
-              }`}
-              style={{
-                height: activeDevTool ? `${devToolHeight}px` : "0px",
-              }}
-            >
-              {activeDevTool === "elements" && (
-                <div className="font-mono">
-                  {inspectorState.kind === "focused" &&
-                    inspectorState.focusedInfo.name}
-                </div>
-              )}
-
-              {activeDevTool === "devtools" && (
-                <div>
-                  {/* DevTools tabs */}
-                  <div className="flex items-center gap-2 mb-2 border-b border-zinc-800/50 pb-1">
-                    <button
-                      className={`text-[10px] px-1.5 py-0.5 rounded ${activeDevToolsTab === "console" ? "bg-zinc-800 text-zinc-200" : "text-zinc-400 hover:text-zinc-200"}`}
-                      onClick={() => switchDevToolsTab("console")}
-                    >
-                      Console
-                    </button>
-                    <button
-                      className={`text-[10px] px-1.5 py-0.5 rounded ${activeDevToolsTab === "network" ? "bg-zinc-800 text-zinc-200" : "text-zinc-400 hover:text-zinc-200"}`}
-                      onClick={() => switchDevToolsTab("network")}
-                    >
-                      Network
-                    </button>
-                    <button
-                      className={`text-[10px] px-1.5 py-0.5 rounded ${activeDevToolsTab === "performance" ? "bg-zinc-800 text-zinc-200" : "text-zinc-400 hover:text-zinc-200"}`}
-                      onClick={() => switchDevToolsTab("performance")}
-                    >
-                      Performance
-                    </button>
-                  </div>
-
-                  {/* DevTools content based on active tab */}
-                  {activeDevToolsTab === "console" && (
-                    <div className="font-mono">
-                      <div className="mb-1">
-                        <span className="text-zinc-500">›</span>{" "}
-                        <span className="text-blue-400">const</span> messages ={" "}
-                        <span className="text-amber-400">useState</span>([...])
-                      </div>
-                      <div className="mb-1">
-                        <span className="text-zinc-500">›</span>{" "}
-                        <span className="text-blue-400">function</span>{" "}
-                        <span className="text-emerald-400">
-                          handleSendMessage
-                        </span>
-                        () &#123; ... &#125;
-                      </div>
-                      <div className="text-yellow-400">
-                        <span className="text-zinc-500">⚠</span> Warning: Each
-                        child in a list should have a unique "key" prop.
-                      </div>
-                    </div>
-                  )}
-
-                  {activeDevToolsTab === "network" && (
-                    <div className="font-mono">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-emerald-400">GET</span>
-                        <span className="text-zinc-300">/api/chat</span>
-                        <span className="text-zinc-500">200 OK</span>
-                        <span className="text-zinc-500">42ms</span>
-                      </div>
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-blue-400">POST</span>
-                        <span className="text-zinc-300">/api/chat/message</span>
-                        <span className="text-zinc-500">201 Created</span>
-                        <span className="text-zinc-500">156ms</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-emerald-400">GET</span>
-                        <span className="text-zinc-300">
-                          /api/user/settings
-                        </span>
-                        <span className="text-zinc-500">304 Not Modified</span>
-                        <span className="text-zinc-500">28ms</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeDevToolsTab === "performance" && (
-                    <div className="font-mono">
-                      <div className="mb-2">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-zinc-300">Memory Usage</span>
-                          <span className="text-emerald-400">128MB</span>
-                        </div>
-                        <div className="w-full bg-zinc-800 h-1.5 rounded-full">
-                          <div className="bg-emerald-500 h-1.5 rounded-full w-1/4"></div>
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-zinc-300">CPU Usage</span>
-                          <span className="text-amber-400">42%</span>
-                        </div>
-                        <div className="w-full bg-zinc-800 h-1.5 rounded-full">
-                          <div className="bg-amber-500 h-1.5 rounded-full w-2/5"></div>
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-zinc-300">Render Time</span>
-                          <span className="text-blue-400">24ms</span>
-                        </div>
-                        <div className="w-full bg-zinc-800 h-1.5 rounded-full">
-                          <div className="bg-blue-500 h-1.5 rounded-full w-1/6"></div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-zinc-300">Network Latency</span>
-                          <span className="text-purple-400">156ms</span>
-                        </div>
-                        <div className="w-full bg-zinc-800 h-1.5 rounded-full">
-                          <div className="bg-purple-500 h-1.5 rounded-full w-3/5"></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeDevTool === "screenshot" && (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-zinc-300 font-medium">
-                      Capture Screenshot
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-6 px-2 text-[10px] border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200"
-                    >
-                      <Camera className="h-3 w-3 mr-1" />
-                      Capture
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="checkbox"
-                        id="include-browser"
-                        className="h-3 w-3 rounded border-zinc-700 bg-zinc-800"
-                      />
-                      <label
-                        htmlFor="include-browser"
-                        className="text-zinc-400 text-[10px]"
-                      >
-                        Include browser
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="checkbox"
-                        id="full-page"
-                        className="h-3 w-3 rounded border-zinc-700 bg-zinc-800"
-                      />
-                      <label
-                        htmlFor="full-page"
-                        className="text-zinc-400 text-[10px]"
-                      >
-                        Full page
-                      </label>
-                    </div>
-                  </div>
-                  <div className="text-zinc-500 text-[10px]">
-                    Screenshots will be saved to your downloads folder
-                  </div>
-                </div>
-              )}
-
-              {activeDevTool === "record" && (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-zinc-300 font-medium">
-                      Screen Recording
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-6 px-2 text-[10px] border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200"
-                    >
-                      <Video className="h-3 w-3 mr-1" />
-                      Start Recording
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="checkbox"
-                        id="record-audio"
-                        className="h-3 w-3 rounded border-zinc-700 bg-zinc-800"
-                      />
-                      <label
-                        htmlFor="record-audio"
-                        className="text-zinc-400 text-[10px]"
-                      >
-                        Record audio
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="checkbox"
-                        id="record-camera"
-                        className="h-3 w-3 rounded border-zinc-700 bg-zinc-800"
-                      />
-                      <label
-                        htmlFor="record-camera"
-                        className="text-zinc-400 text-[10px]"
-                      >
-                        Include camera
-                      </label>
-                    </div>
-                  </div>
-                  <div className="text-zinc-500 text-[10px]">
-                    Recordings will be saved as .webm files
-                  </div>
-                </div>
-              )}
-
-              {activeDevTool === "draw" && (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-zinc-300 font-medium">
-                      Drawing Mode
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-6 px-2 text-[10px] border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200"
-                    >
-                      <Pencil className="h-3 w-3 mr-1" />
-                      Start Drawing
-                    </Button>
-                  </div>
-                  <div className="mb-3">
-                    <div className="text-zinc-400 text-[10px] mb-1.5">
-                      Brush Color
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="w-5 h-5 rounded-full bg-red-500 border border-zinc-700"></button>
-                      <button className="w-5 h-5 rounded-full bg-yellow-500 border border-zinc-700"></button>
-                      <button className="w-5 h-5 rounded-full bg-green-500 border border-zinc-700"></button>
-                      <button className="w-5 h-5 rounded-full bg-blue-500 border border-zinc-700"></button>
-                      <button className="w-5 h-5 rounded-full bg-purple-500 border border-zinc-700"></button>
-                      <button className="w-5 h-5 rounded-full bg-white border border-zinc-700"></button>
-                    </div>
-                  </div>
-                  <div className="text-zinc-500 text-[10px]">
-                    Draw on the website to highlight areas and provide visual
-                    feedback
-                  </div>
-                </div>
-              )}
+            <div className="text-[10px] text-[#808085] flex items-center">
+              <span className="px-1.5">Page Tools</span>
             </div>
+          </div>
 
-            {/* Text input area */}
+          {/* Text input area with improved glassy effect */}
             <div className="flex flex-col text-xs">
-              <div className="relative min-h-[52px]">
+              <div className="relative min-h-[52px] w-full">
                 <textarea
                   ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Hack away..."
-                  className="absolute top-0 left-0 w-full h-full pt-2 pl-3 pr-3 pb-1 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-zinc-200 placeholder:text-zinc-500 overflow-auto"
+                  placeholder="Ask me anything..."
+                  className="absolute top-0 left-0 w-full h-full pt-3 pl-3 pr-3 pb-1 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#e0e0e3] placeholder:text-[#808085] overflow-auto"
                   style={{
-                    lineHeight: "1.3",
+                    lineHeight: "1.5",
                     textAlign: "left",
                     boxSizing: "border-box",
                     minHeight: "52px",
+                    wordWrap: "break-word",
+                    overflowWrap: "break-word",
+                    maxHeight: "100px"
                   }}
                 />
               </div>
-              <div className="flex items-center justify-between px-3 py-2 border-t border-zinc-800">
-                <div className="flex items-center gap-1.5">
-                  <div className="flex items-center gap-1">
-                    <span className="text-[11px] text-zinc-400">
-                      claude-3.7-sonnet
-                    </span>
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M4 6L8 10L12 6"
-                        stroke="#71717A"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
+
+            {/* Send controls with improved glassy effect */}
+            <div className="flex items-center justify-between px-3 py-2 border-t border-[#323236]">
+              <div className="text-[10px] text-[#a0a0a5] flex items-center gap-1">
+                <span>claude-3.7-sonnet</span>
+                <ChevronDown className="h-3 w-3" />
                 </div>
-                <div className="flex items-center gap-1.5">
                   <button
-                    onClick={async () => {
-                      // flushSync(() => {
-                      // handleSendMessage();
-                      // });
-                      const newMessages: typeof messages = [
-                        ...messages,
-                        {
-                          role: "user",
-                          content: input,
-                        },
-                      ];
-                      setMessages(newMessages);
-                      if (inspectorState.kind === "focused") {
-                        console.log("req");
-
-                        const res = await pluginRPC.edit.$post({
-                          json: {
-                            messages: newMessages,
-                            focusedInfo: inspectorState.focusedInfo,
-                          },
-                        });
-                        console.log("done", await res.json());
-
-                        const iframe = document.getElementById(
-                          "child-iframe"
-                        )! as HTMLIFrameElement;
-
-                        iframe.src = iframe.src;
-
-                        return;
-                      }
-                      handleSendMessage();
-                    }}
+                onClick={handleSendMessage}
                     disabled={!input.trim()}
-                    className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-[11px] text-zinc-200 ${!input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-[11px] font-medium backdrop-blur-xl bg-[#505057]/30 border border-[#606067]/30 hover:bg-[#606067]/40 text-[#e0e0e3] ${!input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <span>Send</span>
-                    <svg
-                      className="ml-1.5"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M13.5 8H2.5M13.5 8L9 3.5M13.5 8L9 12.5"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                <SendIcon className="ml-1.5 h-3 w-3" />
                   </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Code highlighting and other special content handling */}
+      <style jsx global>{`
+        pre {
+          overflow-x: auto;
+          max-width: 100%;
+          border-radius: 4px;
+          padding: 0.5rem;
+          background-color: #1a1a1c;
+          border: 1px solid #333;
+          margin: 0.5rem 0;
+        }
+        
+        code {
+          font-family: monospace;
+          white-space: pre-wrap;
+          word-break: break-word;
+          max-width: 100%;
+          display: inline-block;
+        }
+        
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+        
+        table {
+          border-collapse: collapse;
+          margin: 0.5rem 0;
+          max-width: 100%;
+          overflow-x: auto;
+          display: block;
+        }
+        
+        th, td {
+          border: 1px solid #333;
+          padding: 0.25rem;
+          font-size: 0.75rem;
+        }
+      `}</style>
     </div>
   );
 }
-
-export const ChatContext = createContext<{
-  messages: Array<ChatMessage>;
-  setMessages: Dispatch<SetStateAction<Array<ChatMessage>>>;
-  input: string;
-  setInput: Dispatch<SetStateAction<string>>;
-}>(null!);
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [messages, setMessages] = useState<Array<ChatMessage>>([]);

@@ -70,12 +70,23 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     InspectorStateContext
   );
 
+  console.log("what the sigma");
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+
+    if (!canvas) {
+      console.log("no canvas");
+
+      return;
+    }
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      console.log("no ctx");
+
+      return;
+    }
 
     let rafId: number;
 
@@ -104,15 +115,25 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     if (!ctx) return;
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-      if (event.origin !== "http://localhost:4200") return;
+      console.log("message fuck", event);
+
+      if (event.origin !== "http://localhost:4200") {
+        console.log("wrong origin");
+
+        return;
+      }
 
       const data = event.data;
 
       switch (data.kind) {
         case "mouse-position-update": {
           if (DevtoolFrontendStore.getState().kind !== "inspecting") {
+            console.log("nope");
+
             return;
           }
+          console.log("update");
+
           const now = Date.now();
           const throttleInterval = 50;
 
@@ -208,8 +229,11 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
         !targetRectRef.current
       ) {
         rafIdRef.current = null;
+        console.log("sucks");
+
         return;
       }
+      console.log("animating");
 
       const current = currentRectRef.current;
       const target = targetRectRef.current;
@@ -248,6 +272,8 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     });
 
     resizeObserver.observe(iframe);
+    console.log("SETTING UP");
+
     window.addEventListener("message", handleMessage);
 
     return () => {

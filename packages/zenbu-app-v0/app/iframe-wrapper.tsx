@@ -64,7 +64,6 @@ export const IFrameWrapper = () => {
   const { inspectorState, setInspectorState } = useInspectorStateContext();
 
   const sendMessage = useIFrameMessenger();
-
   const makeRequest = useMakeRequest({ iframeRef });
 
   useEffect(() => {
@@ -116,30 +115,16 @@ export const IFrameWrapper = () => {
   }, []);
 
   return (
-    <>
-      <button
-        style={{
-          width: "fit-content",
-        }}
-        onClick={() => {
-          setInspectorState((prev) => ({
-            kind: prev.kind === "inspecting" ? "off" : "inspecting",
-          }));
-        }}
-      >
-        {inspectorState.kind}ing
-      </button>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          position: "relative",
-        }}
-      >
-        {/* <div */}
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        position: "relative",
+      }}
+    >
+      <div className="relative w-full h-full">
         <iframe
           id="child-iframe"
           key={lastUpdate}
@@ -148,11 +133,12 @@ export const IFrameWrapper = () => {
           style={{
             height: "100%",
             width: "100%",
+            border: "none",
           }}
         />
         <DevtoolsOverlay iframeRef={iframeRef} />
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 import { InspectorStateProvider } from "./iframe-wrapper";
 import { ChatProvider } from "@/components/chat-interface";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Zenbu",
@@ -16,15 +18,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ChatProvider>
-      <InspectorStateProvider>
-        <html
-          lang="en"
-          className={`${GeistSans.variable} ${GeistMono.variable}`}
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
         >
-          <body className="antialiased">{children}</body>
-        </html>
-      </InspectorStateProvider>
-    </ChatProvider>
+          <InspectorStateProvider>
+            <ChatProvider>{children}</ChatProvider>
+          </InspectorStateProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

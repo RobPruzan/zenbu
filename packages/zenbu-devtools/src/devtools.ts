@@ -18,6 +18,7 @@ document.addEventListener("mousemove", (e) => {
 
   currentMouseOverElement = target;
   const rect = target.getBoundingClientRect();
+  // console.log("sent update", rect);
 
   sendMessage({
     kind: "mouse-position-update",
