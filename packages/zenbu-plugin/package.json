@@ -8,6 +8,8 @@
   "main": "src/create-server.ts",
   "dependencies": {
     "@ai-sdk/anthropic": "^1.1.17",
+    "@ai-sdk/google": "^1.1.26",
+    "@ai-sdk/groq": "^1.1.15",
     "@ai-sdk/openai": "^1.2.5",
     "@hono/arktype-validator": "^2.0.0",
     "@hono/node-server": "^1.13.8",
