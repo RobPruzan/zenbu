@@ -15,14 +15,14 @@ import { EventLogEvent, PluginServerEvent } from "zenbu-plugin/src/ws/ws";
  */
 export type ChatInstanceInitialState = {
   // messages: Array<{}>;
-  eventLog: Array<EventLogEvent>;
+  eventLog: EventLogSliceInitialState;
   inspector: InspectorSliceInitialState;
 };
 
 export type ChatInstanceStore = {
   // messages: Array<{}>;
-  eventLog: Array<EventLogEvent>;
-  inspector: SliceCreator<InspectorSlice>;
+  eventLog: EventLogSlice;
+  inspector: InspectorSlice;
 };
 
 /**
@@ -50,11 +50,11 @@ export type ChatInstanceStore = {
 export const ChatInstanceContext = createZustandContext(
   (initialState: ChatInstanceInitialState) =>
     createStore<ChatInstanceStore>()(
-      immer(() => ({
-        eventLog: initialState.eventLog,
-        inspector: createInspectorSlice(initialState.inspector),
-      }))
-    )
+      immer((...args) => ({
+        eventLog: createEventLogSlice(initialState.eventLog)(...args),
+        inspector: createInspectorSlice(initialState.inspector)(...args),
+      })),
+    ),
 );
 
 export function useChatStore(): ChatInstanceStore;
@@ -83,4 +83,25 @@ const createInspectorSlice =
   (initialState: InspectorSliceInitialState): SliceCreator<InspectorSlice> =>
   (set, get) => ({
     state: initialState.state,
+  });
+
+type EventLogSliceInitialState = {
+  events: Array<EventLogEvent>;
+};
+type EventLogSlice = {
+  events: Array<EventLogEvent>;
+  actions: {
+    pushEvent: (event: EventLogEvent) => void;
+  };
+};
+const createEventLogSlice =
+  (initialState: EventLogSliceInitialState): SliceCreator<EventLogSlice> =>
+  (set, get) => ({
+    events: initialState.events,
+    actions: {
+      pushEvent: (event) =>
+        set((state) => {
+          state.eventLog.events.push(event);
+        }),
+    },
   });

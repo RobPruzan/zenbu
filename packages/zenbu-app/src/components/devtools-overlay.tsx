@@ -19,7 +19,7 @@ import {
 } from "zenbu-devtools";
 import { DevtoolFrontendStore } from "~/app/iframe-wrapper";
 import { useChatContext } from "./chat-interface";
-import { useChatWS } from "~/app/ws";
+import { useEventWS } from "~/app/ws";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -66,13 +66,12 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
   const lastThrottleTimeRef = useRef<number>(0);
   const lastElementRef = useRef<Element | null>(null);
 
-  const { socket } = useChatWS();
+  const { socket } = useEventWS();
   const makeRequest = useMakeRequest({ iframeRef });
   const { inspectorState, setInspectorState } = useContext(
     InspectorStateContext
   );
 
-  console.log("what the sigma");
 
   useEffect(() => {
     const canvas = canvasRef.current;

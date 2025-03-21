@@ -26,6 +26,7 @@ import { scan } from "react-scan";
 import DevTools from "../components/devtools";
 import { ChatInstanceContext } from "~/components/chat-instance-context";
 import { IFrameWrapper } from "./iframe-wrapper";
+import { Chat } from "~/components/chat";
 
 scan({
   showFPS: false,
@@ -90,7 +91,9 @@ export default function Home() {
               kind: "off",
             },
           },
-          eventLog: [],
+          eventLog: {
+            events: [],
+          },
         }}
       >
         <ResizablePanelGroup direction="horizontal">
@@ -113,7 +116,8 @@ export default function Home() {
                 >
                   <X className="h-3.5 w-3.5" />
                 </Button> */}
-                  <ChatInterface onClose={toggleChat} />
+                  {/* <ChatInterface onClose={toggleChat} /> */}
+                  <Chat />
                 </div>
               </ResizablePanel>
               <ResizableHandle withHandle className="bg-border/40" />

@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { EventLogEvent } from "zenbu-plugin/src/ws/ws";
 
-export const useChatWS = () => {
+export const useEventWS = (opts?: { onMessage?: (message: EventLogEvent) => void }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    console.log("a");
 
     const socketInstance = io("http://localhost:5001", {
       path: "/ws",
       transports: ["websocket"],
     });
-    console.log("b");
     socketInstance.on("connect", () => {
       console.log("Socket connected successfully");
     });
+
+
+    socketInstance.on("message", (message) => {
+      opts?.onMessage?.(message)
+    })
 
     console.log("Socket connection status:", socketInstance.connected);
 
@@ -32,7 +36,6 @@ export const useChatWS = () => {
       socketInstance.disconnect();
     };
   }, []);
-  console.log("me socket", socket);
 
   return { socket };
 };

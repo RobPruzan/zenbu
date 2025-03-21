@@ -27,6 +27,7 @@ export type EventLogEvent = ClientEvent | PluginServerEvent;
 export type ClientEvent = {
   kind: "user-message";
   context: any;
+  text: string;
   requestId: string;
   timestamp: number;
 };
@@ -64,14 +65,22 @@ export const injectWebSocket = (server: HttpServer) => {
   });
 
   ioServer.on("connection", async (runtimeSocket) => {
-    runtimeSocket.on("message", async (prompt) => {
+    runtimeSocket.on("message", async (event: ClientEvent) => {
+      console.log("got text", event.text);
+
       const { textStream } = streamText({
         model: anthropic("claude-3-5-sonnet-latest"),
-        prompt: prompt,
+        prompt: event.text,
       });
+      console.log("awaiting stream");
 
       for await (const textPart of textStream) {
-        runtimeSocket.emit("message", textPart);
+        runtimeSocket.emit("message", {
+          kind: "assistant-simple-message",
+          associatedRequestId: event.requestId,
+          text: textPart,
+          timestamp: Date.now(),
+        } satisfies PluginServerEvent);
         console.log(textPart);
       }
     });
