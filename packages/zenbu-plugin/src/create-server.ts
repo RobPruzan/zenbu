@@ -2,12 +2,15 @@ import { serve } from "@hono/node-server";
 import { zValidator } from "@hono/zod-validator";
 import { Hono, type MiddlewareHandler } from "hono";
 import { z } from "zod";
+import { type Server as HttpServer, type Server } from "node:http";
+
 import { type FocusedInfo } from "zenbu-devtools";
 import type { InputToDataByTarget } from "hono/types";
 import { shim } from "./validator-shim.js";
 import { cors } from "hono/cors";
 import { makeEdit } from "./ai.js";
 import { readFile, writeFile } from "node:fs/promises";
+import { injectWebSocket } from "./ws/ws.js";
 
 const operateOnPath =
   "/Users/robby/zenbu/packages/examples/iframe-website/index.ts";
@@ -44,8 +47,6 @@ export const createServer = () => {
         messages: body.messages,
       });
 
-      // console.log("new file", newFile);
-
       await writeFile(operateOnPath, res.object.newFile);
 
       return opts.json({
@@ -55,15 +56,21 @@ export const createServer = () => {
       });
     }
   );
-  serve(
+  const port = 5001;
+  const host = "localhost";
+  const $server = serve(
     {
       fetch: app.fetch,
       port: 5001,
+      hostname: "localhost",
     },
     (info) => {
       console.log(`Server is running on http://localhost:${info.port}`);
     }
   );
+
+  const server = $server.listen(port, host);
+  injectWebSocket(server as HttpServer); // safe assert // safe assert https://github.com/orgs/honojs/discussions/1781#discussioncomment-7827318
 
   process.on("exit", () => {
     console.log("im done for");

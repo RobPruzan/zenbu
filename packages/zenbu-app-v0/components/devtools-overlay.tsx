@@ -19,6 +19,7 @@ import {
 } from "zenbu-devtools";
 import { DevtoolFrontendStore } from "@/app/iframe-wrapper";
 import { useChatContext } from "./chat-interface";
+import { useChatWS } from "@/app/ws";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -46,7 +47,7 @@ interface Props {
 
 // then it lists for the rects from mouse move and we draw the interpolation
 
-// then when we click an element we transition to focus, set that as the focused element info, and show a single outline a round it
+// then when we click an element we transition to focus, set that as the focused element  info, and show a single outline a round it
 
 // then we can click the button we clicked to turn it on to turn it back off
 
@@ -65,6 +66,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
   const lastThrottleTimeRef = useRef<number>(0);
   const lastElementRef = useRef<Element | null>(null);
 
+  const { socket } = useChatWS();
   const makeRequest = useMakeRequest({ iframeRef });
   const { inspectorState, setInspectorState } = useContext(
     InspectorStateContext
@@ -115,11 +117,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     if (!ctx) return;
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-      console.log("message fuck", event);
-
       if (event.origin !== "http://localhost:4200") {
-        console.log("wrong origin");
-
         return;
       }
 
@@ -128,8 +126,6 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
       switch (data.kind) {
         case "mouse-position-update": {
           if (DevtoolFrontendStore.getState().kind !== "inspecting") {
-            console.log("nope");
-
             return;
           }
           console.log("update");
