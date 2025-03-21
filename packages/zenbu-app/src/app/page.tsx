@@ -1,53 +1,194 @@
-import Link from "next/link";
+"use client";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "~/components/ui/resizable";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import {
+  MessageSquare,
+  Terminal,
+  ArrowUp,
+  ArrowDown,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
+import ChatInterface from "~/components/chat-interface";
+import { useState, useEffect } from "react";
+import { scan } from "react-scan";
+import DevTools from "../components/devtools";
+import { ChatInstanceContext } from "~/components/chat-instance-context";
+import { IFrameWrapper } from "./iframe-wrapper";
 
-import { LatestPost } from "~/app/_components/post";
-import { api, HydrateClient } from "~/trpc/server";
+scan({
+  showFPS: false,
+  // showNotificationCount: false,
+});
 
-export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
+export default function Home() {
+  const [showProjectsDialog, setShowProjectsDialog] = useState(false);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [chatVisible, setChatVisible] = useState(true);
+  const [devtoolsVisible, setDevtoolsVisible] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  void api.post.getLatest.prefetch();
+  const toggleChat = () => {
+    setIsAnimating(true);
+    setChatVisible(!chatVisible);
+    setTimeout(() => setIsAnimating(false), 300); // Match transition duration
+  };
+
+  const toggleDevtools = () => {
+    setIsAnimating(true);
+    setDevtoolsVisible(!devtoolsVisible);
+    setTimeout(() => setIsAnimating(false), 300); // Match transition duration
+  };
 
   return (
-    <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-          </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello ? hello.greeting : "Loading tRPC query..."}
+    <main className="relative flex h-screen overflow-hidden bg-background text-foreground">
+      {/* Left chat toggle button (when collapsed) */}
+      {!chatVisible && (
+        <div className="absolute left-2 top-2 z-30">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 rounded-full border-border/50 bg-background shadow-md hover:bg-accent"
+            onClick={toggleChat}
+            disabled={isAnimating}
+          >
+            <MessageSquare className="h-5 w-5 text-primary" />
+          </Button>
+        </div>
+      )}
+
+      {/* Bottom devtools toggle button (when collapsed) */}
+      {!devtoolsVisible && (
+        <div className="absolute bottom-2 right-2 z-30">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 rounded-full border-border/50 bg-background shadow-md hover:bg-accent"
+            onClick={toggleDevtools}
+            disabled={isAnimating}
+          >
+            <Terminal className="h-5 w-5 text-primary" />
+          </Button>
+        </div>
+      )}
+
+      <ChatInstanceContext.Provider
+        initialValue={{
+          inspector: {
+            state: {
+              kind: "off",
+            },
+          },
+          eventLog: [],
+        }}
+      >
+        <ResizablePanelGroup direction="horizontal">
+          {/* Left side: Chat interface */}
+          {chatVisible && (
+            <>
+              <ResizablePanel
+                defaultSize={25}
+                minSize={15}
+                maxSize={40}
+                className="transition-all duration-300 ease-in-out"
+              >
+                <div className="relative flex h-full flex-col border-r border-border/40">
+                  {/* <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
+                  onClick={toggleChat}
+                  disabled={isAnimating}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button> */}
+                  <ChatInterface onClose={toggleChat} />
+                </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle className="bg-border/40" />
+            </>
+          )}
+
+          {/* Main content area with iframe and bottom devtools */}
+          <ResizablePanel defaultSize={chatVisible ? 75 : 100}>
+            <ResizablePanelGroup direction="vertical">
+              {/* Iframe */}
+              <ResizablePanel
+                defaultSize={devtoolsVisible ? 70 : 100}
+                className="h-full"
+              >
+                <div className="flex h-full flex-col">
+                  <IFrameWrapper />
+                </div>
+              </ResizablePanel>
+
+              {/* Bottom panel: Dev tools */}
+              {devtoolsVisible && (
+                <>
+                  <ResizableHandle withHandle className="bg-border/40" />
+                  <ResizablePanel
+                    defaultSize={30}
+                    minSize={15}
+                    className="transition-all duration-300 ease-in-out"
+                  >
+                    <div className="relative flex h-full flex-col border-t border-zinc-800/80">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
+                        onClick={toggleDevtools}
+                        disabled={isAnimating}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                      <DevTools onClose={toggleDevtools} />
+                    </div>
+                  </ResizablePanel>
+                </>
+              )}
+            </ResizablePanelGroup>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </ChatInstanceContext.Provider>
+
+      {/* Projects Dialog */}
+      <Dialog open={showProjectsDialog} onOpenChange={setShowProjectsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Projects</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Your projects will appear here.
             </p>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <LatestPost />
-        </div>
-      </main>
-    </HydrateClient>
+      {/* Settings Dialog */}
+      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Settings</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Settings will appear here.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </main>
   );
 }
