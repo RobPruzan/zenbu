@@ -25,6 +25,7 @@ import { useState, useEffect } from "react";
 import { scan } from "react-scan";
 import { IFrameWrapper } from "@/app/iframe-wrapper";
 import DevTools from "../components/devtools";
+import { ChatInstanceContext } from "@/components/chat-instance-context";
 
 scan({
   showFPS: false,
@@ -82,18 +83,28 @@ export default function Home() {
         </div>
       )}
 
-      <ResizablePanelGroup direction="horizontal">
-        {/* Left side: Chat interface */}
-        {chatVisible && (
-          <>
-            <ResizablePanel
-              defaultSize={25}
-              minSize={15}
-              maxSize={40}
-              className="transition-all duration-300 ease-in-out"
-            >
-              <div className="h-full flex flex-col border-r border-border/40 relative">
-                {/* <Button
+      <ChatInstanceContext.Provider
+        initialValue={{
+          inspector: {
+            state: {
+              kind: "off",
+            },
+          },
+          messages: [],
+        }}
+      >
+        <ResizablePanelGroup direction="horizontal">
+          {/* Left side: Chat interface */}
+          {chatVisible && (
+            <>
+              <ResizablePanel
+                defaultSize={25}
+                minSize={15}
+                maxSize={40}
+                className="transition-all duration-300 ease-in-out"
+              >
+                <div className="h-full flex flex-col border-r border-border/40 relative">
+                  {/* <Button
                   variant="ghost"
                   size="icon"
                   className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
@@ -102,53 +113,54 @@ export default function Home() {
                 >
                   <X className="h-3.5 w-3.5" />
                 </Button> */}
-                <ChatInterface onClose={toggleChat} />
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle className="bg-border/40" />
-          </>
-        )}
+                  <ChatInterface onClose={toggleChat} />
+                </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle className="bg-border/40" />
+            </>
+          )}
 
-        {/* Main content area with iframe and bottom devtools */}
-        <ResizablePanel defaultSize={chatVisible ? 75 : 100}>
-          <ResizablePanelGroup direction="vertical">
-            {/* Iframe */}
-            <ResizablePanel
-              defaultSize={devtoolsVisible ? 70 : 100}
-              className="h-full"
-            >
-              <div className="h-full flex flex-col">
-                <IFrameWrapper />
-              </div>
-            </ResizablePanel>
+          {/* Main content area with iframe and bottom devtools */}
+          <ResizablePanel defaultSize={chatVisible ? 75 : 100}>
+            <ResizablePanelGroup direction="vertical">
+              {/* Iframe */}
+              <ResizablePanel
+                defaultSize={devtoolsVisible ? 70 : 100}
+                className="h-full"
+              >
+                <div className="h-full flex flex-col">
+                  <IFrameWrapper />
+                </div>
+              </ResizablePanel>
 
-            {/* Bottom panel: Dev tools */}
-            {devtoolsVisible && (
-              <>
-                <ResizableHandle withHandle className="bg-border/40" />
-                <ResizablePanel
-                  defaultSize={30}
-                  minSize={15}
-                  className="transition-all duration-300 ease-in-out"
-                >
-                  <div className="h-full flex flex-col border-t border-zinc-800/80 relative">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
-                      onClick={toggleDevtools}
-                      disabled={isAnimating}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                    <DevTools onClose={toggleDevtools} />
-                  </div>
-                </ResizablePanel>
-              </>
-            )}
-          </ResizablePanelGroup>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+              {/* Bottom panel: Dev tools */}
+              {devtoolsVisible && (
+                <>
+                  <ResizableHandle withHandle className="bg-border/40" />
+                  <ResizablePanel
+                    defaultSize={30}
+                    minSize={15}
+                    className="transition-all duration-300 ease-in-out"
+                  >
+                    <div className="h-full flex flex-col border-t border-zinc-800/80 relative">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
+                        onClick={toggleDevtools}
+                        disabled={isAnimating}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                      <DevTools onClose={toggleDevtools} />
+                    </div>
+                  </ResizablePanel>
+                </>
+              )}
+            </ResizablePanelGroup>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </ChatInstanceContext.Provider>
 
       {/* Projects Dialog */}
       <Dialog open={showProjectsDialog} onOpenChange={setShowProjectsDialog}>

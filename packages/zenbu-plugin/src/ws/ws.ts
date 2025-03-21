@@ -1,6 +1,9 @@
+import { anthropic } from "@ai-sdk/anthropic";
+import { streamObject, streamText } from "ai";
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import type { Socket } from "socket.io";
+import { z } from "zod";
 /**
  *
  *
@@ -19,10 +22,29 @@ import type { Socket } from "socket.io";
  *
  *
  */
+export type EventLogEvent = ClientEvent | PluginServerEvent;
 
+export type ClientEvent = {
+  kind: "user-message";
+  context: any;
+  requestId: string;
+  timestamp: number;
+};
+
+export type PluginServerEvent = {
+  // hm if we want to progressively stream this and correctly render this we need ordering from the timestamp
+  // and then we need to correctly render based on that order (for things like when we enter the next visual state)
+  // has to be flat, not json structure
+  kind: "assistant-simple-message";
+  text: string;
+  associatedRequestId: string;
+  timestamp: number;
+};
+
+// i probably shouldn't couple events gr
+
+// i will need to couple in event log, but i shouldn't couple the types themselves
 export const injectWebSocket = (server: HttpServer) => {
-  console.log("injecting");
-
   const ioServer = new Server(server, {
     path: "/ws",
     serveClient: false,
@@ -35,24 +57,23 @@ export const injectWebSocket = (server: HttpServer) => {
     transports: ["websocket"],
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  // middleware, we probably don't need this but might be useful
+  // can block connection here
   ioServer.use(async (socket, next) => {
-    console.log("something something");
     next();
   });
 
   ioServer.on("connection", async (runtimeSocket) => {
-    console.log("da connection");
+    runtimeSocket.on("message", async (prompt) => {
+      const { textStream } = streamText({
+        model: anthropic("claude-3-5-sonnet-latest"),
+        prompt: prompt,
+      });
 
-
-    runtimeSocket.on('message', (e) => {
-      console.log('hello', e);
-      
-    })
+      for await (const textPart of textStream) {
+        runtimeSocket.emit("message", textPart);
+        console.log(textPart);
+      }
+    });
   });
-
-
-
-
-
 };
