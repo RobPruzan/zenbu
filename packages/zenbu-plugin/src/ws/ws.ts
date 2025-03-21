@@ -1,9 +1,10 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamObject, streamText } from "ai";
+import { CoreMessage, streamObject, streamText } from "ai";
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import type { Socket } from "socket.io";
 import { z } from "zod";
+import { toChatMessages } from "./utils.js";
 /**
  *
  *
@@ -31,6 +32,7 @@ export type ClientEvent = {
   text: string;
   requestId: string;
   timestamp: number;
+  previousEvents: Array<EventLogEvent>;
 };
 
 export type PluginServerEvent = {
@@ -80,13 +82,18 @@ export const injectWebSocket = (server: HttpServer) => {
     console.log(`Socket ${socket.id} joined room ${roomId}`);
 
     socket.on("message", async (event: ClientEvent) => {
-      console.log("got text", event.text);
 
       const { textStream } = streamText({
         model: anthropic("claude-3-5-sonnet-latest"),
-        prompt: event.text,
+        // prompt: event.text,
+        messages: [
+          ...toChatMessages(event.previousEvents),
+          {
+            role: "user",
+            content: event.text,
+          },
+        ],
       });
-      console.log("awaiting stream");
 
       for await (const textPart of textStream) {
         ioServer.to(roomId).emit("message", {
@@ -101,3 +108,4 @@ export const injectWebSocket = (server: HttpServer) => {
     });
   });
 };
+

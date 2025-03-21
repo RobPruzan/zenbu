@@ -8,6 +8,7 @@ import { ClientEvent } from "zenbu-plugin/src/ws/ws";
 import { nanoid } from "nanoid";
 import { InspectIcon } from "lucide-react";
 import { Button } from "./ui/button";
+import { toChatMessages } from "zenbu-plugin/src/ws/utils";
 
 export const Chat = () => {
   const { eventLog, inspector } = useChatStore();
@@ -28,21 +29,23 @@ export const Chat = () => {
     },
   });
 
+  const messages = toChatMessages(eventLog.events);
+
   return (
     <div className="flex h-full w-full flex-col bg-[#151515]">
       {/* oof this has to be dynamically calculatel;kdcjsakls;djfkl;adsjfd;lks */}
-      <div className="h-[calc(100%-100px)]">
-        {eventLog.events.map((event) => (
-          <div key={event.id}>
+      <div className="h-[calc(100%-100px)] overflow-y-auto">
+        {messages.map((message, index) => (
+          <div key={index}>
             {iife(() => {
-              switch (event.kind) {
-                case "assistant-simple-message": {
-                  return <div>{event.text}</div>;
+              switch (message.role) {
+                case "assistant": {
+                  return <div>{message.content}</div>;
                 }
-                case "user-message": {
+                case "user": {
                   return (
                     <div className="rounded-md border bg-gray-700 p-3">
-                      {event.text}
+                      {message.content}
                     </div>
                   );
                 }
@@ -56,7 +59,9 @@ export const Chat = () => {
         <div className="h-10 rounded-t-md border-x border-t">
           <Button
             className={`${
-              inspector.state.kind === "inspecting" ? "bg-purple-500/20 text-purple-400" : ""
+              inspector.state.kind === "inspecting"
+                ? "bg-purple-500/20 text-purple-400"
+                : ""
             }`}
             variant={"ghost"}
             onClick={() => {
@@ -87,18 +92,29 @@ export const Chat = () => {
               return;
             }
 
-            e.preventDefault();
-            console.log("sending", input);
-            setInput("");
-
-            socket.emit("message", {
+            const clientEvent: ClientEvent = {
               requestId: nanoid(),
               context: [],
               kind: "user-message",
               text: input,
               timestamp: Date.now(),
               id: nanoid(),
-            } satisfies ClientEvent);
+              previousEvents: eventLog.events,
+            };
+            console.log(
+              "previous",
+              toChatMessages(eventLog.events),
+              "vs event log",
+              eventLog,
+            );
+
+            eventLog.actions.pushEvent(clientEvent);
+
+            e.preventDefault();
+            console.log("sending", input);
+            setInput("");
+
+            socket.emit("message", clientEvent);
           }}
           onChange={(e) => {
             setInput(e.target.value);
