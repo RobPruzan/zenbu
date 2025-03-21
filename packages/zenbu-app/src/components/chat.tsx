@@ -11,6 +11,9 @@ export const Chat = () => {
   const { eventLog } = useChatStore();
   const [input, setInput] = useState("");
 
+  // we will want to optimistically update our local event log but dedupe events
+  // with the same id received, its how we will handle multi tab support (which is crucial)
+  //
   const { socket } = useEventWS({
     onMessage: (message) => {
       console.log("got back message", message);
@@ -26,7 +29,7 @@ export const Chat = () => {
   return (
     <div className="flex h-full w-full flex-col justify-start">
       {eventLog.events.map((event) => (
-        <div>
+        <div key={event.id}>
           {iife(() => {
             switch (event.kind) {
               case "assistant-simple-message": {
@@ -63,6 +66,7 @@ export const Chat = () => {
             kind: "user-message",
             text: input,
             timestamp: Date.now(),
+            id: nanoid(),
           } satisfies ClientEvent);
         }}
         onChange={(e) => {

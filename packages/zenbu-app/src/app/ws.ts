@@ -10,6 +10,9 @@ export const useEventWS = (opts?: { onMessage?: (message: EventLogEvent) => void
     const socketInstance = io("http://localhost:5001", {
       path: "/ws",
       transports: ["websocket"],
+      query: {
+        roomId: "todo-impl-rooms-based-on-project-hostname"
+      }
     });
     socketInstance.on("connect", () => {
       console.log("Socket connected successfully");
