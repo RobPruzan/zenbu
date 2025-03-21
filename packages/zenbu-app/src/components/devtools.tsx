@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Button } from "~/components/ui/button";
-import { useInspectorStateContext } from "~/app/iframe-wrapper";
 import { useChatContext } from "~/components/chat-interface";
 import {
   Inspect,
@@ -25,6 +24,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Input } from "~/components/ui/input";
+import { useChatStore } from "./chat-instance-context";
 
 // Add onClose prop to the component interface
 interface DevToolsProps {
@@ -32,7 +32,7 @@ interface DevToolsProps {
 }
 
 export default function DevTools({ onClose }: DevToolsProps) {
-  const { inspectorState, setInspectorState } = useInspectorStateContext();
+  const { inspector } = useChatStore();
   const { setInput } = useChatContext();
   const [activeTab, setActiveTab] = useState("console");
 
@@ -234,11 +234,11 @@ export default function DevTools({ onClose }: DevToolsProps) {
     setConsoleInput("");
   };
 
-  const toggleInspector = () => {
-    setInspectorState((prev) => ({
-      kind: prev.kind === "inspecting" ? "off" : "inspecting",
-    }));
-  };
+  // const toggleInspector = () => {
+  //   setInspectorState((prev) => ({
+  //     kind: prev.kind === "inspecting" ? "off" : "inspecting",
+  //   }));
+  // };
 
   const analyzeConsoleError = (errorMessage: string) => {
     setCurrentAiAnalysis(`Analyzing: "${errorMessage}"`);
@@ -304,11 +304,11 @@ export default function DevTools({ onClose }: DevToolsProps) {
 
           {/* Right side - controls */}
           <div className="flex h-9 items-center gap-1 px-2">
-            {inspectorState.kind === "inspecting" && (
+            {/* {inspectorState.kind === "inspecting" && (
               <span className="mr-2 rounded bg-blue-500/10 px-2 py-0.5 text-[11px] font-medium text-blue-400">
                 Selecting Element
               </span>
-            )}
+            )} */}
             {currentAiAnalysis && (
               <div className="mr-2 flex items-center">
                 <div className="flex animate-pulse items-center text-[11px] text-blue-400">
@@ -317,14 +317,14 @@ export default function DevTools({ onClose }: DevToolsProps) {
                 </div>
               </div>
             )}
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               className={`flex h-7 w-7 items-center justify-center rounded-md p-0 ${inspectorState.kind === "inspecting" ? "bg-blue-500/10 text-blue-400" : "text-[#bbbbbd] hover:bg-[#323236] hover:text-white"}`}
               onClick={toggleInspector}
             >
               <Inspect className="h-4 w-4" />
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               size="sm"

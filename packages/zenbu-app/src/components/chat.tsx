@@ -6,9 +6,11 @@ import { iife } from "~/lib/utils";
 import { useEventWS } from "~/app/ws";
 import { ClientEvent } from "zenbu-plugin/src/ws/ws";
 import { nanoid } from "nanoid";
+import { InspectIcon } from "lucide-react";
+import { Button } from "./ui/button";
 
 export const Chat = () => {
-  const { eventLog } = useChatStore();
+  const { eventLog, inspector } = useChatStore();
   const [input, setInput] = useState("");
 
   // we will want to optimistically update our local event log but dedupe events
@@ -27,52 +29,82 @@ export const Chat = () => {
   });
 
   return (
-    <div className="flex h-full w-full flex-col justify-start">
-      {eventLog.events.map((event) => (
-        <div key={event.id}>
-          {iife(() => {
-            switch (event.kind) {
-              case "assistant-simple-message": {
-                return <div>{event.text}</div>;
+    <div className="flex h-full w-full flex-col bg-[#151515]">
+      {/* oof this has to be dynamically calculatel;kdcjsakls;djfkl;adsjfd;lks */}
+      <div className="h-[calc(100%-100px)]">
+        {eventLog.events.map((event) => (
+          <div key={event.id}>
+            {iife(() => {
+              switch (event.kind) {
+                case "assistant-simple-message": {
+                  return <div>{event.text}</div>;
+                }
+                case "user-message": {
+                  return (
+                    <div className="rounded-md border bg-gray-700 p-3">
+                      {event.text}
+                    </div>
+                  );
+                }
               }
-              case "user-message": {
-                return (
-                  <div className="rounded-md border bg-gray-700 p-3">
-                    {event.text}
-                  </div>
-                );
-              }
-            }
-          })}
+            })}
+          </div>
+        ))}
+      </div>
+
+      <div className="px-4 pb-2">
+        <div className="h-10 rounded-t-md border-x border-t">
+          <Button
+            className={`${
+              inspector.state.kind === "inspecting" ? "bg-purple-500/20 text-purple-400" : ""
+            }`}
+            variant={"ghost"}
+            onClick={() => {
+              inspector.actions.setInspectorState({
+                kind:
+                  inspector.state.kind === "inspecting" ? "off" : "inspecting",
+              });
+            }}
+          >
+            <InspectIcon />
+          </Button>
         </div>
-      ))}
-      <Textarea
-        value={input}
-        onKeyDown={(e) => {
-          if (e.key !== "Enter") {
-            return;
-          }
-          if (!socket) {
-            return;
-          }
 
-          e.preventDefault();
-          console.log("sending", input);
-          setInput("");
+        <Textarea
+          placeholder="Ask me anything..."
+          className="rounded-t-none bg-[#1D1D20] outline-0 focus-visible:ring-0"
+          style={{
+            height: "100px",
+            resize: "none",
+          }}
+          value={input}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") {
+              return;
+            }
 
-          socket.emit("message", {
-            requestId: nanoid(),
-            context: [],
-            kind: "user-message",
-            text: input,
-            timestamp: Date.now(),
-            id: nanoid(),
-          } satisfies ClientEvent);
-        }}
-        onChange={(e) => {
-          setInput(e.target.value);
-        }}
-      />
+            if (!socket) {
+              return;
+            }
+
+            e.preventDefault();
+            console.log("sending", input);
+            setInput("");
+
+            socket.emit("message", {
+              requestId: nanoid(),
+              context: [],
+              kind: "user-message",
+              text: input,
+              timestamp: Date.now(),
+              id: nanoid(),
+            } satisfies ClientEvent);
+          }}
+          onChange={(e) => {
+            setInput(e.target.value);
+          }}
+        />
+      </div>
     </div>
   );
 };

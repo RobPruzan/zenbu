@@ -28,12 +28,10 @@ import { ChatInstanceContext } from "~/components/chat-instance-context";
 import { IFrameWrapper } from "./iframe-wrapper";
 import { Chat } from "~/components/chat";
 
-scan({
-  showFPS: false,
-  // showNotificationCount: false,
-});
+scan();
 
 export default function Home() {
+
   const [showProjectsDialog, setShowProjectsDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [chatVisible, setChatVisible] = useState(true);
@@ -98,6 +96,7 @@ export default function Home() {
       >
         <ResizablePanelGroup direction="horizontal">
           {/* Left side: Chat interface */}
+
           {chatVisible && (
             <>
               <ResizablePanel

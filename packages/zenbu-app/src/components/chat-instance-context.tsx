@@ -73,6 +73,9 @@ export type SliceCreator<SliceState> = StateCreator<
 
 type InspectorSlice = {
   state: InspectorState;
+  actions: {
+    setInspectorState: (state: InspectorState) => void;
+  };
 };
 
 type InspectorSliceInitialState = {
@@ -83,6 +86,15 @@ const createInspectorSlice =
   (initialState: InspectorSliceInitialState): SliceCreator<InspectorSlice> =>
   (set, get) => ({
     state: initialState.state,
+    actions: {
+      setInspectorState: (inspectorState) =>
+        set((state) => {
+          state.inspector.state = {
+            ...state.inspector.state,
+            ...inspectorState,
+          };
+        }),
+    },
   });
 
 type EventLogSliceInitialState = {

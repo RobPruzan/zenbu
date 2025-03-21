@@ -43,10 +43,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { useInspectorStateContext } from "~/app/iframe-wrapper";
 import { pluginRPC } from "~/app/rpc";
 import { ChatMessage } from "zenbu-plugin";
 import { flushSync } from "react-dom";
+import { useChatStore } from "./chat-instance-context";
 
 // Define local message type that includes status
 interface Message {
@@ -166,7 +166,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
     }
   };
 
-  const { inspectorState, setInspectorState } = useInspectorStateContext();
+  const {} = useChatStore()
 
   return (
     <div className="flex flex-col h-full bg-[#151515] relative overflow-hidden">
@@ -348,7 +348,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="sm"
                       className={`h-6 px-1.5 py-0.5 rounded-md flex items-center ${inspectorState.kind === "inspecting" ? "text-[#949bf8] bg-[#949bf8]/10" : "text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"}`}
@@ -363,7 +363,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                 >
                   <Inspect className="h-3 w-3 mr-0.5" />
                   <span className="text-[10px]">Select</span>
-                </Button>
+                </Button> */}
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"

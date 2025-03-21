@@ -20,9 +20,9 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
         <TRPCReactProvider>
-          <InspectorStateProvider>
+          {/* <InspectorStateProvider> */}
             <ChatProvider>{children}</ChatProvider>
-          </InspectorStateProvider>
+          {/* </InspectorStateProvider> */}
         </TRPCReactProvider>
       </body>
     </html>

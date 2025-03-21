@@ -8,7 +8,7 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const DEVTOOLS_PATH =
   "/Users/robby/zenbu/packages/zenbu-devtools/dist/devtools.global.js";
 const HOT_RELOAD_FILE =
-  "/Users/robby/zenbu/packages/zenbu-app/app/hot-reload.ts";
+  "/Users/robby/zenbu/packages/zenbu-app/src/app/hot-reload.ts";
 
 chokidar.watch(DEVTOOLS_PATH).on("change", async () => {
   await writeFile(

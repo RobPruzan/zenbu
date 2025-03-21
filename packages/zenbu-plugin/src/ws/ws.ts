@@ -25,7 +25,7 @@ import { z } from "zod";
 export type EventLogEvent = ClientEvent | PluginServerEvent;
 
 export type ClientEvent = {
-  id: string
+  id: string;
   kind: "user-message";
   context: any;
   text: string;
@@ -34,7 +34,7 @@ export type ClientEvent = {
 };
 
 export type PluginServerEvent = {
-  id: string
+  id: string;
   // hm if we want to progressively stream this and correctly render this we need ordering from the timestamp
   // and then we need to correctly render based on that order (for things like when we enter the next visual state)
   // has to be flat, not json structure
@@ -43,6 +43,10 @@ export type PluginServerEvent = {
   associatedRequestId: string;
   timestamp: number;
 };
+
+const pendingEvents: Array<EventLogEvent> = [];
+
+const startFlushInterval = () => {};
 
 // i probably shouldn't couple events gr
 
@@ -90,7 +94,7 @@ export const injectWebSocket = (server: HttpServer) => {
           associatedRequestId: event.requestId,
           text: textPart,
           timestamp: Date.now(),
-          id: crypto.randomUUID()
+          id: crypto.randomUUID(),
         } satisfies PluginServerEvent);
         console.log(textPart);
       }

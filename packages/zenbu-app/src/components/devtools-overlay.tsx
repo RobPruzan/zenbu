@@ -17,9 +17,9 @@ import {
   InspectorState,
   ParentToChildMessage,
 } from "zenbu-devtools";
-import { DevtoolFrontendStore } from "~/app/iframe-wrapper";
 import { useChatContext } from "./chat-interface";
 import { useEventWS } from "~/app/ws";
+import { ChatInstanceContext, useChatStore } from "./chat-instance-context";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -68,10 +68,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
 
   const { socket } = useEventWS();
   const makeRequest = useMakeRequest({ iframeRef });
-  const { inspectorState, setInspectorState } = useContext(
-    InspectorStateContext
-  );
-
+  const { inspector } = useChatStore();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -92,7 +89,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     let rafId: number;
 
     const clearAndCheck = () => {
-      if (inspectorState.kind === "off") {
+      if (inspector.state.kind === "off") {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
       rafId = requestAnimationFrame(clearAndCheck);
@@ -103,11 +100,13 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [inspectorState.kind]);
+  }, [inspector.state.kind]);
   const sendMessage = useIFrameMessenger();
   const { setMessages, setInput } = useChatContext();
+  const store = ChatInstanceContext.useContext();
 
   useEffect(() => {
+    const getState = store.getState;
     const canvas = canvasRef.current;
     const iframe = iframeRef.current;
     if (!canvas || !iframe) return;
@@ -117,6 +116,8 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
       if (event.origin !== "http://localhost:4200") {
+        console.log("wrong origin");
+
         return;
       }
 
@@ -124,10 +125,9 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
 
       switch (data.kind) {
         case "mouse-position-update": {
-          if (DevtoolFrontendStore.getState().kind !== "inspecting") {
+          if (getState().inspector.state.kind !== "inspecting") {
             return;
           }
-          console.log("update");
 
           const now = Date.now();
           const throttleInterval = 50;
@@ -159,21 +159,22 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
         case "get-state-request": {
           sendMessage({
             kind: "get-state-response",
-            state: DevtoolFrontendStore.getState(),
+            state: getState().inspector.state,
             id: event.data.id!,
           });
           return;
         }
         case "click-element-info": {
+          console.log("we click yay");
+
           if (rafIdRef.current) {
             cancelAnimationFrame(rafIdRef.current);
           }
 
-          setInspectorState((prev) => ({
-            ...prev,
+          inspector.actions.setInspectorState({
             focusedInfo: data.focusedInfo,
             kind: "focused",
-          }));
+          });
 
           // setMessages((prev) => [
           //   ...prev,
@@ -182,10 +183,9 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
           //     content: JSON.stringify(data.focusedInfo),
           //   },
           // ]);
-          console.log("why", data);
 
           setInput(
-            (prev) => prev + "\n" + JSON.stringify(data.focusedInfo) + "\n\n"
+            (prev) => prev + "\n" + JSON.stringify(data.focusedInfo) + "\n\n",
           );
 
           drawFocusedRect(data.focusedInfo);
@@ -210,6 +210,8 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      console.log("draw it now.");
+
       ctx.strokeStyle = "rgba(138, 43, 226, 0.8)";
       ctx.lineWidth = 2;
       const { domRect } = focusedInfo;
@@ -224,11 +226,9 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
         !targetRectRef.current
       ) {
         rafIdRef.current = null;
-        console.log("sucks");
 
         return;
       }
-      console.log("animating");
 
       const current = currentRectRef.current;
       const target = targetRectRef.current;
@@ -269,6 +269,14 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     resizeObserver.observe(iframe);
     console.log("SETTING UP");
 
+    requestAnimationFrame(() => {
+      console.log("focused?", inspector.state.kind);
+
+      if (inspector.state.kind === "focused") {
+        drawFocusedRect(inspector.state.focusedInfo);
+      }
+    });
+
     window.addEventListener("message", handleMessage);
 
     return () => {
@@ -278,7 +286,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [iframeRef]);
+  }, [iframeRef, store]);
 
   return (
     <canvas
@@ -347,11 +355,11 @@ export const useMakeRequest = ({
   const sendMessage = useIFrameMessenger();
 
   return async <T extends ParentToChildMessage & { responsePossible: true }>(
-    message: T
+    message: T,
   ) => {
     if (!message.responsePossible) {
       throw new Error(
-        "Invariant: response not available for request kind:" + message.kind
+        "Invariant: response not available for request kind:" + message.kind,
       );
     }
     const messageId = nanoid();

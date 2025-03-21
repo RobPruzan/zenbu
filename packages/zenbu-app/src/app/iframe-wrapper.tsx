@@ -16,6 +16,7 @@ import {
   InspectorStateContext,
   useMakeRequest,
 } from "~/components/devtools-overlay";
+import { useChatStore } from "~/components/chat-instance-context";
 // import { ChildToParentMessage } from "~/devtools";
 // import {
 //   DevtoolsOverlay,
@@ -25,43 +26,13 @@ import {
 // } from "./components/DevtoolsOverlay";
 // import { useIFrameMessenger } from "./hooks/use-iframe-listener.ts";
 
-export const DevtoolFrontendStore: {
-  publish: (state: InspectorState) => void;
-  subscribe: (callback: (state: InspectorState) => void) => () => void;
-  subscribers: Set<(state: InspectorState) => void>;
-  getState: () => InspectorState;
-  state: InspectorState;
-  setState: (
-    action: InspectorState | ((prev: InspectorState) => InspectorState)
-  ) => void;
-} = {
-  subscribers: new Set(),
-  state: { kind: "off" },
-  publish(state) {
-    DevtoolFrontendStore.state = state;
-    DevtoolFrontendStore.subscribers.forEach((callback) => callback(state));
-  },
-  subscribe(callback) {
-    DevtoolFrontendStore.subscribers.add(callback);
-    return () => DevtoolFrontendStore.subscribers.delete(callback);
-  },
-  getState() {
-    return DevtoolFrontendStore.state;
-  },
-  setState(action) {
-    const nextState =
-      typeof action === "function"
-        ? action(DevtoolFrontendStore.state)
-        : action;
-    DevtoolFrontendStore.publish(nextState);
-  },
-};
 const snapshot = { kind: "off" as const };
 
 export const IFrameWrapper = () => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const refEventCatcher = useRef<HTMLDivElement | null>(null);
-  const { inspectorState, setInspectorState } = useInspectorStateContext();
+  // const { inspectorState, setInspectorState } = useInspectorStateContext();
+  const { inspector } = useChatStore();
 
   const sendMessage = useIFrameMessenger();
   const makeRequest = useMakeRequest({ iframeRef });
@@ -95,11 +66,11 @@ export const IFrameWrapper = () => {
 
       if (response.kind !== "clicked-element-info-response") {
         throw new Error(
-          "Invariant: note to self, should make this safe at type level"
+          "Invariant: note to self, should make this safe at type level",
         );
       }
 
-      setInspectorState({
+      inspector.actions.setInspectorState({
         kind: "focused",
         focusedInfo: response.focusedInfo,
       });
@@ -142,28 +113,28 @@ export const IFrameWrapper = () => {
   );
 };
 
-export const InspectorStateProvider = ({
-  children,
-}: {
-  children: ReactElement;
-}) => {
-  const inspectorState = useSyncExternalStore(
-    DevtoolFrontendStore.subscribe,
-    DevtoolFrontendStore.getState,
-    () => snapshot
-  );
-  const setInspectorState = DevtoolFrontendStore.setState;
+// export const InspectorStateProvider = ({
+//   children,
+// }: {
+//   children: ReactElement;
+// }) => {
+//   const inspectorState = useSyncExternalStore(
+//     DevtoolFrontendStore.subscribe,
+//     DevtoolFrontendStore.getState,
+//     () => snapshot
+//   );
+//   const setInspectorState = DevtoolFrontendStore.setState;
 
-  return (
-    <InspectorStateContext.Provider
-      value={{
-        inspectorState,
-        setInspectorState,
-      }}
-    >
-      {children}
-    </InspectorStateContext.Provider>
-  );
-};
+//   return (
+//     <InspectorStateContext.Provider
+//       value={{
+//         inspectorState,
+//         setInspectorState,
+//       }}
+//     >
+//       {children}
+//     </InspectorStateContext.Provider>
+//   );
+// };
 
-export const useInspectorStateContext = () => useContext(InspectorStateContext);
+// export const useInspectorStateContext = () => useContext(InspectorStateContext);
