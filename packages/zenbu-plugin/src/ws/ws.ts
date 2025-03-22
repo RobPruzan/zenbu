@@ -1,5 +1,12 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { CoreMessage, generateText, streamObject, streamText, tool } from "ai";
+import {
+  CoreMessage,
+  generateObject,
+  generateText,
+  streamObject,
+  streamText,
+  tool,
+} from "ai";
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import type { Socket } from "socket.io";
@@ -9,6 +16,8 @@ import { getTemplatedZenbuPrompt, removeComments } from "../create-server.js";
 import { codeBaseSearch, indexCodebase } from "../tools/code-base-search.js";
 import { readFile, writeFile } from "node:fs/promises";
 import { editFile } from "../tools/edit.js";
+import { groq } from "@ai-sdk/groq";
+import { openai } from "@ai-sdk/openai";
 /**
  *
  *
@@ -369,11 +378,6 @@ export const injectWebSocket = (server: HttpServer) => {
                       role: "assistant",
                       content: toChatMessages(accumulatedTextDeltas)[0].content,
                     },
-                    {
-                      role: "user",
-                      content:
-                        "remember, just implement the changes you need to apply, and unchanged code you should use the special comment",
-                    },
                   ],
                   targetFile: target_file,
                 }),
@@ -389,6 +393,37 @@ export const injectWebSocket = (server: HttpServer) => {
                 });
               }
 
+              // const checkPrompt = (
+              //   await readFile(
+              //     "/Users/robby/zenbu/packages/zenbu-plugin/src/precise-edit-check.md",
+              //     "utf-8"
+              //   ).then(removeComments)
+              // )
+              //   .replace(
+              //     "{fullFile}",
+              //     (await readFile(target_file, "utf-8")).replace(
+              //       "{modelEdit}",
+              //       accEdit
+              //     )
+              //   )
+              //   .slice(0, 300);
+
+              const { object } = await generateObject({
+                model: openai("gpt-4o"),
+                prompt:
+                  `Does this output say its a precise edit or a full rewrite?:` +
+                  accEdit,
+                schema: z.object({
+                  editType: z.union([
+                    z.literal("precise"),
+                    z.literal("full-rewrite"),
+                  ]),
+                }),
+                // messages: [{
+
+                // }]
+              });
+
               emitAssistantMessage({
                 ioServer,
                 requestId: event.requestId,
@@ -396,25 +431,51 @@ export const injectWebSocket = (server: HttpServer) => {
                 text: `\n\n==================CODE EDIT: ${accEdit}======\n\n`,
               });
 
+              emitAssistantMessage({
+                ioServer,
+                requestId: event.requestId,
+                roomId,
+                text:
+                  object.editType === "precise"
+                    ? `\n\n==================PRECISE EDIT======\n\n`
+                    : `\n\n==================FULL REWRITE======\n\n`,
+              });
+
               console.log("EDIT FILE TOOL CALL");
 
               // Implementation will go here
 
-              const result = await editFile({
-                instructions: "edit file",
-                codeEdit: accEdit,
-                targetFile: `${target_file}`,
-                onChunk: (chunk) => {
-                  console.log("chunk", chunk);
+              const result =
+                object.editType === "precise"
+                  ? await editFile({
+                      instructions: "edit file",
+                      codeEdit: accEdit,
+                      targetFile: `${target_file}`,
+                      onChunk: (chunk) => {
+                        console.log("chunk", chunk);
 
-                  emitAssistantMessage({
-                    text: chunk,
-                    ioServer,
-                    requestId: event.requestId,
-                    roomId,
-                  });
-                },
-              });
+                        emitAssistantMessage({
+                          text: chunk,
+                          ioServer,
+                          requestId: event.requestId,
+                          roomId,
+                        });
+                      },
+                    })
+                  : (() => {
+                      // const codeBlockMatch = accEdit.match(
+                      //   /```(?:[\w-]+)?\s*([\s\S]*?)\s*```/
+                      // );
+                      // return codeBlockMatch ? codeBlockMatch[1] : accEdit;
+                      const codeBlockMatch = accEdit.match(
+                        /```(\w+)?\s*([\s\S]*?)```/
+                      );
+                      if (codeBlockMatch) {
+                        return codeBlockMatch[2];
+                      }
+
+                      return accEdit;
+                    })();
 
               emitAssistantMessage({
                 ioServer,
@@ -441,7 +502,7 @@ export const injectWebSocket = (server: HttpServer) => {
                 roomId,
                 text: "================== EDITING FILE END =============",
               });
-              return {};
+              return accEdit;
             },
           }),
           // file_search: tool({

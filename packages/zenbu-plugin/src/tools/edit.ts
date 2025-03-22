@@ -80,7 +80,8 @@ const fastEdit = async (prompt: string, onChunk: (chunk: string) => void) => {
   let accResult = "";
   const { textStream, finishReason } = streamText({
     // model: groq("llama-3.3-70b-versatile"),
-    model: openai("gpt-4o-mini"),
+    // @ts-expect-error
+    model: groq("llama3-70b-8192"),
     prompt,
   });
   for await (const textPart of textStream) {
