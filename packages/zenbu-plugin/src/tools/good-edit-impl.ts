@@ -140,13 +140,35 @@ export const smartEdit = ({
       }
 
       // Parse the XML response to get the edit type decision
-      onChunk("parsing:" + accumulatedXml + "<-");
-      const editTypeResult = parseEditDecision(accumulatedXml);
+      onChunk(`\n\nParsing model's decision...\n`);
+
+      // Clean up XML - remove anything before opening tag and after closing tag
+      const cleanedXml = accumulatedXml.replace(/^[\s\S]*?(<editDecision>)/s, '$1')
+        .replace(/(<\/editDecision>)[\s\S]*$/s, '$1');
+
+      onChunk(`Using XML: ${cleanedXml}\n`);
+      let editTypeResult = parseEditDecision(cleanedXml);
 
       if (!editTypeResult) {
-        throw new Error(
-          "Failed to determine edit type: couldn't parse XML response"
-        );
+        // If parsing fails, try a more aggressive extraction approach
+        const editTypeMatch = cleanedXml.match(/<editType>(.*?)<\/editType>/s);
+        const explanationMatch = cleanedXml.match(/<explanation>(.*?)<\/explanation>/s);
+        
+        if (editTypeMatch && explanationMatch) {
+          const editType = editTypeMatch[1].trim();
+          const explanation = explanationMatch[1].trim();
+          
+          // Validate the edit type
+          const validEditTypes = ["append", "single_contiguous_edit", "multiple_logical_edits", "full_file_rewrite"];
+          if (validEditTypes.includes(editType)) {
+            onChunk(`Found valid edit type using fallback parsing: ${editType}\n`);
+            editTypeResult = { editType, explanation };
+          } else {
+            throw new Error(`Failed to determine edit type: extracted type "${editType}" is not valid`);
+          }
+        } else {
+          throw new Error("Failed to determine edit type: couldn't parse XML response");
+        }
       }
 
       onChunk(
@@ -154,7 +176,7 @@ export const smartEdit = ({
       );
 
       // 2. Based on the edit type, use the appropriate prompt and execution strategy
-      let result = "";
+      let modelOutput = "";
 
       if (editTypeResult.editType === "append") {
         // For append only
@@ -163,7 +185,7 @@ export const smartEdit = ({
           chatHistory,
         });
 
-        result = await generateAppend({
+        modelOutput = await generateAppend({
           prompt: appendPrompt,
           targetFile,
           onChunk,
@@ -175,7 +197,7 @@ export const smartEdit = ({
           chatHistory,
         });
 
-        result = await generateSingleEdit({
+        modelOutput = await generateSingleEdit({
           prompt: singleEditPrompt,
           targetFile,
           onChunk,
@@ -187,7 +209,7 @@ export const smartEdit = ({
           chatHistory,
         });
 
-        result = await generateMultipleEdits({
+        modelOutput = await generateMultipleEdits({
           prompt: multiEditPrompt,
           targetFile,
           onChunk,
@@ -199,14 +221,15 @@ export const smartEdit = ({
           chatHistory,
         });
 
-        result = await generateFullRewrite({
+        modelOutput = await generateFullRewrite({
           prompt: rewritePrompt,
           targetFile,
           onChunk,
         });
       }
 
-      resolve(result);
+      // Return the raw model output instead of the file content
+      resolve(modelOutput);
     } catch (error) {
       reject(error);
     }
@@ -380,7 +403,8 @@ async function generateSingleEdit({
 
   onChunk(`Edit successfully applied!\n`);
 
-  return result;
+  // Return the raw XML output from the model instead of the file content
+  return accumulatedXml;
 }
 
 // Function to generate and apply multiple logical edits
@@ -470,7 +494,8 @@ async function generateMultipleEdits({
 
   onChunk(`Edits successfully applied!\n`);
 
-  return result;
+  // Return the raw XML output from the model instead of the file content
+  return accumulatedXml;
 }
 
 // Function to generate and apply a full file rewrite
@@ -516,7 +541,8 @@ async function generateFullRewrite({
 
   onChunk(`Full file rewrite successfully applied!\n`);
 
-  return rewrittenFile;
+  // Return the raw XML output from the model instead of the file content
+  return accumulatedXml;
 }
 
 // Function to generate and append code to the end of a file
@@ -572,5 +598,6 @@ async function generateAppend({
 
   onChunk(`Code successfully appended!\n`);
 
-  return result;
+  // Return the raw XML output from the model instead of the file content
+  return accumulatedXml;
 }
