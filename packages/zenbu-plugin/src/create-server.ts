@@ -23,9 +23,13 @@ const operateOnPath =
 
 export const getTemplatedZenbuPrompt = async () => {
   const prompt = await getZenbuPrompt();
-  const withoutComments = prompt.replace(/<!--[\s\S]*?-->/g, "");
-  return withoutComments
-}
+
+  return removeComments(prompt);
+};
+
+export const removeComments = (text: string): string => {
+  return text.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, "");
+};
 export const createServer = async () => {
   const app = new Hono();
   app.use("*", cors());

@@ -22,7 +22,6 @@ document.addEventListener("mousemove", (e) => {
 
   // console.log('sending update');
 
-  
   sendMessage({
     kind: "mouse-position-update",
     rect,
@@ -75,7 +74,10 @@ const iife = <T>(f: () => T): T => f();
 
 // todo: need RPC to share store between parent and child
 
-const blockClick = (shouldHandle: boolean) => (e: MouseEvent) => {
+const blockClick = (shouldHandle: boolean) => async (e: MouseEvent) => {
+  if ((await getState()).kind !== "inspecting") {
+    return;
+  }
   e.stopPropagation();
   e.preventDefault();
 

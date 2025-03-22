@@ -4,8 +4,8 @@ import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import type { Socket } from "socket.io";
 import { z } from "zod";
-import { toChatMessages } from "./utils.js";
-import { getTemplatedZenbuPrompt } from "../create-server.js";
+import { ChatMessage, toChatMessages } from "./utils.js";
+import { getTemplatedZenbuPrompt, removeComments } from "../create-server.js";
 import { codeBaseSearch, indexCodebase } from "../tools/code-base-search.js";
 import { readFile, writeFile } from "node:fs/promises";
 import { editFile } from "../tools/edit.js";
@@ -80,6 +80,26 @@ export const getCodebaseIndexPrompt = async () => {
 
   return templated;
 };
+
+export const editThreadPrompt = async ({
+  targetFile,
+  chatHistory,
+}: {
+  targetFile: string;
+  chatHistory: Array<ChatMessage>;
+}) => {
+  const systemPrompt = await readFile(
+    "/Users/robby/zenbu/packages/zenbu-plugin/src/thread-prompt.md",
+    "utf-8"
+  ).then((value) => removeComments(value));
+
+  const templated = systemPrompt
+    .replace("{targetFile}", targetFile)
+    .replace("{existingChatHistory}", JSON.stringify(chatHistory));
+
+  return templated;
+};
+
 export const injectWebSocket = (server: HttpServer) => {
   const ioServer = new Server(server, {
     path: "/ws",
@@ -116,6 +136,7 @@ export const injectWebSocket = (server: HttpServer) => {
     // });
 
     socket.on("message", async (event: ClientEvent) => {
+      const accumulatedTextDeltas: Array<PluginServerEvent> = [];
       const { fullStream } = streamText({
         // todo: determine good temperature, and expose this to user with semantic meaning (temperature is awful- how about re-roll)
         temperature: 1,
@@ -128,6 +149,22 @@ export const injectWebSocket = (server: HttpServer) => {
           },
         },
 
+        messages: [
+          {
+            content: await getTemplatedZenbuPrompt(),
+            role: "system",
+          },
+          {
+            content: await getCodebaseIndexPrompt(),
+            role: "system",
+          },
+
+          ...toChatMessages(event.previousEvents),
+          {
+            role: "user",
+            content: event.text,
+          },
+        ],
         maxSteps: 1,
         toolCallStreaming: true,
         onChunk: (chunk) => {
@@ -290,9 +327,8 @@ export const injectWebSocket = (server: HttpServer) => {
 
           edit_file: tool({
             description:
-              "Use this tool to propose an edit to an existing file.\n\nThis will be read by a less intelligent model, which will quickly apply the edit. You should make it clear what the edit is, while also minimizing the unchanged code you write.\nWhen writing the edit, you should specify each edit in sequence, with the special comment `// ... existing code ...` to represent unchanged code in between edited lines.",
+              "Use this tool to request another AI agent implements an edit on a target_file given the context of the previous chat history. You just need to provide the target_path, and another model will handle implementing the change that you want (because it reads the full chat history, and is the same model as you, think of it like it's reading your mind)",
             parameters: z.object({
-              code_edit: z.string().describe("The code edit to make"),
               target_file: z.string().describe("File to edit"),
               // instructions: z.string().describe("Single sentence instruction"),
               // blocking: z.boolean().describe("Whether to block further edits"),
@@ -301,7 +337,6 @@ export const injectWebSocket = (server: HttpServer) => {
               {
                 target_file,
                 // instructions,
-                code_edit,
 
                 // blocking
               },
@@ -314,11 +349,45 @@ export const injectWebSocket = (server: HttpServer) => {
                 text: "================== EDITING FILE START=========",
               });
 
+              let accEdit = "";
+              const { textStream } = await streamText({
+                model: anthropic("claude-3-7-sonnet-20250219"),
+                // messages: []
+                prompt: await editThreadPrompt({
+                  chatHistory: [
+                    {
+                      content: await getCodebaseIndexPrompt(),
+                      role: "system",
+                    },
+                    ...toChatMessages(event.previousEvents),
+                    {
+                      role: "user",
+                      content: event.text,
+                    },
+                    {
+                      role: "assistant",
+                      content: toChatMessages(accumulatedTextDeltas)[0].content,
+                    },
+                  ],
+                  targetFile: target_file,
+                }),
+              });
+
+              for await (const text of textStream) {
+                accEdit += text;
+                emitAssistantMessage({
+                  ioServer,
+                  requestId: event.requestId,
+                  roomId,
+                  text: text,
+                });
+              }
+
               emitAssistantMessage({
                 ioServer,
                 requestId: event.requestId,
                 roomId,
-                text: `\n\n==================CODE EDIT: ${code_edit}======\n\n`,
+                text: `\n\n==================CODE EDIT: ${accEdit}======\n\n`,
               });
 
               console.log("EDIT FILE TOOL CALL");
@@ -327,7 +396,7 @@ export const injectWebSocket = (server: HttpServer) => {
 
               const result = await editFile({
                 instructions: "edit file",
-                codeEdit: code_edit,
+                codeEdit: accEdit,
                 targetFile: `${target_file}`,
                 onChunk: (chunk) => {
                   console.log("chunk", chunk);
@@ -424,22 +493,6 @@ export const injectWebSocket = (server: HttpServer) => {
           //   },
           // }),
         },
-        messages: [
-          {
-            content: await getTemplatedZenbuPrompt(),
-            role: "system",
-          },
-          {
-            content: await getCodebaseIndexPrompt(),
-            role: "system",
-          },
-
-          ...toChatMessages(event.previousEvents),
-          {
-            role: "user",
-            content: event.text,
-          },
-        ],
       });
       for await (const obj of fullStream) {
         switch (obj.type) {
@@ -498,6 +551,14 @@ export const injectWebSocket = (server: HttpServer) => {
             break;
           }
           case "text-delta": {
+            // const serverEvent: PluginServerEvent = ;
+            accumulatedTextDeltas.push({
+              kind: "assistant-simple-message",
+              associatedRequestId: event.requestId,
+              text: obj.textDelta,
+              timestamp: Date.now(),
+              id: crypto.randomUUID(),
+            });
             emitAssistantMessage({
               ioServer,
               roomId,

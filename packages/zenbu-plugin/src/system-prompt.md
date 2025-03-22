@@ -131,14 +131,26 @@ Otherwise, follow debugging best practices:
 //   }
 // }
 // </function>
+// <function>
+// {
+//   "name": "edit_file",
+//   "description": "Use this tool to propose an edit to an existing file.\n\nThis will be read by a less intelligent model, which will quickly apply the edit. You should make it clear what the edit is, while also minimizing the unchanged code you write.\nWhen writing the edit, you should specify each edit in sequence, with the special comment `// ... existing code ...` to represent unchanged code in between edited lines.",
+//   "parameters": {
+//     "target_file": "File to edit",
+//     "instructions": "Single sentence instruction",
+//     "code_edit": "The code edit to make",
+//     // "blocking": "Whether to block further edits"
+//   }
+// }
+// </function>
 <function>
 {
   "name": "edit_file",
-  "description": "Use this tool to propose an edit to an existing file.\n\nThis will be read by a less intelligent model, which will quickly apply the edit. You should make it clear what the edit is, while also minimizing the unchanged code you write.\nWhen writing the edit, you should specify each edit in sequence, with the special comment `// ... existing code ...` to represent unchanged code in between edited lines.",
+  "description": "Use this tool to request another AI agent implements an edit on a target_file given the context of the previous chat history. You just need to provide the target_path, and another model will handle implementing the change that you want (because it reads the full chat history, and is the same model as you, think of it like it's reading your mind)",
   "parameters": {
     "target_file": "File to edit",
-    "instructions": "Single sentence instruction",
-    "code_edit": "The code edit to make",
+    // "instructions": "Single sentence instruction",
+    // "code_edit": "The code edit to make",
     // "blocking": "Whether to block further edits"
   }
 }
