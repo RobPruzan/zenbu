@@ -31,7 +31,6 @@ import { Chat } from "~/components/chat";
 scan();
 
 export default function Home() {
-
   const [showProjectsDialog, setShowProjectsDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [chatVisible, setChatVisible] = useState(true);
@@ -91,6 +90,9 @@ export default function Home() {
           },
           eventLog: {
             events: [],
+          },
+          chatControls: {
+            input: "",
           },
         }}
       >

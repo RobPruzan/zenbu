@@ -27,15 +27,18 @@ export type EditFileParams = {
   targetFile: string;
   instructions: string;
   codeEdit: string;
+  onChunk: (chunk: string) => void;
   // no blocking for now, don't see a ton of value and introduces a ton of complexity
 };
 
-import { generateText } from "ai";
+import { generateText, streamText } from "ai";
+import { readFile } from "fs/promises";
 
-export const editFile = ({
+export const editFile = async ({
   codeEdit,
   instructions,
   targetFile,
+  onChunk,
 }: EditFileParams) => {
   // we need a prompt for the edit model
   /**
@@ -56,12 +59,17 @@ When you encounter this, you should write the exact code present in the file in 
 as the result of your edit will be written directly to the file.\
 The instructions of the edit will also be provided to you, so you have context on what the edit was trying to accomplish\
 
+
+REMEMBER YOU MUST RETURN THE ENTIRE FILE NO MATTER WHAT, THIS WILL BE DIRECTLY WRITTEN BACK TO THE FILE
+
+If there is no special content, just echo back the output and we will write the whole result back
+
 <edit-instructions>
 ${instructions}
 </edit-instructions>
 
 <target-file>
-${targetFile}
+${await readFile(targetFile, "utf-8")}
 </target-file>
 
 
@@ -70,13 +78,27 @@ ${codeEdit}
 </code-edit>
   `;
 
-  return groqEdit(prompt);
+  const result = groqEdit(prompt, onChunk);
+
+  return result;
 };
 
-const groqEdit = (prompt: string) => {
-  return generateText({
+const groqEdit = async (prompt: string, onChunk: (chunk: string) => void) => {
+  let accResult = "";
+  const { textStream } = streamText({
     // @ts-expect-error
-    model: groq("gemma2-9b-it"),
+    model: groq("llama-3.3-70b-versatile"),
     prompt,
   });
+  for await (const textPart of textStream) {
+    onChunk(textPart);
+    accResult += textPart;
+  }
+
+  const codeBlockMatch = accResult.match(/```(\w+)?\s*([\s\S]*?)```/);
+  if (codeBlockMatch) {
+    return codeBlockMatch[2];
+  }
+
+  return accResult;
 };

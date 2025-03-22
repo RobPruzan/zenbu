@@ -44,3 +44,5 @@ export const toChatMessages = (events: Array<EventLogEvent>) => {
   });
   return messages;
 };
+
+export type ChatMessage = ReturnType<typeof toChatMessages>[number]

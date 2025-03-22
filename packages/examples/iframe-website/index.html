@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script src="http://localhost:42069"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Landing Page</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+          sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 2rem;
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      body::before {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, rgba(15, 132, 255, 0.1) 0%, transparent 100%);
+        animation: rotate 20s linear infinite;
+        z-index: 0;
+      }
+
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      .container {
+        text-align: center;
+        max-width: 800px;
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-size: 4rem;
+        background: linear-gradient(135deg, #0f84ff, #00ff9d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1.5rem;
+        animation: fadeIn 1s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      p {
+        color: #cccccc;
+        font-size: 1.25rem;
+        line-height: 1.6;
+        margin-bottom: 2.5rem;
+        animation: fadeIn 1s ease-out 0.2s backwards;
+      }
+
+      .cta-button {
+        display: inline-block;
+        padding: 1rem 2.5rem;
+        background: linear-gradient(135deg, #0f84ff, #00ff9d);
+        border: none;
+        border-radius: 50px;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        animation: fadeIn 1s ease-out 0.4s backwards;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 132, 255, 0.3);
+      }
+
+      .cta-button:active {
+        transform: translateY(1px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome</h1>
+      <p>A simple and elegant landing page for your next big idea.</p>
+      <a href="#" class="cta-button">Hi</a>
+    </div>
+  </body>
+</html>

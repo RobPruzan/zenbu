@@ -8,9 +8,10 @@ import { type FocusedInfo } from "zenbu-devtools";
 import type { InputToDataByTarget } from "hono/types";
 import { shim } from "./validator-shim.js";
 import { cors } from "hono/cors";
-import { makeEdit } from "./ai.js";
+import { getZenbuPrompt, makeEdit } from "./ai.js";
 import { readFile, writeFile } from "node:fs/promises";
 import { injectWebSocket } from "./ws/ws.js";
+import { ChatMessage } from "./ws/utils.js";
 
 const operateOnPath =
   "/Users/robby/zenbu/packages/examples/iframe-website/index.ts";
@@ -20,16 +21,12 @@ const operateOnPath =
 //   bottom: 'Type definitions must be strings or objects (was number) '
 // }
 
-export type ChatMessage =
-  | {
-      role: "user";
-      content: string;
-    }
-  | {
-      role: "assistant";
-      content: string;
-    };
-export const createServer = () => {
+export const getTemplatedZenbuPrompt = async () => {
+  const prompt = await getZenbuPrompt();
+  const withoutComments = prompt.replace(/<!--[\s\S]*?-->/g, "");
+  return withoutComments
+}
+export const createServer = async () => {
   const app = new Hono();
   app.use("*", cors());
 

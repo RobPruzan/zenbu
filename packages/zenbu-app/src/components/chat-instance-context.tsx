@@ -17,12 +17,14 @@ export type ChatInstanceInitialState = {
   // messages: Array<{}>;
   eventLog: EventLogSliceInitialState;
   inspector: InspectorSliceInitialState;
+  chatControls: ChatControlsInitialState;
 };
 
 export type ChatInstanceStore = {
   // messages: Array<{}>;
   eventLog: EventLogSlice;
   inspector: InspectorSlice;
+  chatControls: ChatControlsSlice;
 };
 
 /**
@@ -53,6 +55,9 @@ export const ChatInstanceContext = createZustandContext(
       immer((...args) => ({
         eventLog: createEventLogSlice(initialState.eventLog)(...args),
         inspector: createInspectorSlice(initialState.inspector)(...args),
+        chatControls: createChatControlsSlice(initialState.chatControls)(
+          ...args,
+        ),
       })),
     ),
 );
@@ -77,6 +82,17 @@ type InspectorSlice = {
     setInspectorState: (state: InspectorState) => void;
   };
 };
+type ChatControlsInitialState = {
+  input: string;
+};
+type ChatControlsSlice = {
+  state: {
+    input: string;
+  };
+  actions: {
+    setInput: (input: string) => void;
+  };
+};
 
 type InspectorSliceInitialState = {
   state: InspectorState;
@@ -93,6 +109,20 @@ const createInspectorSlice =
             ...state.inspector.state,
             ...inspectorState,
           };
+        }),
+    },
+  });
+
+const createChatControlsSlice =
+  (initialState: ChatControlsInitialState): SliceCreator<ChatControlsSlice> =>
+  (set, get) => ({
+    state: {
+      input: initialState.input,
+    },
+    actions: {
+      setInput: (input) =>
+        set((prev) => {
+          prev.chatControls.state.input = input;
         }),
     },
   });

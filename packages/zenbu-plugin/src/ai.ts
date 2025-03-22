@@ -1,9 +1,10 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { generateObject, generateText } from "ai";
-import { ChatMessage } from "./create-server.js";
 import { z } from "zod";
 
 import { config } from "dotenv";
+import { ChatMessage } from "./ws/utils.js";
+import { readFile } from "node:fs/promises";
 
 config();
 
@@ -30,16 +31,28 @@ export const makeEdit = async ({
       file,
   });
 
-  return {res: await generateObject({
-    messages: cleanedMessages,
+  return {
+    res: await generateObject({
+      messages: cleanedMessages,
 
-    model: anthropic("claude-3-5-sonnet-latest"),
-    schema: z.object({
-      newFile: z.string(),
+      model: anthropic("claude-3-5-sonnet-latest"),
+      schema: z.object({
+        newFile: z.string(),
+      }),
+      // prompt: "How many people will live in the world in 2040?",
     }),
-    // prompt: "How many people will live in the world in 2040?",
-  }),
 
- input: cleanedMessages 
+    input: cleanedMessages,
   };
+};
+
+export const getZenbuPrompt = async () => {
+  // todo: don't hardcode path
+  // todo: this needs to be a template
+  const fileContent = await readFile(
+    "/Users/robby/zenbu/packages/zenbu-plugin/src/system-prompt.md",
+    "utf-8"
+  );
+
+  return fileContent;
 };

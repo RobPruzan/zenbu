@@ -54,7 +54,7 @@ ${tree}
     })
   ).object;
 
-  console.log("ignore result", ignore, "tree", tree);
+  // console.log("ignore result", ignore, "tree", tree);
 
   const codebase = await traverseCodebase(path, ignore);
   const stringCodebase = codeBaseToString(codebase);
@@ -77,6 +77,8 @@ ${explanation}
 ${stringCodebase}
 </codebase>
 `;
+
+  console.log("codebase search prompt", codeSearchPrompt);
 
   const searchSpecifically = performance.now();
   const searchResult = await generateObject({
@@ -104,18 +106,26 @@ ${stringCodebase}
    */
 };
 
-export const indexCodebase = () => {
-  /**
-   * 1. gen tree
-   * 2. ask model what it wants to index
-   * 3. in parallel request every single file that needs to be indexed and the result is applied to the index tree
-   * 4. result is index result
-   */
+const codebaseCache = new Map<string, string>();
+
+export const indexCodebase = async (
+  path: string = HARD_CODED_USER_PROJECT_PATH
+) => {
+  if (codebaseCache.has(path)) {
+    return codebaseCache.get(path)!;
+  }
+
+  const codebase = await traverseCodebase(path, []);
+  const stringCodebase = codeBaseToString(codebase);
+
+  codebaseCache.set(path, stringCodebase);
+
+  return stringCodebase;
 };
 
 const traverseCodebase = async (path: string, ignore: Array<string>) => {
   const files = await getAllFiles(path, ignore);
-  console.log("all files", files);
+  // console.log("all files", files);
 
   const pathToContent: Array<{
     path: string;
@@ -134,6 +144,8 @@ const traverseCodebase = async (path: string, ignore: Array<string>) => {
       }
     })
   );
+
+  console.log("what we got", pathToContent);
 
   pathToContent.sort((a, b) =>
     a.path === b.path ? 0 : a.path < b.path ? -1 : 1
@@ -162,6 +174,7 @@ ${content}
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
 import { z } from "zod";
+import { HARD_CODED_USER_PROJECT_PATH } from "../ws/ws.js";
 
 async function getAllFiles(
   dir: string,
@@ -179,6 +192,8 @@ async function getAllFiles(
     ".DS_Store",
     ".env",
     ".env.local",
+    "bun.lock",
+    "README.md"
   ];
 
   const ignorePatterns = [...defaultIgnore, ...ignore];
@@ -206,14 +221,14 @@ async function getAllFiles(
   return filePaths.filter((f) => f !== null).flat();
 }
 
-console.log(
-  "search result:\n",
-  (
-    await codeBaseSearch({
-      path: "/Users/robby/zenbu",
-      query: "ai file edit implementation",
-      explanation:
-        "the user wants to know where the logic that handles file edits using a smaller and larger model happens",
-    })
-  ).searchResult
-);
+// console.log(
+//   "search result:\n",
+//   (
+//     await codeBaseSearch({
+//       path: "/Users/robby/zenbu",
+//       query: "ai file edit implementation",
+//       explanation:
+//         "the user wants to know where the logic that handles file edits using a smaller and larger model happens",
+//     })
+//   ).searchResult
+// );

@@ -68,7 +68,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
 
   const { socket } = useEventWS();
   const makeRequest = useMakeRequest({ iframeRef });
-  const { inspector } = useChatStore();
+  const { inspector, eventLog, chatControls } = useChatStore();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -175,6 +175,9 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
             focusedInfo: data.focusedInfo,
             kind: "focused",
           });
+
+          chatControls.actions.setInput(JSON.stringify(data.focusedInfo)) +
+            "\n\n\n\n\n\n\n";
 
           // setMessages((prev) => [
           //   ...prev,
