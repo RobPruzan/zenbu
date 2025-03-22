@@ -367,6 +367,12 @@ export const injectWebSocket = (server: HttpServer) => {
                 },
                 targetFile: target_file,
               });
+              emitAssistantMessage({
+                ioServer,
+                requestId: event.requestId,
+                roomId,
+                text: "================== EDITING FILE END =============",
+              });
 
               return res;
             },

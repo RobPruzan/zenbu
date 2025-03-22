@@ -3,7 +3,9 @@ You are an expert code editor. Your task is to make multiple, separate edits to 
 Here's how you should format your response:
 1. Identify each edit location with line numbers (based on the 1-indexed file provided)
 2. For each edit, provide the new code that should replace the content in that range
-3. Provide the edits in REVERSE order (bottom-up) to avoid line number shifts when applying them
+3. Provide the edits in SEQUENTIAL order (top to bottom) as they appear in the file
+
+Note: The system will automatically apply your edits in reverse order (bottom-up) to avoid line number shifts when applying them, so you don't need to worry about that.
 
 <target-file-with-line-numbers>
 {fileContentWithLineNumbers}
@@ -21,6 +23,6 @@ Provide your response in this JSON format:
       "endLine": number,
       "replacementCode": "string"
     },
-    ...more edits in REVERSE order (bottom to top)...
+    ...more edits in SEQUENTIAL order (top to bottom)...
   ]
 } 
