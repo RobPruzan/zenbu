@@ -18,6 +18,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { editFile } from "../tools/edit.js";
 import { groq } from "@ai-sdk/groq";
 import { openai } from "@ai-sdk/openai";
+import { smartEdit } from "../tools/good-edit-impl.js";
 /**
  *
  *
@@ -343,167 +344,193 @@ export const injectWebSocket = (server: HttpServer) => {
               // instructions: z.string().describe("Single sentence instruction"),
               // blocking: z.boolean().describe("Whether to block further edits"),
             }),
-            execute: async (
-              {
-                target_file,
-                // instructions,
-
-                // blocking
-              },
-              options
-            ) => {
-              emitAssistantMessage({
-                ioServer,
-                requestId: event.requestId,
-                roomId,
-                text: "================== EDITING FILE START=========",
+            execute: async ({ target_file }) => {
+              const res = await smartEdit({
+                chatHistory: [
+                  ...toChatMessages(event.previousEvents),
+                  {
+                    role: "user",
+                    content: event.text,
+                  },
+                  {
+                    role: "assistant",
+                    content: toChatMessages(accumulatedTextDeltas)[0].content,
+                  },
+                ],
+                onChunk: (chunk) => {
+                  emitAssistantMessage({
+                    ioServer,
+                    requestId: event.requestId,
+                    roomId,
+                    text: chunk,
+                  });
+                },
+                targetFile: target_file,
               });
 
-              let accEdit = "";
-              const { textStream } = await streamText({
-                model: anthropic("claude-3-7-sonnet-20250219"),
-                // messages: []
-                prompt: await editThreadPrompt({
-                  chatHistory: [
-                    {
-                      content: await getCodebaseIndexPrompt(),
-                      role: "system",
-                    },
-                    ...toChatMessages(event.previousEvents),
-                    {
-                      role: "user",
-                      content: event.text,
-                    },
-                    {
-                      role: "assistant",
-                      content: toChatMessages(accumulatedTextDeltas)[0].content,
-                    },
-                  ],
-                  targetFile: target_file,
-                }),
-              });
-
-              for await (const text of textStream) {
-                accEdit += text;
-                emitAssistantMessage({
-                  ioServer,
-                  requestId: event.requestId,
-                  roomId,
-                  text: text,
-                });
-              }
-
-              // const checkPrompt = (
-              //   await readFile(
-              //     "/Users/robby/zenbu/packages/zenbu-plugin/src/precise-edit-check.md",
-              //     "utf-8"
-              //   ).then(removeComments)
-              // )
-              //   .replace(
-              //     "{fullFile}",
-              //     (await readFile(target_file, "utf-8")).replace(
-              //       "{modelEdit}",
-              //       accEdit
-              //     )
-              //   )
-              //   .slice(0, 300);
-
-              const { object } = await generateObject({
-                model: openai("gpt-4o"),
-                prompt:
-                  `Does this output say its a precise edit or a full rewrite?:` +
-                  accEdit,
-                schema: z.object({
-                  editType: z.union([
-                    z.literal("precise"),
-                    z.literal("full-rewrite"),
-                  ]),
-                }),
-                // messages: [{
-
-                // }]
-              });
-
-              emitAssistantMessage({
-                ioServer,
-                requestId: event.requestId,
-                roomId,
-                text: `\n\n==================CODE EDIT: ${accEdit}======\n\n`,
-              });
-
-              emitAssistantMessage({
-                ioServer,
-                requestId: event.requestId,
-                roomId,
-                text:
-                  object.editType === "precise"
-                    ? `\n\n==================PRECISE EDIT======\n\n`
-                    : `\n\n==================FULL REWRITE======\n\n`,
-              });
-
-              console.log("EDIT FILE TOOL CALL");
-
-              // Implementation will go here
-
-              const result =
-                object.editType === "precise"
-                  ? await editFile({
-                      instructions: "edit file",
-                      codeEdit: accEdit,
-                      targetFile: `${target_file}`,
-                      onChunk: (chunk) => {
-                        console.log("chunk", chunk);
-
-                        emitAssistantMessage({
-                          text: chunk,
-                          ioServer,
-                          requestId: event.requestId,
-                          roomId,
-                        });
-                      },
-                    })
-                  : (() => {
-                      // const codeBlockMatch = accEdit.match(
-                      //   /```(?:[\w-]+)?\s*([\s\S]*?)\s*```/
-                      // );
-                      // return codeBlockMatch ? codeBlockMatch[1] : accEdit;
-                      const codeBlockMatch = accEdit.match(
-                        /```(\w+)?\s*([\s\S]*?)```/
-                      );
-                      if (codeBlockMatch) {
-                        return codeBlockMatch[2];
-                      }
-
-                      return accEdit;
-                    })();
-
-              emitAssistantMessage({
-                ioServer,
-                requestId: event.requestId,
-                roomId,
-                text:
-                  "\n\n\n\n========== WRITING TO FILE ================== \n\n\n" +
-                  result,
-              });
-
-              await writeFile(`${target_file}`, result).catch((e) => {
-                emitAssistantMessage({
-                  ioServer,
-                  requestId: event.requestId,
-                  roomId,
-                  text:
-                    "================== FAILED TO WRITE TO FILE =============== " +
-                    (e as Error).message,
-                });
-              });
-              emitAssistantMessage({
-                ioServer,
-                requestId: event.requestId,
-                roomId,
-                text: "================== EDITING FILE END =============",
-              });
-              return accEdit;
+              return res;
             },
+            // execute: async (
+            //   {
+            //     target_file,
+            //     // instructions,
+
+            //     // blocking
+            //   },
+            //   options
+            // ) => {
+            // emitAssistantMessage({
+            //   ioServer,
+            //   requestId: event.requestId,
+            //   roomId,
+            //   text: "================== EDITING FILE START=========",
+            // });
+
+            //   let accEdit = "";
+            //   const { textStream } = await streamText({
+            //     model: anthropic("claude-3-7-sonnet-20250219"),
+            //     // messages: []
+            //     prompt: await editThreadPrompt({
+            //       chatHistory: [
+            //         {
+            //           content: await getCodebaseIndexPrompt(),
+            //           role: "system",
+            //         },
+            // ...toChatMessages(event.previousEvents),
+            // {
+            //   role: "user",
+            //   content: event.text,
+            // },
+            // {
+            //   role: "assistant",
+            //   content: toChatMessages(accumulatedTextDeltas)[0].content,
+            // },
+            //       ],
+            //       targetFile: target_file,
+            //     }),
+            //   });
+
+            //   for await (const text of textStream) {
+            //     accEdit += text;
+            //     emitAssistantMessage({
+            //       ioServer,
+            //       requestId: event.requestId,
+            //       roomId,
+            //       text: text,
+            //     });
+            //   }
+
+            //   // const checkPrompt = (
+            //   //   await readFile(
+            //   //     "/Users/robby/zenbu/packages/zenbu-plugin/src/precise-edit-check.md",
+            //   //     "utf-8"
+            //   //   ).then(removeComments)
+            //   // )
+            //   //   .replace(
+            //   //     "{fullFile}",
+            //   //     (await readFile(target_file, "utf-8")).replace(
+            //   //       "{modelEdit}",
+            //   //       accEdit
+            //   //     )
+            //   //   )
+            //   //   .slice(0, 300);
+
+            //   const { object } = await generateObject({
+            //     model: openai("gpt-4o"),
+            //     prompt:
+            //       `Does this output say its a precise edit or a full rewrite?:` +
+            //       accEdit,
+            //     schema: z.object({
+            //       editType: z.union([
+            //         z.literal("precise"),
+            //         z.literal("full-rewrite"),
+            //       ]),
+            //     }),
+            //     // messages: [{
+
+            //     // }]
+            //   });
+
+            //   emitAssistantMessage({
+            //     ioServer,
+            //     requestId: event.requestId,
+            //     roomId,
+            //     text: `\n\n==================CODE EDIT: ${accEdit}======\n\n`,
+            //   });
+
+            //   emitAssistantMessage({
+            //     ioServer,
+            //     requestId: event.requestId,
+            //     roomId,
+            //     text:
+            //       object.editType === "precise"
+            //         ? `\n\n==================PRECISE EDIT======\n\n`
+            //         : `\n\n==================FULL REWRITE======\n\n`,
+            //   });
+
+            //   console.log("EDIT FILE TOOL CALL");
+
+            //   // Implementation will go here
+
+            //   const result =
+            //     object.editType === "precise"
+            //       ? await editFile({
+            //           instructions: "edit file",
+            //           codeEdit: accEdit,
+            //           targetFile: `${target_file}`,
+            //           onChunk: (chunk) => {
+            //             console.log("chunk", chunk);
+
+            //             emitAssistantMessage({
+            //               text: chunk,
+            //               ioServer,
+            //               requestId: event.requestId,
+            //               roomId,
+            //             });
+            //           },
+            //         })
+            //       : (() => {
+            //           // const codeBlockMatch = accEdit.match(
+            //           //   /```(?:[\w-]+)?\s*([\s\S]*?)\s*```/
+            //           // );
+            //           // return codeBlockMatch ? codeBlockMatch[1] : accEdit;
+            //           const codeBlockMatch = accEdit.match(
+            //             /```(\w+)?\s*([\s\S]*?)```/
+            //           );
+            //           if (codeBlockMatch) {
+            //             return codeBlockMatch[2];
+            //           }
+
+            //           return accEdit;
+            //         })();
+
+            //   emitAssistantMessage({
+            //     ioServer,
+            //     requestId: event.requestId,
+            //     roomId,
+            //     text:
+            //       "\n\n\n\n========== WRITING TO FILE ================== \n\n\n" +
+            //       result,
+            //   });
+
+            //   await writeFile(`${target_file}`, result).catch((e) => {
+            //     emitAssistantMessage({
+            //       ioServer,
+            //       requestId: event.requestId,
+            //       roomId,
+            //       text:
+            //         "================== FAILED TO WRITE TO FILE =============== " +
+            //         (e as Error).message,
+            //     });
+            //   });
+            //   emitAssistantMessage({
+            //     ioServer,
+            //     requestId: event.requestId,
+            //     roomId,
+            //     text: "================== EDITING FILE END =============",
+            //   });
+            //   return accEdit;
+            // },
           }),
           // file_search: tool({
           //   description:

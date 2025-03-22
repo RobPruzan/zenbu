@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Website</title>
+  <title>Canvas Drawing App</title>
   <script src="http://localhost:42069"></script>
   <style>
     * {
@@ -14,19 +14,20 @@
     }
 
     :root {
-      --bg-primary: #f8f9fa;
+      --bg-primary: #e6f2ff;
       --bg-secondary: #ffffff;
-      --bg-tertiary: #e9ecef;
-      --text-primary: #333;
-      --text-secondary: #6c757d;
-      --text-heading: #212529;
-      --accent: #007bff;
-      --accent-hover: #0069d9;
-      --border: #ced4da;
-      --card-bg: #f8f9fa;
-      --footer-bg: #212529;
-      --footer-text: #f8f9fa;
-      --shadow: rgba(0, 0, 0, 0.1);
+      --bg-tertiary: #d4e6ff;
+      --text-primary: #1a3c6e;
+      --text-secondary: #4a6fa5;
+      --text-heading: #0d2b57;
+      --accent: #0066cc;
+      --accent-hover: #0052a3;
+      --border: #b8d3ff;
+      --card-bg: #e6f2ff;
+      --footer-bg: #0d2b57;
+      --footer-text: #e6f2ff;
+      --shadow: rgba(13, 43, 87, 0.1);
+      --canvas-bg: #ffffff;
     }
 
     [data-theme="dark"] {
@@ -43,6 +44,7 @@
       --footer-bg: #000000;
       --footer-text: #e0e0e0;
       --shadow: rgba(0, 0, 0, 0.3);
+      --canvas-bg: #2d2d2d;
     }
 
     body {
@@ -53,6 +55,9 @@
       padding: 0;
       margin: 0;
       transition: background-color 0.3s, color 0.3s;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     header {
@@ -69,6 +74,7 @@
       max-width: 1200px;
       margin: 0 auto;
       padding: 0 2rem;
+      width: 100%;
     }
 
     nav {
@@ -87,19 +93,8 @@
 
     .nav-links {
       display: flex;
-      gap: 2rem;
+      gap: 1rem;
       align-items: center;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: var(--text-secondary);
-      font-weight: 500;
-      transition: color 0.3s;
-    }
-
-    .nav-links a:hover {
-      color: var(--accent);
     }
 
     .theme-toggle {
@@ -108,7 +103,6 @@
       cursor: pointer;
       font-size: 1.2rem;
       color: var(--text-secondary);
-      margin-left: 1rem;
       transition: color 0.3s;
     }
 
@@ -116,228 +110,136 @@
       color: var(--accent);
     }
 
-    .hero {
-      background-color: var(--bg-tertiary);
-      padding: 5rem 0;
-      text-align: center;
-      transition: background-color 0.3s;
-    }
-
-    .hero h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      color: var(--text-heading);
-      transition: color 0.3s;
-    }
-
-    .hero p {
-      font-size: 1.25rem;
-      color: var(--text-secondary);
-      max-width: 800px;
-      margin: 0 auto 2rem;
-      transition: color 0.3s;
-    }
-
     .btn {
       display: inline-block;
       background-color: var(--accent);
       color: white;
-      padding: 0.75rem 1.5rem;
+      padding: 0.5rem 1rem;
       border-radius: 4px;
       text-decoration: none;
       font-weight: 500;
       transition: background-color 0.3s;
       border: none;
       cursor: pointer;
+      font-size: 0.9rem;
     }
 
     .btn:hover {
       background-color: var(--accent-hover);
     }
 
-    .features {
-      padding: 5rem 0;
-      background-color: var(--bg-secondary);
-      transition: background-color 0.3s;
+    .btn.active {
+      background-color: var(--accent-hover);
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
     }
 
-    .section-title {
-      text-align: center;
-      margin-bottom: 3rem;
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem 0;
     }
 
-    .section-title h2 {
-      font-size: 2.5rem;
-      color: var(--text-heading);
-      margin-bottom: 1rem;
-      transition: color 0.3s;
-    }
-
-    .section-title p {
-      color: var(--text-secondary);
-      max-width: 600px;
-      margin: 0 auto;
-      transition: color 0.3s;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-    }
-
-    .feature-card {
-      background-color: var(--card-bg);
-      border-radius: 8px;
-      padding: 2rem;
-      text-align: center;
-      transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px var(--shadow);
-    }
-
-    .feature-icon {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      color: var(--accent);
-    }
-
-    .feature-card h3 {
-      margin-bottom: 1rem;
-      color: var(--text-heading);
-      transition: color 0.3s;
-    }
-
-    .feature-card p {
-      color: var(--text-secondary);
-      transition: color 0.3s;
-    }
-
-    .about {
-      padding: 5rem 0;
-      background-color: var(--bg-tertiary);
-      transition: background-color 0.3s;
-    }
-
-    .about-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      position: relative;
     }
 
-    .about-text h2 {
-      font-size: 2.5rem;
-      margin-bottom: 1.5rem;
-      color: var(--text-heading);
-      transition: color 0.3s;
-    }
-
-    .about-text p {
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-      transition: color 0.3s;
-    }
-
-    .about-image img {
-      width: 100%;
-      border-radius: 8px;
-      box-shadow: 0 10px 20px var(--shadow);
-    }
-
-    .contact {
-      padding: 5rem 0;
-      background-color: var(--bg-secondary);
-      transition: background-color 0.3s;
-    }
-
-    .contact-form {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: var(--text-heading);
-      font-weight: 500;
-      transition: color 0.3s;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 0.75rem;
+    #drawing-canvas {
+      background-color: var(--canvas-bg);
       border: 1px solid var(--border);
       border-radius: 4px;
-      font-size: 1rem;
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+      box-shadow: 0 2px 10px var(--shadow);
+      cursor: crosshair;
+      max-width: 100%;
+      height: 80vh; /* Make canvas bigger with fixed height */
+      touch-action: none;
     }
 
-    textarea.form-control {
-      min-height: 150px;
+    .tools {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+      box-shadow: 0 2px 5px var(--shadow);
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
     }
 
-    .form-control:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    .tool-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0 0.5rem;
+      border-right: 1px solid var(--border);
+    }
+
+    .tool-group:last-child {
+      border-right: none;
+    }
+
+    .color-picker {
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .size-slider {
+      width: 100px;
+      margin: 0 0.5rem;
     }
 
     footer {
       background-color: var(--footer-bg);
       color: var(--footer-text);
-      padding: 3rem 0;
+      padding: 1rem 0;
       text-align: center;
       transition: background-color 0.3s, color 0.3s;
     }
 
     .footer-content {
       display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .social-links {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-    }
-
-    .social-links a {
-      color: var(--footer-text);
-      font-size: 1.5rem;
-      transition: color 0.3s;
-    }
-
-    .social-links a:hover {
-      color: var(--accent);
+      justify-content: space-between;
+      align-items: center;
     }
 
     .copyright {
       color: var(--text-secondary);
+      font-size: 0.9rem;
       transition: color 0.3s;
     }
 
     @media (max-width: 768px) {
-      .about-content {
-        grid-template-columns: 1fr;
+      .tools {
+        flex-direction: column;
+        align-items: center;
       }
-
-      .about-image {
-        order: -1;
+      
+      .tool-group {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 0.5rem 0;
+        width: 100%;
+        justify-content: center;
       }
-
-      .nav-links {
-        display: none;
+      
+      .tool-group:last-child {
+        border-bottom: none;
       }
     }
   </style>
@@ -346,103 +248,47 @@
   <header>
     <div class="container">
       <nav>
-        <a href="#" class="logo">MyWebsite</a>
+        <a href="#" class="logo">Canvas Drawing App</a>
         <div class="nav-links">
-          <a href="#">Home</a>
-          <a href="#features">Features</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
           <button class="theme-toggle" id="theme-toggle">🌙</button>
         </div>
       </nav>
     </div>
   </header>
 
-  <section class="hero">
+  <div class="main-content">
     <div class="container">
-      <h1>Welcome to My Website</h1>
-      <p>A clean, modern website template that you can use as a starting point for your projects.</p>
-      <a href="#features" class="btn">Learn More</a>
-    </div>
-  </section>
-
-  <section id="features" class="features">
-    <div class="container">
-      <div class="section-title">
-        <h2>Our Features</h2>
-        <p>Discover what makes our service stand out from the competition.</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🚀</div>
-          <h3>Fast & Responsive</h3>
-          <p>Our website loads quickly and works perfectly on all devices, from desktops to smartphones.</p>
+      <div class="tools">
+        <div class="tool-group">
+          <button class="btn active" id="brush-tool" title="Brush">🖌️</button>
+          <button class="btn" id="eraser-tool" title="Eraser">🧽</button>
+          <button class="btn" id="clear-canvas" title="Clear Canvas">🗑️</button>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">🛠️</div>
-          <h3>Easy to Customize</h3>
-          <p>Modify colors, fonts, and layouts with ease to match your brand's unique identity.</p>
+        <div class="tool-group">
+          <label for="brush-size">Size:</label>
+          <input type="range" id="brush-size" class="size-slider" min="1" max="50" value="5">
+          <span id="size-display">5px</span>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">📱</div>
-          <h3>Mobile Friendly</h3>
-          <p>Designed with mobile-first approach to ensure great experience on all screen sizes.</p>
+        <div class="tool-group">
+          <label for="color-picker">Color:</label>
+          <input type="color" id="color-picker" class="color-picker" value="#000000">
+        </div>
+        <div class="tool-group">
+          <button class="btn" id="save-btn" title="Save Image">💾</button>
+          <button class="btn" id="undo-btn" title="Undo">↩️</button>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section id="about" class="about">
-    <div class="container">
-      <div class="about-content">
-        <div class="about-text">
-          <h2>About Us</h2>
-          <p>We're a team of passionate designers and developers who love creating beautiful, functional websites.</p>
-          <p>Our mission is to help businesses and individuals establish a strong online presence with websites that not only look great but also perform exceptionally well.</p>
-          <a href="#contact" class="btn">Get in Touch</a>
-        </div>
-        <div class="about-image">
-          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80" alt="Team working together">
-        </div>
+      <div class="canvas-container">
+        <canvas id="drawing-canvas"></canvas>
       </div>
     </div>
-  </section>
-
-  <section id="contact" class="contact">
-    <div class="container">
-      <div class="section-title">
-        <h2>Contact Us</h2>
-        <p>Have questions or want to work with us? Send us a message!</p>
-      </div>
-      <form class="contact-form">
-        <div class="form-group">
-          <label for="name">Name</label>
-          <input type="text" id="name" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label for="message">Message</label>
-          <textarea id="message" class="form-control" required></textarea>
-        </div>
-        <button type="submit" class="btn">Send Message</button>
-      </form>
-    </div>
-  </section>
+  </div>
 
   <footer>
     <div class="container">
       <div class="footer-content">
-        <div class="social-links">
-          <a href="#">📘</a>
-          <a href="#">📱</a>
-          <a href="#">📸</a>
-          <a href="#">📧</a>
-        </div>
         <div class="copyright">
-          &copy; 2023 MyWebsite. All rights reserved.
+          &copy; 2023 Canvas Drawing App. All rights reserved.
         </div>
       </div>
     </div>
@@ -450,13 +296,19 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Theme toggle functionality
       const themeToggle = document.getElementById('theme-toggle');
       const htmlElement = document.documentElement;
       
-      // Check for saved theme preference or default to dark
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      htmlElement.setAttribute('data-theme', savedTheme);
-      updateToggleButton(savedTheme);
+      // Check for saved theme preference or use preferred color scheme
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        htmlElement.setAttribute('data-theme', savedTheme);
+        updateToggleButton(savedTheme);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        htmlElement.setAttribute('data-theme', 'dark');
+        updateToggleButton('dark');
+      }
       
       // Toggle theme when button is clicked
       themeToggle.addEventListener('click', () => {
@@ -471,7 +323,152 @@
       function updateToggleButton(theme) {
         themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
       }
-    });
-  </script>
-</body>
-</html>
+
+      // Canvas drawing functionality
+      const canvas = document.getElementById('drawing-canvas');
+      const ctx = canvas.getContext('2d');
+      const colorPicker = document.getElementById('color-picker');
+      const brushSize = document.getElementById('brush-size');
+      const sizeDisplay = document.getElementById('size-display');
+      const clearBtn = document.getElementById('clear-canvas');
+      const saveBtn = document.getElementById('save-btn');
+      const undoBtn = document.getElementById('undo-btn');
+      const brushTool = document.getElementById('brush-tool');
+      const eraserTool = document.getElementById('eraser-tool');
+      
+      // Canvas state variables
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+      let currentColor = colorPicker.value;
+      let currentSize = brushSize.value;
+      let drawingMode = 'brush';
+      let undoStack = [];
+      
+      // Set canvas size
+      function resizeCanvas() {
+        const container = canvas.parentElement;
+        const containerWidth = container.clientWidth;
+        const aspectRatio = 16 / 9;
+        
+        // Calculate height based on container width and aspect ratio
+        const canvasWidth = Math.min(containerWidth, 1200);
+        const canvasHeight = canvasWidth / aspectRatio;
+        
+        // Set canvas dimensions
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        // Redraw canvas after resize
+        redrawCanvas();
+      }
+      
+      // Initialize canvas
+      function initCanvas() {
+        resizeCanvas();
+        saveCanvasState();
+        
+        // Set initial canvas background
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg');
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        saveCanvasState();
+      }
+      
+      // Event listeners for drawing
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('touchstart', handleTouchStart);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('touchmove', handleTouchMove);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('touchend', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+      
+      // Tool event listeners
+      colorPicker.addEventListener('change', () => {
+        currentColor = colorPicker.value;
+        if (drawingMode === 'brush') {
+          brushTool.click();
+        }
+      });
+      
+      brushSize.addEventListener('input', () => {
+        currentSize = brushSize.value;
+        sizeDisplay.textContent = `${currentSize}px`;
+      });
+      
+      clearBtn.addEventListener('click', clearCanvas);
+      saveBtn.addEventListener('click', saveImage);
+      undoBtn.addEventListener('click', undoLastAction);
+      
+      brushTool.addEventListener('click', () => {
+        setActiveTool(brushTool);
+        drawingMode = 'brush';
+        currentColor = colorPicker.value;
+      });
+      
+      eraserTool.addEventListener('click', () => {
+        setActiveTool(eraserTool);
+        drawingMode = 'eraser';
+      });
+      
+      // Handle window resize
+      window.addEventListener('resize', resizeCanvas);
+      
+      // Drawing functions
+      function startDrawing(e) {
+        isDrawing = true;
+        [lastX, lastY] = getCoordinates(e);
+        
+        // Start a new path for this stroke
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        
+        // Draw a single dot if the user just clicks
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = currentSize;
+        ctx.strokeStyle = drawingMode === 'brush' ? currentColor : getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg');
+        
+        ctx.lineTo(lastX, lastY);
+        ctx.stroke();
+      }
+      
+      function draw(e) {
+        if (!isDrawing) return;
+        
+        const [currentX, currentY] = getCoordinates(e);
+        
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = currentSize;
+        ctx.strokeStyle = drawingMode === 'brush' ? currentColor : getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg');
+        
+        ctx.lineTo(currentX, currentY);
+        ctx.stroke();
+        
+        [lastX, lastY] = [currentX, currentY];
+      }
+      
+      function stopDrawing() {
+        if (isDrawing) {
+          isDrawing = false;
+          saveCanvasState();
+        }
+      }
+      
+      function handleTouchStart(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+      }
+      
+      function handleTouchMove(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('
