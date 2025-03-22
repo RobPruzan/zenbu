@@ -1,4 +1,5 @@
 import { groq } from "@ai-sdk/groq";
+import { openai } from "@ai-sdk/openai";
 /**
  * 
  * 
@@ -52,48 +53,44 @@ export const editFile = async ({
    */
 
   const prompt = `
-You are a precise coding AI model that takes in entire files of code, and a requested edit to that file of code, and\
-outputs the entire file back with the edit requested applied\
-The edit requested will contain the special comment  "// ... existing code ..." to represent unchanged code in between edited lines.\
-When you encounter this, you should write the exact code present in the file in that range. You must never omit ANY code\
-as the result of your edit will be written directly to the file.\
-The instructions of the edit will also be provided to you, so you have context on what the edit was trying to accomplish\
+You will be provided with a partial edit of a file which is a proposed code edit to implement a change. You will also\
+be provided with the entire file that the proposed edit should be applied on. You need to rewrite this entire file with the proposed
+change exactly. You must not omit any code since your code output will be written directly back to the file.
 
-
-REMEMBER YOU MUST RETURN THE ENTIRE FILE NO MATTER WHAT, THIS WILL BE DIRECTLY WRITTEN BACK TO THE FILE
-
-If there is no special content, just echo back the output and we will write the whole result back
-
-<edit-instructions>
-${instructions}
-</edit-instructions>
-
-<target-file>
-${await readFile(targetFile, "utf-8")}
-</target-file>
-
+You may wrap the code in the \`\`\`language \`\`\` pattern, 
 
 <code-edit>
 ${codeEdit}
 </code-edit>
+
+<target-file>
+${await readFile(targetFile, "utf-8")}
+</target-file>
   `;
 
-  const result = groqEdit(prompt, onChunk);
+  console.log("fast editing");
+
+  const result = await fastEdit(prompt, onChunk);
+  console.log("fast edit result", result);
 
   return result;
 };
 
-const groqEdit = async (prompt: string, onChunk: (chunk: string) => void) => {
+const fastEdit = async (prompt: string, onChunk: (chunk: string) => void) => {
   let accResult = "";
-  const { textStream } = streamText({
-    // @ts-expect-error
-    model: groq("llama-3.3-70b-versatile"),
+  const { textStream, finishReason } = streamText({
+    // model: groq("llama-3.3-70b-versatile"),
+    model: openai("gpt-4o-mini"),
     prompt,
   });
   for await (const textPart of textStream) {
+    console.log("we got a text chunk", textPart);
+
     onChunk(textPart);
     accResult += textPart;
   }
+
+  console.log("reason", await finishReason);
 
   const codeBlockMatch = accResult.match(/```(\w+)?\s*([\s\S]*?)```/);
   if (codeBlockMatch) {

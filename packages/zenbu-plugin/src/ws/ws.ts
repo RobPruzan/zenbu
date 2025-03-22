@@ -165,7 +165,8 @@ export const injectWebSocket = (server: HttpServer) => {
             content: event.text,
           },
         ],
-        maxSteps: 1,
+        maxSteps: 50,
+        maxTokens: 8192,
         toolCallStreaming: true,
         onChunk: (chunk) => {
           console.log("full chunk", chunk);
@@ -367,6 +368,11 @@ export const injectWebSocket = (server: HttpServer) => {
                     {
                       role: "assistant",
                       content: toChatMessages(accumulatedTextDeltas)[0].content,
+                    },
+                    {
+                      role: "user",
+                      content:
+                        "remember, just implement the changes you need to apply, and unchanged code you should use the special comment",
                     },
                   ],
                   targetFile: target_file,
