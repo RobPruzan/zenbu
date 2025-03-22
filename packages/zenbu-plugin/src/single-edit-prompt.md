@@ -13,9 +13,13 @@ Here's how you should format your response:
 {chatHistory}
 </chat-history>
 
-Provide your response in this JSON format:
-{
-  "startLine": number,
-  "endLine": number,
-  "replacementCode": "string"
-} 
+Provide your response in XML format as follows:
+<edit>
+  <startLine>10</startLine>
+  <endLine>15</endLine>
+  <replacementCode>
+    // your replacement code here
+  </replacementCode>
+</edit>
+
+Use this exact XML structure as it will be parsed programmatically. Do not include any text, explanation, or comments outside of the XML structure. 
