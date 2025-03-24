@@ -18,9 +18,7 @@ function parseXML<T>(xml: string, tagName: string): T | null {
 }
 
 // Parse full edit decision XML
-function parseEditDecision(
-  xml: string
-): { editType: string; explanation: string } | null {
+function parseEditDecision(xml: string): { editType: string } | null {
   const editDecisionMatch = xml.match(
     /<editDecision>([\s\S]*?)<\/editDecision>/s
   );
@@ -28,13 +26,11 @@ function parseEditDecision(
 
   const editDecisionXml = editDecisionMatch[1];
   const editType = parseXML<string>(editDecisionXml, "editType");
-  const explanation = parseXML<string>(editDecisionXml, "explanation");
 
-  if (!editType || !explanation) return null;
+  if (!editType) return null;
 
   return {
     editType,
-    explanation,
   };
 }
 
@@ -121,7 +117,7 @@ export const smartEdit = ({
         chatHistory,
       });
 
-      onChunk(`Analyzing file and determining optimal edit strategy...\n`);
+      // onChunk(`Analyzing file and determining optimal edit strategy...\n`);
 
       // Stream the router model's thinking process
       let accumulatedXml = "";
@@ -140,11 +136,12 @@ export const smartEdit = ({
       }
 
       // Parse the XML response to get the edit type decision
-      onChunk(`\n\nParsing model's decision...\n`);
+      // onChunk(`\n\nParsing model's decision...\n`);
 
       // Clean up XML - remove anything before opening tag and after closing tag
-      const cleanedXml = accumulatedXml.replace(/^[\s\S]*?(<editDecision>)/s, '$1')
-        .replace(/(<\/editDecision>)[\s\S]*$/s, '$1');
+      const cleanedXml = accumulatedXml
+        .replace(/^[\s\S]*?(<editDecision>)/s, "$1")
+        .replace(/(<\/editDecision>)[\s\S]*$/s, "$1");
 
       onChunk(`Using XML: ${cleanedXml}\n`);
       let editTypeResult = parseEditDecision(cleanedXml);
@@ -152,28 +149,37 @@ export const smartEdit = ({
       if (!editTypeResult) {
         // If parsing fails, try a more aggressive extraction approach
         const editTypeMatch = cleanedXml.match(/<editType>(.*?)<\/editType>/s);
-        const explanationMatch = cleanedXml.match(/<explanation>(.*?)<\/explanation>/s);
-        
+        const explanationMatch = cleanedXml.match(
+          /<explanation>(.*?)<\/explanation>/s
+        );
+
         if (editTypeMatch && explanationMatch) {
           const editType = editTypeMatch[1].trim();
           const explanation = explanationMatch[1].trim();
-          
+
           // Validate the edit type
-          const validEditTypes = ["append", "single_contiguous_edit", "multiple_logical_edits", "full_file_rewrite"];
+          const validEditTypes = [
+            "append",
+            // "single_contiguous_edit",
+            "multiple_logical_edits",
+            "full_file_rewrite",
+          ];
           if (validEditTypes.includes(editType)) {
-            onChunk(`Found valid edit type using fallback parsing: ${editType}\n`);
-            editTypeResult = { editType, explanation };
+            onChunk(
+              `Found valid edit type using fallback parsing: ${editType}\n`
+            );
+            editTypeResult = { editType };
           } else {
-            throw new Error(`Failed to determine edit type: extracted type "${editType}" is not valid`);
+            throw new Error(
+              `Failed to determine edit type: extracted type "${editType}" is not valid`
+            );
           }
         } else {
-          throw new Error("Failed to determine edit type: couldn't parse XML response");
+          throw new Error(
+            "Failed to determine edit type: couldn't parse XML response"
+          );
         }
       }
-
-      onChunk(
-        `\n\nDetermined edit type: ${editTypeResult.editType}\n${editTypeResult.explanation}\n\n`
-      );
 
       // 2. Based on the edit type, use the appropriate prompt and execution strategy
       let modelOutput = "";
@@ -190,19 +196,21 @@ export const smartEdit = ({
           targetFile,
           onChunk,
         });
-      } else if (editTypeResult.editType === "single_contiguous_edit") {
-        // For single contiguous edit
-        const singleEditPrompt = await getSingleEditPrompt({
-          targetFile,
-          chatHistory,
-        });
+      }
+      // else if (editTypeResult.editType === "single_contiguous_edit") {
+      //   // For single contiguous edit
+      //   const singleEditPrompt = await getSingleEditPrompt({
+      //     targetFile,
+      //     chatHistory,
+      //   });
 
-        modelOutput = await generateSingleEdit({
-          prompt: singleEditPrompt,
-          targetFile,
-          onChunk,
-        });
-      } else if (editTypeResult.editType === "multiple_logical_edits") {
+      //   modelOutput = await generateSingleEdit({
+      //     prompt: singleEditPrompt,
+      //     targetFile,
+      //     onChunk,
+      //   });
+      // }
+      else if (editTypeResult.editType === "multiple_logical_edits") {
         // For multiple logical edits
         const multiEditPrompt = await getMultipleEditsPrompt({
           targetFile,

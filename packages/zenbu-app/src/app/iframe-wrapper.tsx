@@ -107,7 +107,8 @@ export const IFrameWrapper = () => {
             border: "none",
           }}
         />
-        <DevtoolsOverlay iframeRef={iframeRef} />
+        <DevtoolsOverlay 
+          iframeRef={iframeRef} />
       </div>
     </div>
   );

@@ -1,557 +1,415 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Canvas Drawing App</title>
-  <script src="http://localhost:42069"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    :root {
-      --bg-primary: #e6f2ff;
-      --bg-secondary: #ffffff;
-      --bg-tertiary: #d4e6ff;
-      --text-primary: #1a3c6e;
-      --text-secondary: #4a6fa5;
---text-heading: #0d2b57;
---accent: #ff3333;
---accent-hover: #cc0000;
-      --border: #b8d3ff;
-      --card-bg: #e6f2ff;
-      --footer-bg: #0d2b57;
-      --footer-text: #e6f2ff;
-      --shadow: rgba(13, 43, 87, 0.1);
-       --canvas-bg: #f5f5f5;
-     }
- 
-[data-theme="dark"] {
-       --bg-primary: #121212;
-       --bg-secondary: #1e1e1e;
-       --bg-tertiary: #2d2d2d;
-       --text-primary: #e0e0e0;
-       --text-secondary: #aaaaaa;
-       --text-heading: #ffffff;
---accent: #ff3333;
---accent-hover: #cc0000;
-       --border: #444444;
-       --card-bg: #2d2d2d;
-       --footer-bg: #000000;
-       --footer-text: #e0e0e0;
-       --shadow: rgba(0, 0, 0, 0.3);
-       --canvas-bg: #2d2d2d;
-}
-    body {
-      font-family: 'Inter', sans-serif;
-      line-height: 1.6;
-      color: var(--text-primary);
-      background-color: var(--bg-primary);
-      padding: 0;
-      margin: 0;
-      transition: background-color 0.3s, color 0.3s;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      background-color: var(--bg-secondary);
-      box-shadow: 0 2px 4px var(--shadow);
-      padding: 1rem 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      transition: background-color 0.3s;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem;
-      width: 100%;
-    }
-
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .theme-toggle {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 1.2rem;
-color: #00cc66;
-      transition: color 0.3s;
-    }
-
-    .theme-toggle:hover {
-      color: var(--accent);
-    }
-
-    .btn {
-      display: inline-block;
-      background-color: var(--accent);
-color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background-color 0.3s;
-      border: none;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-
-    .btn:hover {
-      background-color: var(--accent-hover);
-    }
-
-    .btn.active {
-      background-color: var(--accent-hover);
-      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
-    }
-
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem 0;
-    }
-
-    .canvas-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      position: relative;
-    }
-
-    #drawing-canvas {
-      background-color: var(--canvas-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-box-shadow: 0 4px 15px var(--shadow), 0 0 0 2px var(--accent);
-      cursor: crosshair;
-      max-width: 100%;
-      height: 80vh; /* Make canvas bigger with fixed height */
-      touch-action: none;
-    }
-
-    .tools {
-      display: flex;
-      gap: 0.8rem;
-      flex-wrap: nowrap;
-      justify-content: center;
-      margin-bottom: 1rem;
-      padding: 0.8rem 1.2rem;
-      background-color: var(--bg-secondary);
-      border-radius: 8px;
-      box-shadow: 0 2px 5px var(--shadow);
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      width: auto;
-    }
-
-    .tool-group {
-      display: flex;
-      gap: 0.8rem;
-      align-items: center;
-      padding: 0 0.8rem;
-      border-right: 1px solid var(--border);
-    }
-
-    .tool-group:last-child {
-      border-right: none;
-    }
-
-    .color-picker {
-      width: 2rem;
-      height: 2rem;
-      border: none;
-      border-radius: 50%;
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    .size-slider {
-      width: 100px;
-      margin: 0 0.5rem;
-    }
-
-    footer {
-      background-color: var(--footer-bg);
-      color: var(--footer-text);
-      padding: 1rem 0;
-      text-align: center;
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    .footer-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .copyright {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      transition: color 0.3s;
-    }
-
-    @media (max-width: 768px) {
-      .tools {
-        padding: 0.6rem;
-        gap: 0.4rem;
-        width: 90%;
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Universe Game</title>
+    <script src="http://localhost:42069"></script>
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #000;
       }
       
-      .tool-group {
-        padding: 0 0.4rem;
-        gap: 0.4rem;
+      #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
       }
       
-      .size-slider {
-        width: 60px;
+      #starfield {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
       }
       
-      .btn {
-        padding: 0.4rem 0.6rem;
+      #nebula {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        opacity: 0.5;
       }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="container">
-      <nav>
-        <a href="#" class="logo">Canvas Drawing App</a>
-        <div class="nav-links">
-          <button class="theme-toggle" id="theme-toggle">🌙</button>
-        </div>
-      </nav>
-    </div>
-  </header>
-
-  <div class="main-content">
-    <div class="container">
-      <div class="tools">
-        <div class="tool-group">
-<button class="btn active" id="brush-tool" title="Brush" style="color: white;">✏️</button>
-<button class="btn" id="eraser-tool" title="Eraser" style="color: white;">⌫</button>
-<button class="btn" id="clear-canvas" title="Clear Canvas" style="color: white;">🗑️</button>
-        </div>
-        <div class="tool-group">
-          <label for="brush-size">Size:</label>
-          <input type="range" id="brush-size" class="size-slider" min="1" max="50" value="5">
-          <span id="size-display">5px</span>
-        </div>
-        <div class="tool-group">
-          <label for="color-picker">Color:</label>
-          <input type="color" id="color-picker" class="color-picker" value="#000000">
-        </div>
-        <div class="tool-group">
-<button class="btn" id="save-btn" title="Save Image" style="color: white;">💾</button>
-<button class="btn" id="undo-btn" title="Undo" style="color: white;">⟲</button>
-        </div>
-      </div>
-      <div class="canvas-container">
-        <canvas id="drawing-canvas"></canvas>
+      
+      #player {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><polygon points="25,0 50,50 25,35 0,50" fill="%23fff"/></svg>');
+        z-index: 10;
+      }
+      
+      .shuriken {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="5" fill="%2300ffff"/></svg>');
+        z-index: 9;
+      }
+      
+      .boss {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23ff0000"/><circle cx="50" cy="50" r="20" fill="%23000"/><circle cx="50" cy="50" r="10" fill="%23fff"/></svg>');
+        z-index: 8;
+      }
+      
+      .tendril {
+        position: absolute;
+        background-color: #ff6600;
+        z-index: 7;
+      }
+      
+      .dust {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background-color: rgba(255, 255, 255, 0.5);
+        z-index: 3;
+      }
+      
+      #hud {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: #fff;
+        font-size: 18px;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container">
+      <div id="starfield"></div>
+      <div id="nebula"></div>
+      <div id="player"></div>
+      <div id="hud">
+        <div id="score">Score: 0</div>
+        <div id="health">Health: 100</div>
       </div>
     </div>
-  </div>
-
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="copyright">
-          &copy; 2023 Canvas Drawing App. All rights reserved.
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Theme toggle functionality
-      const themeToggle = document.getElementById('theme-toggle');
-      const htmlElement = document.documentElement;
-      
-      // Check for saved theme preference or use preferred color scheme
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme) {
-        htmlElement.setAttribute('data-theme', savedTheme);
-        updateToggleButton(savedTheme);
-      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        htmlElement.setAttribute('data-theme', 'dark');
-        updateToggleButton('dark');
-      }
-      
-      // Toggle theme when button is clicked
-      themeToggle.addEventListener('click', () => {
-        const currentTheme = htmlElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const gameContainer = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const starfield = document.getElementById('starfield');
+        const nebula = document.getElementById('nebula');
+        const scoreDisplay = document.getElementById('score');
+        const healthDisplay = document.getElementById('health');
         
-        htmlElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateToggleButton(newTheme);
-      });
-      
-      function updateToggleButton(theme) {
-        themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
-      }
-
-      // Canvas drawing functionality
-      const canvas = document.getElementById('drawing-canvas');
-      const ctx = canvas.getContext('2d');
-      const colorPicker = document.getElementById('color-picker');
-      const brushSize = document.getElementById('brush-size');
-      const sizeDisplay = document.getElementById('size-display');
-      const clearBtn = document.getElementById('clear-canvas');
-      const saveBtn = document.getElementById('save-btn');
-      const undoBtn = document.getElementById('undo-btn');
-      const brushTool = document.getElementById('brush-tool');
-      const eraserTool = document.getElementById('eraser-tool');
-      
-      // Canvas state variables
-      let isDrawing = false;
-      let lastX = 0;
-      let lastY = 0;
-      let currentColor = colorPicker.value;
-      let currentSize = brushSize.value;
-      let drawingMode = 'brush';
-      let undoStack = [];
-      
-      // Set canvas size
-      function resizeCanvas() {
-        const container = canvas.parentElement;
-        const containerWidth = container.clientWidth;
-        const aspectRatio = 16 / 9;
+        // Game state
+        const state = {
+          playerX: window.innerWidth / 2,
+          playerY: window.innerHeight - 100,
+          playerHealth: 100,
+          score: 0,
+          shurikens: [],
+          boss: null,
+          tendrils: [],
+          dust: [],
+          keys: {
+            ArrowLeft: false,
+            ArrowRight: false,
+            ArrowUp: false,
+            ArrowDown: false,
+            Space: false
+          },
+          lastShurikenTime: 0,
+          gameOver: false
+        };
         
-        // Calculate height based on container width and aspect ratio
-        const canvasWidth = Math.min(containerWidth, 1200);
-        const canvasHeight = canvasWidth / aspectRatio;
-        
-        // Set canvas dimensions
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        
-        // Redraw canvas after resize
-        redrawCanvas();
-      }
-      
-      // Initialize canvas
-      function initCanvas() {
-        resizeCanvas();
-        saveCanvasState();
-        
-        // Set initial canvas background
-        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg');
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        saveCanvasState();
-      }
-      
-      // Event listeners for drawing
-      canvas.addEventListener('mousedown', startDrawing);
-      canvas.addEventListener('touchstart', handleTouchStart);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('touchmove', handleTouchMove);
-      canvas.addEventListener('mouseup', stopDrawing);
-      canvas.addEventListener('touchend', stopDrawing);
-      canvas.addEventListener('mouseout', stopDrawing);
-      
-      // Tool event listeners
-      colorPicker.addEventListener('change', () => {
-        currentColor = colorPicker.value;
-        if (drawingMode === 'brush') {
-          brushTool.click();
+        // Initialize stars
+        function createStars() {
+          for (let i = 0; i < 200; i++) {
+            const star = document.createElement('div');
+            star.className = 'dust';
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.width = `${Math.random() * 3 + 1}px`;
+            star.style.height = star.style.width;
+            star.style.opacity = Math.random();
+            star.dataset.speed = Math.random() * 2 + 0.5;
+            starfield.appendChild(star);
+            state.dust.push(star);
+          }
         }
-      });
-      
-      brushSize.addEventListener('input', () => {
-        currentSize = brushSize.value;
-        sizeDisplay.textContent = `${currentSize}px`;
-      });
-      
-      clearBtn.addEventListener('click', clearCanvas);
-      saveBtn.addEventListener('click', saveImage);
-      undoBtn.addEventListener('click', undoLastAction);
-      
-      brushTool.addEventListener('click', () => {
-        setActiveTool(brushTool);
-        drawingMode = 'brush';
-        currentColor = colorPicker.value;
-      });
-      
-      eraserTool.addEventListener('click', () => {
-        setActiveTool(eraserTool);
-        drawingMode = 'eraser';
-      });
-      
-      // Handle window resize
-      window.addEventListener('resize', resizeCanvas);
-      
-      // Drawing functions
-      function startDrawing(e) {
-        isDrawing = true;
-        [lastX, lastY] = getCoordinates(e);
         
-        // Start a new path for this stroke
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        
-        // Draw a single dot if the user just clicks
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = currentSize;
-        ctx.strokeStyle = drawingMode === 'brush' ? currentColor : getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg');
-        
-        ctx.lineTo(lastX, lastY);
-        ctx.stroke();
-      }
-      
-      function draw(e) {
-        if (!isDrawing) return;
-        
-        const [currentX, currentY] = getCoordinates(e);
-        
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = currentSize;
-        ctx.strokeStyle = drawingMode === 'brush' ? currentColor : getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg');
-        
-        ctx.lineTo(currentX, currentY);
-        ctx.stroke();
-        
-        [lastX, lastY] = [currentX, currentY];
-      }
-      
-      function stopDrawing() {
-        if (isDrawing) {
-          isDrawing = false;
-          saveCanvasState();
+        // Create nebula effect
+        function createNebula() {
+          const colors = ['#ff00ff', '#00ffff', '#ff6600', '#9900ff'];
+          for (let i = 0; i < 5; i++) {
+            const cloud = document.createElement('div');
+            cloud.style.position = 'absolute';
+            cloud.style.width = `${Math.random() * 300 + 200}px`;
+            cloud.style.height = `${Math.random() * 300 + 200}px`;
+            cloud.style.borderRadius = '50%';
+            cloud.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            cloud.style.filter = 'blur(60px)';
+            cloud.style.opacity = '0.2';
+            cloud.style.left = `${Math.random() * 100}%`;
+            cloud.style.top = `${Math.random() * 100}%`;
+            nebula.appendChild(cloud);
+          }
         }
-      }
-      
-      function handleTouchStart(e) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousedown', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        canvas.dispatchEvent(mouseEvent);
-      }
-      
-      function handleTouchMove(e) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousemove', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        canvas.dispatchEvent(mouseEvent);
-      }
-      
-function getCoordinates(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        return [
-          (e.clientX - rect.left) * scaleX,
-          (e.clientY - rect.top) * scaleY
-        ];
-      }
-      
-      function clearCanvas() {
-        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg');
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        saveCanvasState();
-      }
-      
-      function saveImage() {
-        const link = document.createElement('a');
-        link.download = 'canvas-drawing.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }
-      
-      function saveCanvasState() {
-        undoStack.push(canvas.toDataURL());
-        // Limit undo stack size
-        if (undoStack.length > 20) {
-          undoStack.shift();
-        }
-        undoBtn.disabled = undoStack.length <= 1;
-      }
-      
-      function undoLastAction() {
-        if (undoStack.length > 1) {
-          // Remove current state
-          undoStack.pop();
-          // Get previous state
-          const previousState = undoStack[undoStack.length - 1];
-          // Load previous state
-          const img = new Image();
-          img.src = previousState;
-          img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
+        
+        // Create boss
+        function createBoss() {
+          const boss = document.createElement('div');
+          boss.className = 'boss';
+          boss.style.left = `${window.innerWidth / 2 - 50}px`;
+          boss.style.top = '100px';
+          gameContainer.appendChild(boss);
+          
+          state.boss = {
+            element: boss,
+            x: window.innerWidth / 2 - 50,
+            y: 100,
+            health: 100,
+            direction: 1,
+            lastAttackTime: 0
           };
-          undoBtn.disabled = undoStack.length <= 1;
+          
+          // Create tendrils
+          for (let i = 0; i < 5; i++) {
+            const tendril = document.createElement('div');
+            tendril.className = 'tendril';
+            gameContainer.appendChild(tendril);
+            state.tendrils.push({
+              element: tendril,
+              angle: (i * Math.PI * 2) / 5,
+              length: 50,
+              width: 10
+            });
+          }
         }
-      }
-      
-      function setActiveTool(tool) {
-        // Remove active class from all tools
-        document.querySelectorAll('.tools .btn').forEach(btn => {
-          btn.classList.remove('active');
-        });
-        // Add active class to selected tool
-        tool.classList.add('active');
-      }
-      
-      function redrawCanvas() {
-        if (undoStack.length > 0) {
-          const img = new Image();
-          img.src = undoStack[undoStack.length - 1];
-          img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-          };
+        
+        // Handle keyboard input
+        function setupControls() {
+          window.addEventListener('keydown', (e) => {
+            if (e.code in state.keys) {
+              state.keys[e.code] = true;
+              if (e.code === 'Space') {
+                shootShuriken();
+              }
+            }
+          });
+          
+          window.addEventListener('keyup', (e) => {
+            if (e.code in state.keys) {
+              state.keys[e.code] = false;
+            }
+          });
         }
-      }
-      
-      // Initialize canvas
-      initCanvas();
-    });
-  </script>
-</body>
+        
+        // Shoot shuriken
+        function shootShuriken() {
+          const now = Date.now();
+          if (now - state.lastShurikenTime > 300) { // Cooldown
+            const shuriken = document.createElement('div');
+            shuriken.className = 'shuriken';
+            shuriken.style.left = `${state.playerX + 15}px`;
+            shuriken.style.top = `${state.playerY - 20}px`;
+            gameContainer.appendChild(shuriken);
+            
+            state.shurikens.push({
+              element: shuriken,
+              x: state.playerX + 15,
+              y: state.playerY - 20
+            });
+            
+            state.lastShurikenTime = now;
+          }
+        }
+        
+        // Update player position
+        function updatePlayer() {
+          const speed = 5;
+          
+          if (state.keys.ArrowLeft && state.playerX > 0) {
+            state.playerX -= speed;
+          }
+          if (state.keys.ArrowRight && state.playerX < window.innerWidth - 50) {
+            state.playerX += speed;
+          }
+          if (state.keys.ArrowUp && state.playerY > 0) {
+            state.playerY -= speed;
+          }
+          if (state.keys.ArrowDown && state.playerY < window.innerHeight - 50) {
+            state.playerY += speed;
+          }
+          
+          player.style.left = `${state.playerX}px`;
+          player.style.top = `${state.playerY}px`;
+        }
+        
+        // Update shurikens
+        function updateShurikens() {
+          for (let i = state.shurikens.length - 1; i >= 0; i--) {
+            const shuriken = state.shurikens[i];
+            shuriken.y -= 10;
+            shuriken.element.style.top = `${shuriken.y}px`;
+            
+            // Remove if out of bounds
+            if (shuriken.y < -20) {
+              gameContainer.removeChild(shuriken.element);
+              state.shurikens.splice(i, 1);
+              continue;
+            }
+            
+            // Check collision with boss
+            if (state.boss && 
+                shuriken.x < state.boss.x + 100 &&
+                shuriken.x + 20 > state.boss.x &&
+                shuriken.y < state.boss.y + 100 &&
+                shuriken.y + 20 > state.boss.y) {
+              
+              gameContainer.removeChild(shuriken.element);
+              state.shurikens.splice(i, 1);
+              
+              state.boss.health -= 5;
+              state.score += 10;
+              scoreDisplay.textContent = `Score: ${state.score}`;
+              
+              if (state.boss.health <= 0) {
+                gameContainer.removeChild(state.boss.element);
+                state.boss = null;
+                state.score += 500;
+                scoreDisplay.textContent = `Score: ${state.score}`;
+                
+                // Remove tendrils
+                state.tendrils.forEach(tendril => {
+                  gameContainer.removeChild(tendril.element);
+                });
+                state.tendrils = [];
+                
+                // Respawn boss after delay
+                setTimeout(createBoss, 5000);
+              }
+            }
+          }
+        }
+        
+        // Update boss
+        function updateBoss() {
+          if (!state.boss) return;
+          
+          // Move boss
+          state.boss.x += state.boss.direction * 2;
+          if (state.boss.x <= 0 || state.boss.x >= window.innerWidth - 100) {
+            state.boss.direction *= -1;
+          }
+          
+          state.boss.element.style.left = `${state.boss.x}px`;
+          
+          // Update tendrils
+          state.tendrils.forEach((tendril, i) => {
+            tendril.angle += 0.02;
+            const endX = state.boss.x + 50 + Math.cos(tendril.angle) * tendril.length;
+            const endY = state.boss.y + 50 + Math.sin(tendril.angle) * tendril.length;
+            
+            const dx = endX - (state.boss.x + 50);
+            const dy = endY - (state.boss.y + 50);
+            const angle = Math.atan2(dy, dx);
+            
+            tendril.element.style.width = `${tendril.length}px`;
+            tendril.element.style.height = `${tendril.width}px`;
+            tendril.element.style.left = `${state.boss.x + 50}px`;
+            tendril.element.style.top = `${state.boss.y + 50}px`;
+            tendril.element.style.transformOrigin = '0 0';
+            tendril.element.style.transform = `rotate(${angle}rad)`;
+            
+            // Check collision with player
+            const playerCenterX = state.playerX + 25;
+            const playerCenterY = state.playerY + 25;
+            const distance = Math.sqrt(
+              Math.pow(playerCenterX - endX, 2) + 
+              Math.pow(playerCenterY - endY, 2)
+            );
+            
+            if (distance < 30) {
+              state.playerHealth -= 0.5;
+              healthDisplay.textContent = `Health: ${Math.floor(state.playerHealth)}`;
+              
+              if (state.playerHealth <= 0 && !state.gameOver) {
+                state.gameOver = true;
+                alert(`Game Over! Your score: ${state.score}`);
+                location.reload();
+              }
+            }
+          });
+          
+          // Boss attacks
+          const now = Date.now();
+          if (now - state.boss.lastAttackTime > 2000) { // Attack every 2 seconds
+            // Shoot at player
+            const attackElement = document.createElement('div');
+            attackElement.className = 'shuriken';
+            attackElement.style.backgroundColor = 'red';
+            attackElement.style.left = `${state.boss.x + 50}px`;
+            attackElement.style.top = `${state.boss.y + 100}px`;
+            gameContainer.appendChild(attackElement);
+            
+            const angle = Math.atan2(
+              state.playerY - state.boss.y,
+              state.playerX - state.boss.x
+            );
+            
+            const attack = {
+              element: attackElement,
+              x: state.boss.x + 50,
+              y: state.boss.y + 100,
+              vx: Math.cos(angle) * 5,
+              vy: Math.sin(angle) * 5
+            };
+            
+            state.shurikens.push(attack);
+            state.boss.lastAttackTime = now;
+          }
+        }
+        
+        // Update stars
+        function updateStars() {
+          state.dust.forEach(star => {
+            const speed = parseFloat(star.dataset.speed);
+            const y = parseFloat(star.style.top);
+            star.style.top = `${(y + speed) % 100}%`;
+          });
+        }
+        
+        // Game loop
+        function gameLoop() {
+          updatePlayer();
+          updateShurikens();
+          updateBoss();
+          updateStars();
+          
+          requestAnimationFrame(gameLoop);
+        }
+        
+        // Initialize game
+        function init() {
+          player.style.left = `${state.playerX}px`;
+          player.style.top = `${state.playerY}px`;
+          
+          createStars();
+          createNebula();
+          createBoss();
+          setupControls();
+          gameLoop();
+        }
+        
+        init();
+      });
+    </script>
+  </body>
 </html>

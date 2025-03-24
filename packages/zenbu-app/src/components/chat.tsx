@@ -31,27 +31,27 @@ import { ChatMessage, toChatMessages } from "zenbu-plugin/src/ws/utils";
 
 const UserMessage = ({ message }: { message: ChatMessage }) => {
   return (
-    <div className="group mb-4 max-w-full">
-      <div className="rounded-md bg-[#1e1e1e] border border-[#333333] overflow-hidden max-w-full">
-        <div className="border-b border-[#333333] px-3 py-1 flex items-center overflow-hidden">
-          <FileText className="h-3 w-3 mr-1.5 flex-shrink-0 text-[#a0a0a5]" />
-          <span className="text-[10px] text-[#e0e0e3] font-medium truncate">
+    <div className="group mb-6 max-w-full">
+      <div className="rounded-2xl bg-[#121214] backdrop-blur-xl border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.15)] overflow-hidden max-w-full transform hover:translate-y-[-1px] transition-all duration-300">
+        <div className="border-b border-[rgba(255,255,255,0.04)] px-4 py-2 flex items-center overflow-hidden bg-[#1a1a1c]">
+          <FileText className="h-3 w-3 mr-2 flex-shrink-0 text-[#A1A1A6]" />
+          <span className="text-[11px] text-[#F2F2F7] font-light truncate">
             Context
           </span>
         </div>
 
-        <div className="px-3 py-2 text-xs text-[#e0e0e3] whitespace-pre-wrap font-sans leading-relaxed break-words overflow-auto">
+        <div className="px-4 py-3 text-xs text-[#F2F2F7] whitespace-pre-wrap font-sans leading-relaxed break-words overflow-auto">
           {message.content}
         </div>
 
-        <div className="flex items-center justify-between text-[9px] px-3 py-1 text-[#6e6e76]">
+        <div className="flex items-center justify-between text-[10px] px-4 py-2 text-[#A1A1A6] bg-[#1a1a1c]">
           <div className="flex items-center">
-            <ChevronDown className="h-2.5 w-2.5 mr-1" />
-            <span>gpt-4o</span>
+            <ChevronDown className="h-2.5 w-2.5 mr-1.5" />
+            <span className="font-light">gpt-4o</span>
           </div>
           <div className="flex items-center">
-            <button className="hover:text-[#a0a0a5] transition-colors">
-              <span className="flex items-center gap-1">
+            <button className="hover:text-white transition-colors">
+              <span className="flex items-center gap-1.5">
                 <RefreshCw className="h-2.5 w-2.5" />
                 Restore
               </span>
@@ -65,8 +65,8 @@ const UserMessage = ({ message }: { message: ChatMessage }) => {
 
 const AssistantMessage = ({ message }: { message: ChatMessage }) => {
   return (
-    <div className="group mb-4 max-w-full">
-      <div className="text-xs text-[#e0e0e3] whitespace-pre-wrap font-sans leading-relaxed px-2 py-1 break-words overflow-auto">
+    <div className="group mb-6 max-w-full pl-2">
+      <div className="text-xs text-[#F2F2F7] whitespace-pre-wrap font-light leading-relaxed px-3 py-2 break-words overflow-auto rounded-2xl bg-[#15151a] backdrop-blur-xl border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.1)]">
         <div className="overflow-hidden">{message.content}</div>
       </div>
     </div>
@@ -79,20 +79,20 @@ const SystemPrompt = () => {
     "You are a powerful agentic AI coding assistant, powered by Claude 3.7 Sonnet. You operate exclusively in Cursor, the world's best IDE. You are pair programming with a USER to solve their coding task. The task may require creating a new codebase, modifying or debugging an existing codebase, or simply answering a question. Focus on building a modern website with a clean dark interface similar to Vercel's design aesthetic.";
 
   return (
-    <div className="mb-3 w-full">
+    <div className="mb-4 w-full">
       <div
-        className={`group cursor-pointer rounded-[6px] backdrop-blur-xl w-full ${showSystemPrompt ? "bg-[#232326]/60 border border-[#323236]" : "bg-[#1e1e20]/50 border border-[#2a2a2c] hover:bg-[#232326]/40"}`}
+        className={`group cursor-pointer rounded-2xl backdrop-blur-xl w-full transition-all duration-300 ${showSystemPrompt ? "bg-[#121214] border border-[rgba(255,255,255,0.05)] shadow-[0_4px_24px_rgba(0,0,0,0.12)]" : "bg-[#121214] border border-[rgba(255,255,255,0.03)] hover:bg-[#1a1a1c] hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)]"}`}
         onClick={() => setShowSystemPrompt(!showSystemPrompt)}
       >
-        <div className="flex items-center px-3 py-1.5 gap-1.5">
+        <div className="flex items-center px-4 py-2.5 gap-2">
           <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-            <FileText className="h-3 w-3 text-[#a0a0a5]" />
+            <FileText className="h-3 w-3 text-[#A1A1A6]" />
           </div>
           <div className="flex-1 flex items-center justify-between min-w-0">
-            <span className="text-[11px] font-medium text-[#c0c0c5]">
+            <span className="text-[11px] font-light text-[#F2F2F7]">
               System Prompt
             </span>
-            <div className="flex items-center text-[#808085]">
+            <div className="flex items-center text-[#A1A1A6]">
               {showSystemPrompt ? (
                 <ChevronUp className="h-3 w-3" />
               ) : (
@@ -103,7 +103,7 @@ const SystemPrompt = () => {
         </div>
 
         {showSystemPrompt && (
-          <div className="px-8 pb-3 pt-1 text-[11px] text-[#a0a0a5] leading-relaxed border-t border-[#323236]">
+          <div className="px-10 pb-4 pt-1 text-[11px] text-[#A1A1A6] leading-relaxed border-t border-[rgba(255,255,255,0.03)] font-light">
             {systemPromptContent}
           </div>
         )}
@@ -112,37 +112,40 @@ const SystemPrompt = () => {
   );
 };
 
-const Header = () => {
+const Header = ({ onCloseChat }: { onCloseChat: () => void }) => {
   return (
-    <div className="relative z-10 backdrop-blur-xl bg-[#1a1a1c]/70 border-b border-[#2a2a2c]">
-      <div className="flex items-center justify-between h-9 px-2">
+    <div className="relative z-10 backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border-b border-[rgba(255,255,255,0.04)]">
+      <div className="flex items-center justify-between h-12 px-3">
         <div className="flex-1"></div>
-        <div className="flex items-center bg-[#232326]/60 backdrop-blur-xl border border-[#323236] rounded-[6px] h-6 w-[280px] px-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-2"></div>
-          <span className="font-mono text-[11px] text-[#e0e0e3]">
+        <div className="flex items-center bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-full h-7 w-[280px] px-3">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-2.5 shadow-[0_0_6px_rgba(52,211,153,0.6)]"></div>
+          <span className="font-light text-[11px] text-[#F2F2F7]">
             localhost:4200
           </span>
           <div className="flex-1"></div>
         </div>
-        <div className="flex-1 flex items-center justify-end gap-1">
+        <div className="flex-1 flex items-center justify-end gap-2">
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
+            className="h-8 w-8 p-0 text-[#A1A1A6] hover:text-white rounded-full bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(40,40,46,0.7)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300"
           >
             <Search className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
+            className="h-8 w-8 p-0 text-[#A1A1A6] hover:text-white rounded-full bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(40,40,46,0.7)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300"
           >
             <MessageSquare className="h-3.5 w-3.5" />
           </Button>
           <Button
+            onClick={() => {
+              onCloseChat();
+            }}
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
+            className="h-8 w-8 p-0 text-[#A1A1A6] hover:text-white rounded-full bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(40,40,46,0.7)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300"
           >
             <PanelRightOpen className="h-3.5 w-3.5" />
           </Button>
@@ -152,8 +155,8 @@ const Header = () => {
   );
 };
 
-export const Chat = () => {
-  const { eventLog, inspector ,chatControls} = useChatStore();
+export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
+  const { eventLog, inspector, chatControls } = useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -190,7 +193,9 @@ export const Chat = () => {
   // Add scroll handler to detect when user scrolls
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
-    const isScrolledToBottom = Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 1;
+    const isScrolledToBottom =
+      Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) <
+      1;
     setIsAtBottom(isScrolledToBottom);
   };
 
@@ -244,21 +249,22 @@ export const Chat = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#151515] relative overflow-hidden">
+    <div className="flex flex-col h-full relative overflow-hidden">
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute top-[-50%] left-[-30%] w-[100%] h-[100%] opacity-30 bg-gradient-to-br from-slate-800/20 via-slate-800/5 to-transparent blur-[150px]"></div>
-        <div className="absolute bottom-[-30%] right-[-20%] w-[100%] h-[80%] opacity-20 bg-gradient-to-tl from-slate-700/10 via-slate-700/5 to-transparent blur-[180px]"></div>
-        <div className="absolute top-[10%] right-[5%] w-[50%] h-[50%] opacity-10 bg-gradient-to-bl from-indigo-800/5 via-slate-700/5 to-transparent blur-[120px]"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/10 via-slate-800/5 to-slate-900/10 opacity-30"></div>
+        {/* Darker solid background */}
+        <div className="absolute inset-0 bg-[#080809]"></div>
+        
+        {/* Glass blur effect layer with distortion */}
+        <div className="absolute inset-0 backdrop-filter backdrop-blur-lg"></div>
       </div>
 
-      <Header />
+      <Header onCloseChat={onCloseChat} />
 
-      <ScrollArea 
-        className="flex-1 px-3 py-2 relative z-10 w-full overflow-x-hidden"
+      <ScrollArea
+        className="flex-1 px-4 py-3 relative z-10 w-full overflow-x-hidden"
         onScroll={handleScroll}
       >
-        <div className="space-y-3 pt-2 pb-1 w-full">
+        <div className="space-y-4 pt-3 pb-2 w-full">
           <SystemPrompt />
 
           {messages.map((message, index) => (
@@ -283,20 +289,20 @@ export const Chat = () => {
         </div>
       </ScrollArea>
 
-      <div className="px-3 pb-3 relative z-10 w-full">
-        <div className="rounded-[6px] backdrop-blur-xl bg-[#232326]/60 border border-[#323236] shadow-sm shadow-black/5 overflow-hidden w-full">
-          <div className="flex items-center px-1 py-0.5 border-b border-[#323236] bg-[#1e1e20]/30">
-            <div className="flex-1 flex items-center gap-1 justify-between">
+      <div className="px-4 pb-4 relative z-10 w-full">
+        <div className="rounded-2xl backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden w-full transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.18)]">
+          <div className="flex items-center px-2 py-1.5 border-b border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
+            <div className="flex-1 flex items-center gap-2 justify-between">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className={`h-6 px-1.5 py-0.5 rounded-md flex items-center ${
+                      className={`h-7 px-2.5 py-1 rounded-full flex items-center transition-all duration-300 ${
                         inspector.state.kind === "inspecting"
-                          ? "text-[#949bf8] bg-[#949bf8]/10"
-                          : "text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                          ? "text-white bg-[rgba(50,50,56,0.7)] border border-[rgba(255,255,255,0.08)] shadow-[0_2px_12px_rgba(0,0,0,0.2)]"
+                          : "text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)]"
                       }`}
                       onClick={() => {
                         inspector.actions.setInspectorState({
@@ -307,13 +313,13 @@ export const Chat = () => {
                         });
                       }}
                     >
-                      <Inspect className="h-3 w-3 mr-0.5" />
-                      <span className="text-[10px]">Select</span>
+                      <Inspect className="h-3 w-3 mr-1" />
+                      <span className="text-[10px] font-light">Select</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"
-                    className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
+                    className="text-[10px] py-1.5 px-3 bg-[rgba(24,24,26,0.9)] backdrop-blur-2xl text-white border-[rgba(255,255,255,0.05)] rounded-full font-light shadow-sm"
                   >
                     Inspect element
                   </TooltipContent>
@@ -326,15 +332,15 @@ export const Chat = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 px-1.5 py-0.5 rounded-md flex items-center text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                      className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"
                     >
-                      <Video className="h-3 w-3 mr-0.5" />
-                      <span className="text-[10px]">Record</span>
+                      <Video className="h-3 w-3 mr-1" />
+                      <span className="text-[10px] font-light">Record</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"
-                    className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
+                    className="text-[10px] py-1.5 px-3 bg-[rgba(24,24,26,0.9)] backdrop-blur-2xl text-white border-[rgba(255,255,255,0.05)] rounded-full font-light shadow-sm"
                   >
                     Record interactions
                   </TooltipContent>
@@ -347,15 +353,15 @@ export const Chat = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 px-1.5 py-0.5 rounded-md flex items-center text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                      className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"
                     >
-                      <Camera className="h-3 w-3 mr-0.5" />
-                      <span className="text-[10px]">Screenshot</span>
+                      <Camera className="h-3 w-3 mr-1" />
+                      <span className="text-[10px] font-light">Screenshot</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"
-                    className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
+                    className="text-[10px] py-1.5 px-3 bg-[rgba(24,24,26,0.9)] backdrop-blur-2xl text-white border-[rgba(255,255,255,0.05)] rounded-full font-light shadow-sm"
                   >
                     Take screenshot
                   </TooltipContent>
@@ -368,15 +374,15 @@ export const Chat = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 px-1.5 py-0.5 rounded-md flex items-center text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"
+                      className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"
                     >
-                      <PenTool className="h-3 w-3 mr-0.5" />
-                      <span className="text-[10px]">Draw</span>
+                      <PenTool className="h-3 w-3 mr-1" />
+                      <span className="text-[10px] font-light">Draw</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"
-                    className="text-[10px] py-1 px-2 bg-[#232326]/95 text-[#c0c0c5] border-[#323236]"
+                    className="text-[10px] py-1.5 px-3 bg-[rgba(24,24,26,0.9)] backdrop-blur-2xl text-white border-[rgba(255,255,255,0.05)] rounded-full font-light shadow-sm"
                   >
                     Draw on page
                   </TooltipContent>
@@ -386,47 +392,38 @@ export const Chat = () => {
           </div>
 
           <div className="flex flex-col text-xs">
-            <div className="relative min-h-[44px] w-full">
+            <div className="relative min-h-[50px] w-full bg-[rgba(20,20,22,0.4)] backdrop-filter backdrop-blur-md">
               <textarea
                 ref={textareaRef}
                 value={chatControls.state.input}
                 onChange={(e) => chatControls.actions.setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask me anything..."
-                className="absolute top-0 left-0 w-full h-full pt-2.5 pl-3 pr-3 pb-1 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#e0e0e3] placeholder:text-[#808085] overflow-auto leading-relaxed"
+                className="absolute top-0 left-0 w-full h-full pt-3.5 pl-4 pr-4 pb-1.5 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#F2F2F7] placeholder:text-[rgba(161,161,166,0.8)] overflow-auto leading-relaxed font-light"
                 style={{
-                  minHeight: "44px",
+                  minHeight: "50px",
                   maxHeight: "100px",
                 }}
               />
             </div>
 
-            <div className="flex items-center justify-between px-3 py-1.5 border-t border-[#323236]">
-              <div className="text-[10px] text-[#a0a0a5] flex items-center gap-1">
+            <div className="flex items-center justify-between px-4 py-2 border-t border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
+              <div className="text-[10px] text-[#A1A1A6] flex items-center gap-1.5 font-light">
                 <span>claude-3.7-sonnet</span>
                 <ChevronDown className="h-3 w-3" />
               </div>
               <button
                 onClick={handleSendMessage}
                 disabled={!chatControls.state.input.trim()}
-                className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[11px] font-medium backdrop-blur-xl bg-[#505057]/30 border border-[#606067]/30 hover:bg-[#606067]/40 text-[#e0e0e3] ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300 ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <span>Send</span>
-                <SendIcon className="ml-1 h-3 w-3" />
+                <SendIcon className="ml-1.5 h-3 w-3" />
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      {/* <div
-        className="[&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre]:rounded [&_pre]:p-2 [&_pre]:bg-[#1a1a1c] [&_pre]:border [&_pre]:border-[#333] [&_pre]:my-2
-                    [&_code]:font-mono [&_code]:whitespace-pre-wrap [&_code]:break-words [&_code]:max-w-full [&_code]:inline-block
-                    [&_img]:max-w-full [&_img]:h-auto
-                    [&_table]:border-collapse [&_table]:my-2 [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:block
-                    [&_th]:border [&_th]:border-[#333] [&_th]:p-1 [&_th]:text-xs
-                    [&_td]:border [&_td]:border-[#333] [&_td]:p-1 [&_td]:text-xs"
-      ></div> */}
     </div>
   );
 };

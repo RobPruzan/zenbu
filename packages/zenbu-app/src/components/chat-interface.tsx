@@ -148,8 +148,8 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                   "I've received your request. I'll help you build your website!",
                 status: "done",
               }
-            : msg
-        )
+            : msg,
+        ),
       );
     }, 1000);
 
@@ -166,7 +166,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
     }
   };
 
-  const {} = useChatStore()
+  const {} = useChatStore();
 
   return (
     <div className="flex flex-col h-full bg-[#151515] relative overflow-hidden">
@@ -176,10 +176,10 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
         <div className="absolute top-[-50%] left-[-30%] w-[100%] h-[100%] opacity-30 bg-gradient-to-br from-slate-800/20 via-slate-800/5 to-transparent blur-[150px]"></div>
         <div className="absolute bottom-[-30%] right-[-20%] w-[100%] h-[80%] opacity-20 bg-gradient-to-tl from-slate-700/10 via-slate-700/5 to-transparent blur-[180px]"></div>
         <div className="absolute top-[10%] right-[5%] w-[50%] h-[50%] opacity-10 bg-gradient-to-bl from-indigo-800/5 via-slate-700/5 to-transparent blur-[120px]"></div>
-        
+
         {/* Subtle color tints */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/10 via-slate-800/5 to-slate-900/10 opacity-30"></div>
-        
+
         {/* Noise texture overlay with mild graininess */}
         {/* <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxwYXRoIGQ9Ik0wIDBoMzAwdjMwMEgweiIgZmlsdGVyPSJ1cmwoI2EpIiBvcGFjaXR5PSIuMDgiLz48L3N2Zz4=')] opacity-50"></div> */}
       </div>
@@ -196,37 +196,38 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
               localhost:4200
             </span>
             <div className="flex-1"></div>
-                <Button
-                  variant="ghost"
-                  size="sm"
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-5 w-5 p-0 text-[#a0a0a5] hover:text-[#e0e0e3]"
-                >
+            >
               <Copy className="h-3 w-3" />
-                </Button>
-        </div>
+            </Button>
+          </div>
           <div className="flex-1 flex items-center justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="sm"
               className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
             >
               <Search className="h-3.5 w-3.5" />
-          </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
-                >
+            >
               <MessageSquare className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-7 w-7 p-0 text-[#a0a0a5] hover:text-[#e0e0e3] rounded-full"
               onClick={onClose}
-                >
+            >
               <PanelRightOpen className="h-3.5 w-3.5" />
-                </Button>
+            </Button>
           </div>
         </div>
       </div>
@@ -258,7 +259,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                 </div>
               </div>
 
-      {showSystemPrompt && (
+              {showSystemPrompt && (
                 <div className="px-8 pb-3 pt-1 text-[11px] text-[#a0a0a5] leading-relaxed border-t border-[#323236]">
                   {systemPromptContent}
                 </div>
@@ -276,14 +277,16 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                     {/* File context indicator */}
                     <div className="border-b border-[#333333] px-3 py-1 flex items-center overflow-hidden">
                       <FileText className="h-3 w-3 mr-1.5 flex-shrink-0 text-[#a0a0a5]" />
-                      <span className="text-[10px] text-[#e0e0e3] font-medium truncate">Context</span>
-                        </div>
-                    
+                      <span className="text-[10px] text-[#e0e0e3] font-medium truncate">
+                        Context
+                      </span>
+                    </div>
+
                     {/* User message */}
                     <div className="px-3 py-2 text-xs text-[#e0e0e3] whitespace-pre-wrap font-sans leading-relaxed break-words overflow-auto">
                       {message.content}
-                      </div>
-                    
+                    </div>
+
                     {/* Footer with actions */}
                     <div className="flex items-center justify-between text-[9px] px-3 py-1 text-[#6e6e76]">
                       <div className="flex items-center">
@@ -326,9 +329,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                         </span>
                       </div>
                     ) : (
-                      <div className="overflow-hidden">
-                        {message.content}
-                    </div>
+                      <div className="overflow-hidden">{message.content}</div>
                     )}
                   </div>
                 </div>
@@ -348,7 +349,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                {/* <Button
+                    {/* <Button
                   variant="ghost"
                   size="sm"
                       className={`h-6 px-1.5 py-0.5 rounded-md flex items-center ${inspectorState.kind === "inspecting" ? "text-[#949bf8] bg-[#949bf8]/10" : "text-[#a0a0a5] hover:text-[#e0e0e3] hover:bg-[#323236]/40"}`}
@@ -437,44 +438,44 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            </div>
+          </div>
 
           {/* Text input area with improved glassy effect */}
-            <div className="flex flex-col text-xs">
-              <div className="relative min-h-[44px] w-full">
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ask me anything..."
-                  className="absolute top-0 left-0 w-full h-full pt-2.5 pl-3 pr-3 pb-1 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#e0e0e3] placeholder:text-[#808085] overflow-auto"
-                  style={{
-                    lineHeight: "1.5",
-                    textAlign: "left",
-                    boxSizing: "border-box",
-                    minHeight: "44px",
-                    wordWrap: "break-word",
-                    overflowWrap: "break-word",
-                    maxHeight: "100px"
-                  }}
-                />
-              </div>
+          <div className="flex flex-col text-xs">
+            <div className="relative min-h-[44px] w-full">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask me anything..."
+                className="absolute top-0 left-0 w-full h-full pt-2.5 pl-3 pr-3 pb-1 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#e0e0e3] placeholder:text-[#808085] overflow-auto"
+                style={{
+                  lineHeight: "1.5",
+                  textAlign: "left",
+                  boxSizing: "border-box",
+                  minHeight: "44px",
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
+                  maxHeight: "100px",
+                }}
+              />
+            </div>
 
             {/* Send controls with improved glassy effect */}
             <div className="flex items-center justify-between px-3 py-1.5 border-t border-[#323236]">
               <div className="text-[10px] text-[#a0a0a5] flex items-center gap-1">
                 <span>claude-3.7-sonnet</span>
                 <ChevronDown className="h-3 w-3" />
-                </div>
-                  <button
+              </div>
+              <button
                 onClick={handleSendMessage}
-                    disabled={!input.trim()}
+                disabled={!input.trim()}
                 className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[11px] font-medium backdrop-blur-xl bg-[#505057]/30 border border-[#606067]/30 hover:bg-[#606067]/40 text-[#e0e0e3] ${!input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <span>Send</span>
+              >
+                <span>Send</span>
                 <SendIcon className="ml-1 h-3 w-3" />
-                  </button>
+              </button>
             </div>
           </div>
         </div>
@@ -491,7 +492,7 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
           border: 1px solid #333;
           margin: 0.5rem 0;
         }
-        
+
         code {
           font-family: monospace;
           white-space: pre-wrap;
@@ -499,12 +500,12 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
           max-width: 100%;
           display: inline-block;
         }
-        
+
         img {
           max-width: 100%;
           height: auto;
         }
-        
+
         table {
           border-collapse: collapse;
           margin: 0.5rem 0;
@@ -512,8 +513,9 @@ export default function ChatInterface({ onClose }: ChatInterfaceProps = {}) {
           overflow-x: auto;
           display: block;
         }
-        
-        th, td {
+
+        th,
+        td {
           border: 1px solid #333;
           padding: 0.25rem;
           font-size: 0.75rem;

@@ -118,7 +118,7 @@ export default function Home() {
                   <X className="h-3.5 w-3.5" />
                 </Button> */}
                   {/* <ChatInterface onClose={toggleChat} /> */}
-                  <Chat />
+                  <Chat onCloseChat={toggleChat} />
                 </div>
               </ResizablePanel>
               <ResizableHandle withHandle className="bg-border/40" />
