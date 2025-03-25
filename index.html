@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John O'Keefe - Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #000;
+            background-color: #fff;
+            padding: 2rem;
+            cursor: none; /* Hide default cursor */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            font-weight: normal;
+            margin-bottom: 0.5rem;
+        }
+
+        section {
+            margin-bottom: 2rem;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            position: relative;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            position: fixed;
+            width: 8px;
+            height: 16px;
+            background-color: #000;
+            z-index: 100;
+            pointer-events: none;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% {
+                opacity: 1;
+            }
+            50%, 100% {
+                opacity: 0;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 1rem;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom cursor element -->
+    <div class="cursor"></div>
+    
+    <div class="container">
+        <header>
+            <h1>John O'Keefe</h1>
+        </header>
+        
+        <section>
+            <p>Currently working as a freelance developer.</p>
+        </section>
+        
+        <section>
+            <h2>Work Experience</h2>
+            <ul>
+                <li><a href="#">Company One</a> - Senior Developer (2019-2023)</li>
+                <li><a href="#">Company Two</a> - Developer (2016-2019)</li>
+                <li><a href="#">Company Three</a> - Junior Developer (2014-2016)</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>Connect</h2>
+            <ul>
+                <li><a href="#">Twitter</a></li>
+                <li><a href="#">GitHub</a></li>
+                <li><a href="#">LinkedIn</a></li>
+                <li><a href="#">Email</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cursor = document.querySelector('.cursor');
+            
+            // Update cursor position based on mouse movement
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = `${e.clientX}px`;
+                cursor.style.top = `${e.clientY}px`;
+            });
+            
+            // Hide cursor when mouse leaves the window
+            document.addEventListener('mouseout', () => {
+                cursor.style.display = 'none';
+            });
+            
+            // Show cursor when mouse enters the window
+            document.addEventListener('mouseover', () => {
+                cursor.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html> 

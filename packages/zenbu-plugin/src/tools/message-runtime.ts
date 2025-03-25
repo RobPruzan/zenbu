@@ -515,12 +515,34 @@ export const sendIdleMainThreadMessage = async ({
     // console.log(textPart);
   }
 
+  /**
+   *
+   * MUST ADD ME:
+   * if there are still idle tasks left they must be pulled first
+   *
+   * (note to self, only user should be able to delete tasks, and it should be very easy in the ui)
+   *
+   *
+   */
+
   activeStreams.current = activeStreams.current.filter(
     ({ kind }) => kind !== "main-thread"
   );
 };
 
-export const parallelizeTaskSetIfPossible = async () => null;
+export const parallelizeTaskSetIfPossible = async () => {
+  /**
+   *
+   * we will need to read tasks sequentially and determine if they can be parallelized
+   *
+   * wait you actually know immediately for every task if it can be made parallel (so you only need
+   * to check if the new task can be ran in parallel and if it depends on any other task in the batch)
+   *
+   *
+   * but after you complete a task you will need to check for each if any can now be ran in parallel given
+   * one is complete
+   */
+};
 
 export const spawnThread = ({
   emitEvent,

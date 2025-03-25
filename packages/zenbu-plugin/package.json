@@ -11,6 +11,7 @@
     "@ai-sdk/google": "^1.1.26",
     "@ai-sdk/groq": "^1.1.15",
     "@ai-sdk/openai": "^1.2.5",
+    "@anthropic-ai/sdk": "^0.39.0",
     "@hono/arktype-validator": "^2.0.0",
     "@hono/node-server": "^1.13.8",
     "@hono/zod-validator": "^0.4.3",
