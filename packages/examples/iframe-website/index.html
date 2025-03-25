@@ -108,12 +108,14 @@
         const healthDisplay = document.getElementById('health');
         
         // Game state
+// Game state
         const state = {
           playerX: window.innerWidth / 2,
           playerY: window.innerHeight - 100,
           playerHealth: 100,
           score: 0,
           shurikens: [],
+          bossProjectiles: [],
           boss: null,
           tendrils: [],
           dust: [],
@@ -339,40 +341,42 @@
             if (distance < 30) {
               state.playerHealth -= 0.5;
               healthDisplay.textContent = `Health: ${Math.floor(state.playerHealth)}`;
-              
               if (state.playerHealth <= 0 && !state.gameOver) {
                 state.gameOver = true;
-                alert(`Game Over! Your score: ${state.score}`);
-                location.reload();
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
               }
             }
           });
           
           // Boss attacks
           const now = Date.now();
-          if (now - state.boss.lastAttackTime > 2000) { // Attack every 2 seconds
+          if (now - state.boss.lastAttackTime > 2000) {
             // Shoot at player
             const attackElement = document.createElement('div');
             attackElement.className = 'shuriken';
             attackElement.style.backgroundColor = 'red';
-            attackElement.style.left = `${state.boss.x + 50}px`;
-            attackElement.style.top = `${state.boss.y + 100}px`;
+            attackElement.style.left = `${state.boss.x + 50 - 10}px`;
+            attackElement.style.top = `${state.boss.y + 50}px`;
             gameContainer.appendChild(attackElement);
             
             const angle = Math.atan2(
-              state.playerY - state.boss.y,
-              state.playerX - state.boss.x
+              (state.playerY + 25) - (state.boss.y + 50),
+              (state.playerX + 25) - (state.boss.x + 50)
             );
             
             const attack = {
               element: attackElement,
-              x: state.boss.x + 50,
-              y: state.boss.y + 100,
+              x: state.boss.x + 50 - 10,
+              y: state.boss.y + 50,
               vx: Math.cos(angle) * 5,
               vy: Math.sin(angle) * 5
             };
             
-            state.shurikens.push(attack);
+            // Create a separate array for boss projectiles to handle them differently
+            if (!state.bossProjectiles) state.bossProjectiles = [];
+            state.bossProjectiles.push(attack);
             state.boss.lastAttackTime = now;
           }
         }
@@ -386,11 +390,53 @@
           });
         }
         
+        // Update boss projectiles
+        function updateBossProjectiles() {
+          if (!state.bossProjectiles) return;
+          
+          for (let i = state.bossProjectiles.length - 1; i >= 0; i--) {
+            const projectile = state.bossProjectiles[i];
+            projectile.x += projectile.vx;
+            projectile.y += projectile.vy;
+            projectile.element.style.left = `${projectile.x}px`;
+            projectile.element.style.top = `${projectile.y}px`;
+            
+            // Remove if out of bounds
+            if (projectile.x < -20 || projectile.x > window.innerWidth || 
+                projectile.y < -20 || projectile.y > window.innerHeight) {
+              gameContainer.removeChild(projectile.element);
+              state.bossProjectiles.splice(i, 1);
+              continue;
+            }
+            
+            // Check collision with player
+            if (projectile.x < state.playerX + 50 &&
+                projectile.x + 20 > state.playerX &&
+                projectile.y < state.playerY + 50 &&
+                projectile.y + 20 > state.playerY) {
+              
+              gameContainer.removeChild(projectile.element);
+              state.bossProjectiles.splice(i, 1);
+              
+              state.playerHealth -= 10;
+              healthDisplay.textContent = `Health: ${Math.floor(state.playerHealth)}`;
+              
+              if (state.playerHealth <= 0 && !state.gameOver) {
+                state.gameOver = true;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            }
+          }
+        }
+        
         // Game loop
         function gameLoop() {
           updatePlayer();
           updateShurikens();
           updateBoss();
+          updateBossProjectiles();
           updateStars();
           
           requestAnimationFrame(gameLoop);

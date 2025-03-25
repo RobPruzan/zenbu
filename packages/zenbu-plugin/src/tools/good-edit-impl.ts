@@ -123,7 +123,7 @@ export const smartEdit = ({
       let accumulatedXml = "";
 
       const { textStream } = await streamText({
-        model: anthropic("claude-3-7-sonnet-20250219"),
+        model: anthropic("claude-3-5-sonnet-latest"),
         prompt: routerPrompt,
         maxTokens: 8000,
         maxSteps: 100,

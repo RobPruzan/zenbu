@@ -23,7 +23,9 @@ export const toChatMessages = (events: Array<EventLogEvent>) => {
           role: "assistant",
           content: "",
         };
-        const endAt = events.findIndex((e, i) => i > index && e.kind === "user-message");
+        const endAt = events.findIndex(
+          (e, i) => i > index && e.kind === "user-message"
+        );
 
         const localEvents = events.slice(
           index,
@@ -36,7 +38,7 @@ export const toChatMessages = (events: Array<EventLogEvent>) => {
             processedIndices.add(index + localIndex);
           }
         });
-        
+
         messages.push(acc);
         return;
       }
@@ -45,4 +47,12 @@ export const toChatMessages = (events: Array<EventLogEvent>) => {
   return messages;
 };
 
-export type ChatMessage = ReturnType<typeof toChatMessages>[number]
+export type ChatMessage = ReturnType<typeof toChatMessages>[number];
+
+export const removeMarkdownComments = (content: string): string => {
+  let result = content.replace(/^\/\/.*$/gm, "");
+
+  result = result.replace(/<!--[\s\S]*?-->/g, "");
+
+  return result;
+};

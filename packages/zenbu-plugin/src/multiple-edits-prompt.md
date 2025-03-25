@@ -4,9 +4,6 @@ Here's how you should format your response:
 1. Identify each edit location with line numbers (based on the 1-indexed file provided)
 2. For each edit, provide the new code that should replace the content in that range
 3. Make sure edits are non-overlapping - no edit's line range should overlap with another edit
-4. Provide the edits in any order - the system will sort and apply them correctly
-
-Note: The system will automatically apply your edits in reverse order (bottom-up) to avoid line number shifts when applying them, so you don't need to worry about that.
 
 <target-file-with-line-numbers>
 {fileContentWithLineNumbers}
