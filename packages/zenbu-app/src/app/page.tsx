@@ -26,7 +26,7 @@ import { scan } from "react-scan";
 import DevTools from "../components/devtools";
 import { ChatInstanceContext } from "~/components/chat-instance-context";
 import { IFrameWrapper } from "./iframe-wrapper";
-import { Chat } from "~/components/chat";
+import { Chat } from "~/components/chat/chat";
 
 scan();
 

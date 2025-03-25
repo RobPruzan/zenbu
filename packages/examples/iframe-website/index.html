@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmic Universe Game</title>
+    <title>Cosmic Brick Breaker</title>
     <script src="http://localhost:42069"></script>
     <style>
       body {
@@ -39,34 +39,33 @@
         opacity: 0.5;
       }
       
-      #player {
+      #paddle {
         position: absolute;
-        width: 50px;
-        height: 50px;
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><polygon points="25,0 50,50 25,35 0,50" fill="%23fff"/></svg>');
+        width: 120px;
+        height: 20px;
+        background-color: #00ffff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #00ffff;
         z-index: 10;
+        bottom: 30px;
       }
       
-      .shuriken {
+      #ball {
         position: absolute;
         width: 20px;
         height: 20px;
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><circle cx="10" cy="10" r="5" fill="%2300ffff"/></svg>');
+        background-color: #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #ffffff;
         z-index: 9;
       }
       
-      .boss {
+      .brick {
         position: absolute;
-        width: 100px;
-        height: 100px;
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23ff0000"/><circle cx="50" cy="50" r="20" fill="%23000"/><circle cx="50" cy="50" r="10" fill="%23fff"/></svg>');
+        width: 80px;
+        height: 30px;
+        border-radius: 5px;
         z-index: 8;
-      }
-      
-      .tendril {
-        position: absolute;
-        background-color: #ff6600;
-        z-index: 7;
       }
       
       .dust {
@@ -85,49 +84,116 @@
         font-size: 18px;
         z-index: 100;
       }
+      
+      #game-over {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 48px;
+        text-align: center;
+        z-index: 200;
+        display: none;
+      }
+      
+      #start-screen {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 24px;
+        text-align: center;
+        z-index: 200;
+      }
+      
+      button {
+        background-color: #00ffff;
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        font-size: 18px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+      
+      button:hover {
+        background-color: #66ffff;
+      }
+      
+      .particle {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        z-index: 7;
+      }
     </style>
   </head>
   <body>
     <div id="game-container">
       <div id="starfield"></div>
       <div id="nebula"></div>
-      <div id="player"></div>
+      <div id="paddle"></div>
+      <div id="ball"></div>
       <div id="hud">
         <div id="score">Score: 0</div>
-        <div id="health">Health: 100</div>
+        <div id="lives">Lives: 3</div>
+      </div>
+      <div id="game-over">
+        <h1>Game Over</h1>
+        <p id="final-score">Score: 0</p>
+        <button id="restart-button">Play Again</button>
+      </div>
+      <div id="start-screen">
+        <h1>Cosmic Brick Breaker</h1>
+        <p>Use left and right arrow keys to move the paddle</p>
+        <p>Break all the bricks to win!</p>
+        <button id="start-button">Start Game</button>
       </div>
     </div>
     
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         const gameContainer = document.getElementById('game-container');
-        const player = document.getElementById('player');
+        const paddle = document.getElementById('paddle');
+        const ball = document.getElementById('ball');
         const starfield = document.getElementById('starfield');
         const nebula = document.getElementById('nebula');
         const scoreDisplay = document.getElementById('score');
-        const healthDisplay = document.getElementById('health');
+        const livesDisplay = document.getElementById('lives');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-button');
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
         
         // Game state
-// Game state
         const state = {
-          playerX: window.innerWidth / 2,
-          playerY: window.innerHeight - 100,
-          playerHealth: 100,
+          paddleX: window.innerWidth / 2 - 60,
+          ballX: window.innerWidth / 2 - 10,
+          ballY: window.innerHeight - 60,
+          ballSpeedX: 0,
+          ballSpeedY: 0,
+          ballLaunched: false,
+          lives: 3,
           score: 0,
-          shurikens: [],
-          bossProjectiles: [],
-          boss: null,
-          tendrils: [],
+          bricks: [],
           dust: [],
+          particles: [],
           keys: {
             ArrowLeft: false,
             ArrowRight: false,
-            ArrowUp: false,
-            ArrowDown: false,
             Space: false
           },
-          lastShurikenTime: 0,
-          gameOver: false
+          gameActive: false,
+          gameOver: false,
+          brickColors: [
+            '#ff0066', '#ff3300', '#ff6600', '#ffcc00', 
+            '#33cc33', '#00ccff', '#3366ff', '#cc33ff'
+          ]
         };
         
         // Initialize stars
@@ -164,34 +230,50 @@
           }
         }
         
-        // Create boss
-        function createBoss() {
-          const boss = document.createElement('div');
-          boss.className = 'boss';
-          boss.style.left = `${window.innerWidth / 2 - 50}px`;
-          boss.style.top = '100px';
-          gameContainer.appendChild(boss);
+        // Create bricks
+        function createBricks() {
+          // Clear existing bricks
+          state.bricks.forEach(brick => {
+            if (brick.element && brick.element.parentNode) {
+              gameContainer.removeChild(brick.element);
+            }
+          });
+          state.bricks = [];
           
-          state.boss = {
-            element: boss,
-            x: window.innerWidth / 2 - 50,
-            y: 100,
-            health: 100,
-            direction: 1,
-            lastAttackTime: 0
-          };
+          const brickWidth = 80;
+          const brickHeight = 30;
+          const rows = 5;
+          const cols = Math.floor((window.innerWidth * 0.8) / brickWidth);
+          const startX = (window.innerWidth - (cols * brickWidth)) / 2;
+          const startY = 80;
+          const padding = 10;
           
-          // Create tendrils
-          for (let i = 0; i < 5; i++) {
-            const tendril = document.createElement('div');
-            tendril.className = 'tendril';
-            gameContainer.appendChild(tendril);
-            state.tendrils.push({
-              element: tendril,
-              angle: (i * Math.PI * 2) / 5,
-              length: 50,
-              width: 10
-            });
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const brick = document.createElement('div');
+              brick.className = 'brick';
+              const colorIndex = Math.floor(Math.random() * state.brickColors.length);
+              brick.style.backgroundColor = state.brickColors[colorIndex];
+              brick.style.boxShadow = `0 0 10px ${state.brickColors[colorIndex]}`;
+              
+              const x = startX + col * (brickWidth + padding);
+              const y = startY + row * (brickHeight + padding);
+              
+              brick.style.left = `${x}px`;
+              brick.style.top = `${y}px`;
+              
+              gameContainer.appendChild(brick);
+              
+              state.bricks.push({
+                element: brick,
+                x: x,
+                y: y,
+                width: brickWidth,
+                height: brickHeight,
+                color: state.brickColors[colorIndex],
+                hit: false
+              });
+            }
           }
         }
         
@@ -200,8 +282,8 @@
           window.addEventListener('keydown', (e) => {
             if (e.code in state.keys) {
               state.keys[e.code] = true;
-              if (e.code === 'Space') {
-                shootShuriken();
+              if (e.code === 'Space' && !state.ballLaunched && state.gameActive) {
+                launchBall();
               }
             }
           });
@@ -211,173 +293,214 @@
               state.keys[e.code] = false;
             }
           });
-        }
-        
-        // Shoot shuriken
-        function shootShuriken() {
-          const now = Date.now();
-          if (now - state.lastShurikenTime > 300) { // Cooldown
-            const shuriken = document.createElement('div');
-            shuriken.className = 'shuriken';
-            shuriken.style.left = `${state.playerX + 15}px`;
-            shuriken.style.top = `${state.playerY - 20}px`;
-            gameContainer.appendChild(shuriken);
-            
-            state.shurikens.push({
-              element: shuriken,
-              x: state.playerX + 15,
-              y: state.playerY - 20
-            });
-            
-            state.lastShurikenTime = now;
-          }
-        }
-        
-        // Update player position
-        function updatePlayer() {
-          const speed = 5;
           
-          if (state.keys.ArrowLeft && state.playerX > 0) {
-            state.playerX -= speed;
+          restartButton.addEventListener('click', restartGame);
+          startButton.addEventListener('click', startGame);
+        }
+        
+        // Launch ball
+        function launchBall() {
+          if (!state.ballLaunched) {
+            state.ballLaunched = true;
+            // Random angle between -45 and 45 degrees
+            const angle = (Math.random() * 90 - 45) * Math.PI / 180;
+            const speed = 8;
+            state.ballSpeedX = Math.sin(angle) * speed;
+            state.ballSpeedY = -Math.cos(angle) * speed;
           }
-          if (state.keys.ArrowRight && state.playerX < window.innerWidth - 50) {
-            state.playerX += speed;
+        }
+        
+        // Update paddle position
+        function updatePaddle() {
+          const paddleSpeed = 10;
+          
+          if (state.keys.ArrowLeft && state.paddleX > 0) {
+            state.paddleX -= paddleSpeed;
           }
-          if (state.keys.ArrowUp && state.playerY > 0) {
-            state.playerY -= speed;
-          }
-          if (state.keys.ArrowDown && state.playerY < window.innerHeight - 50) {
-            state.playerY += speed;
+          if (state.keys.ArrowRight && state.paddleX < window.innerWidth - 120) {
+            state.paddleX += paddleSpeed;
           }
           
-          player.style.left = `${state.playerX}px`;
-          player.style.top = `${state.playerY}px`;
+          paddle.style.left = `${state.paddleX}px`;
+          
+          // If ball is not launched, make it follow the paddle
+          if (!state.ballLaunched) {
+            state.ballX = state.paddleX + 50;
+            ball.style.left = `${state.ballX}px`;
+            ball.style.top = `${state.ballY}px`;
+          }
         }
         
-        // Update shurikens
-        function updateShurikens() {
-          for (let i = state.shurikens.length - 1; i >= 0; i--) {
-            const shuriken = state.shurikens[i];
-            shuriken.y -= 10;
-            shuriken.element.style.top = `${shuriken.y}px`;
+        // Update ball position
+        function updateBall() {
+          if (!state.ballLaunched) return;
+          
+          state.ballX += state.ballSpeedX;
+          state.ballY += state.ballSpeedY;
+          
+          // Wall collision
+          if (state.ballX <= 0 || state.ballX >= window.innerWidth - 20) {
+            state.ballSpeedX = -state.ballSpeedX;
+            createParticles(state.ballX, state.ballY, '#ffffff', 5);
+          }
+          
+          if (state.ballY <= 0) {
+            state.ballSpeedY = -state.ballSpeedY;
+            createParticles(state.ballX, state.ballY, '#ffffff', 5);
+          }
+          
+          // Paddle collision
+          if (state.ballY >= window.innerHeight - 50 && 
+              state.ballY <= window.innerHeight - 30 &&
+              state.ballX >= state.paddleX - 20 &&
+              state.ballX <= state.paddleX + 120) {
             
-            // Remove if out of bounds
-            if (shuriken.y < -20) {
-              gameContainer.removeChild(shuriken.element);
-              state.shurikens.splice(i, 1);
-              continue;
+            // Calculate bounce angle based on where the ball hits the paddle
+            const hitPosition = (state.ballX - state.paddleX) / 120; // 0 to 1
+            const angle = (hitPosition * 120 - 60) * Math.PI / 180; // -60 to 60 degrees
+            const speed = Math.sqrt(state.ballSpeedX * state.ballSpeedX + state.ballSpeedY * state.ballSpeedY);
+            
+            state.ballSpeedX = Math.sin(angle) * speed;
+            state.ballSpeedY = -Math.cos(angle) * speed;
+            
+            createParticles(state.ballX, state.ballY, '#00ffff', 8);
+          }
+          
+          // Bottom collision (lose life)
+          if (state.ballY >= window.innerHeight) {
+            state.lives--;
+            livesDisplay.textContent = `Lives: ${state.lives}`;
+            
+            if (state.lives <= 0) {
+              endGame();
+            } else {
+              resetBall();
             }
+          }
+          
+          // Brick collision
+          checkBrickCollision();
+          
+          ball.style.left = `${state.ballX}px`;
+          ball.style.top = `${state.ballY}px`;
+        }
+        
+        // Check for collision with bricks
+        function checkBrickCollision() {
+          for (let i = 0; i < state.bricks.length; i++) {
+            const brick = state.bricks[i];
             
-            // Check collision with boss
-            if (state.boss && 
-                shuriken.x < state.boss.x + 100 &&
-                shuriken.x + 20 > state.boss.x &&
-                shuriken.y < state.boss.y + 100 &&
-                shuriken.y + 20 > state.boss.y) {
+            if (brick.hit) continue;
+            
+            if (state.ballX < brick.x + brick.width &&
+                state.ballX + 20 > brick.x &&
+                state.ballY < brick.y + brick.height &&
+                state.ballY + 20 > brick.y) {
               
-              gameContainer.removeChild(shuriken.element);
-              state.shurikens.splice(i, 1);
+              // Determine collision direction
+              const ballCenterX = state.ballX + 10;
+              const ballCenterY = state.ballY + 10;
+              const brickCenterX = brick.x + brick.width / 2;
+              const brickCenterY = brick.y + brick.height / 2;
               
-              state.boss.health -= 5;
+              const dx = ballCenterX - brickCenterX;
+              const dy = ballCenterY - brickCenterY;
+              
+              // Horizontal collision
+              if (Math.abs(dx) > Math.abs(dy)) {
+                state.ballSpeedX = -state.ballSpeedX;
+              } else {
+                // Vertical collision
+                state.ballSpeedY = -state.ballSpeedY;
+              }
+              
+              // Mark brick as hit
+              brick.hit = true;
+              brick.element.style.visibility = 'hidden';
+              
+              // Create particles
+              createParticles(state.ballX, state.ballY, brick.color, 15);
+              
+              // Update score
               state.score += 10;
               scoreDisplay.textContent = `Score: ${state.score}`;
               
-              if (state.boss.health <= 0) {
-                gameContainer.removeChild(state.boss.element);
-                state.boss = null;
-                state.score += 500;
+              // Check if all bricks are hit
+              if (state.bricks.every(b => b.hit)) {
+                // Level complete
+                state.score += 100;
                 scoreDisplay.textContent = `Score: ${state.score}`;
                 
-                // Remove tendrils
-                state.tendrils.forEach(tendril => {
-                  gameContainer.removeChild(tendril.element);
-                });
-                state.tendrils = [];
-                
-                // Respawn boss after delay
-                setTimeout(createBoss, 5000);
+                // Create new level
+                setTimeout(() => {
+                  createBricks();
+                  resetBall();
+                }, 1000);
               }
+              
+              break;
             }
           }
         }
         
-        // Update boss
-        function updateBoss() {
-          if (!state.boss) return;
-          
-          // Move boss
-          state.boss.x += state.boss.direction * 2;
-          if (state.boss.x <= 0 || state.boss.x >= window.innerWidth - 100) {
-            state.boss.direction *= -1;
+        // Reset ball position
+        function resetBall() {
+          state.ballLaunched = false;
+          state.ballX = state.paddleX + 50;
+          state.ballY = window.innerHeight - 60;
+          state.ballSpeedX = 0;
+          state.ballSpeedY = 0;
+        }
+        
+        // Create particle effects
+        function createParticles(x, y, color, count) {
+          for (let i = 0; i < count; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.backgroundColor = color;
+            particle.style.left = `${x + 10}px`;
+            particle.style.top = `${y + 10}px`;
+            
+            gameContainer.appendChild(particle);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 5 + 2;
+            const lifetime = Math.random() * 1000 + 500;
+            
+            state.particles.push({
+              element: particle,
+              x: x + 10,
+              y: y + 10,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              alpha: 1,
+              created: Date.now(),
+              lifetime: lifetime
+            });
           }
-          
-          state.boss.element.style.left = `${state.boss.x}px`;
-          
-          // Update tendrils
-          state.tendrils.forEach((tendril, i) => {
-            tendril.angle += 0.02;
-            const endX = state.boss.x + 50 + Math.cos(tendril.angle) * tendril.length;
-            const endY = state.boss.y + 50 + Math.sin(tendril.angle) * tendril.length;
-            
-            const dx = endX - (state.boss.x + 50);
-            const dy = endY - (state.boss.y + 50);
-            const angle = Math.atan2(dy, dx);
-            
-            tendril.element.style.width = `${tendril.length}px`;
-            tendril.element.style.height = `${tendril.width}px`;
-            tendril.element.style.left = `${state.boss.x + 50}px`;
-            tendril.element.style.top = `${state.boss.y + 50}px`;
-            tendril.element.style.transformOrigin = '0 0';
-            tendril.element.style.transform = `rotate(${angle}rad)`;
-            
-            // Check collision with player
-            const playerCenterX = state.playerX + 25;
-            const playerCenterY = state.playerY + 25;
-            const distance = Math.sqrt(
-              Math.pow(playerCenterX - endX, 2) + 
-              Math.pow(playerCenterY - endY, 2)
-            );
-            
-            if (distance < 30) {
-              state.playerHealth -= 0.5;
-              healthDisplay.textContent = `Health: ${Math.floor(state.playerHealth)}`;
-              if (state.playerHealth <= 0 && !state.gameOver) {
-                state.gameOver = true;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            }
-          });
-          
-          // Boss attacks
+        }
+        
+        // Update particles
+        function updateParticles() {
           const now = Date.now();
-          if (now - state.boss.lastAttackTime > 2000) {
-            // Shoot at player
-            const attackElement = document.createElement('div');
-            attackElement.className = 'shuriken';
-            attackElement.style.backgroundColor = 'red';
-            attackElement.style.left = `${state.boss.x + 50 - 10}px`;
-            attackElement.style.top = `${state.boss.y + 50}px`;
-            gameContainer.appendChild(attackElement);
+          
+          for (let i = state.particles.length - 1; i >= 0; i--) {
+            const particle = state.particles[i];
             
-            const angle = Math.atan2(
-              (state.playerY + 25) - (state.boss.y + 50),
-              (state.playerX + 25) - (state.boss.x + 50)
-            );
+            particle.x += particle.vx;
+            particle.y += particle.vy;
             
-            const attack = {
-              element: attackElement,
-              x: state.boss.x + 50 - 10,
-              y: state.boss.y + 50,
-              vx: Math.cos(angle) * 5,
-              vy: Math.sin(angle) * 5
-            };
+            const age = now - particle.created;
+            particle.alpha = 1 - (age / particle.lifetime);
             
-            // Create a separate array for boss projectiles to handle them differently
-            if (!state.bossProjectiles) state.bossProjectiles = [];
-            state.bossProjectiles.push(attack);
-            state.boss.lastAttackTime = now;
+            particle.element.style.left = `${particle.x}px`;
+            particle.element.style.top = `${particle.y}px`;
+            particle.element.style.opacity = particle.alpha;
+            
+            if (age >= particle.lifetime) {
+              gameContainer.removeChild(particle.element);
+              state.particles.splice(i, 1);
+            }
           }
         }
         
@@ -390,53 +513,46 @@
           });
         }
         
-        // Update boss projectiles
-        function updateBossProjectiles() {
-          if (!state.bossProjectiles) return;
+        // End game
+        function endGame() {
+          state.gameActive = false;
+          state.gameOver = true;
+          finalScoreDisplay.textContent = `Score: ${state.score}`;
+          gameOverScreen.style.display = 'block';
+        }
+        
+        // Restart game
+        function restartGame() {
+          state.lives = 3;
+          state.score = 0;
+          state.gameOver = false;
           
-          for (let i = state.bossProjectiles.length - 1; i >= 0; i--) {
-            const projectile = state.bossProjectiles[i];
-            projectile.x += projectile.vx;
-            projectile.y += projectile.vy;
-            projectile.element.style.left = `${projectile.x}px`;
-            projectile.element.style.top = `${projectile.y}px`;
-            
-            // Remove if out of bounds
-            if (projectile.x < -20 || projectile.x > window.innerWidth || 
-                projectile.y < -20 || projectile.y > window.innerHeight) {
-              gameContainer.removeChild(projectile.element);
-              state.bossProjectiles.splice(i, 1);
-              continue;
-            }
-            
-            // Check collision with player
-            if (projectile.x < state.playerX + 50 &&
-                projectile.x + 20 > state.playerX &&
-                projectile.y < state.playerY + 50 &&
-                projectile.y + 20 > state.playerY) {
-              
-              gameContainer.removeChild(projectile.element);
-              state.bossProjectiles.splice(i, 1);
-              
-              state.playerHealth -= 10;
-              healthDisplay.textContent = `Health: ${Math.floor(state.playerHealth)}`;
-              
-              if (state.playerHealth <= 0 && !state.gameOver) {
-                state.gameOver = true;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            }
-          }
+          scoreDisplay.textContent = `Score: ${state.score}`;
+          livesDisplay.textContent = `Lives: ${state.lives}`;
+          
+          gameOverScreen.style.display = 'none';
+          
+          createBricks();
+          resetBall();
+          
+          state.gameActive = true;
+        }
+        
+        // Start game
+        function startGame() {
+          startScreen.style.display = 'none';
+          state.gameActive = true;
+          resetBall();
         }
         
         // Game loop
         function gameLoop() {
-          updatePlayer();
-          updateShurikens();
-          updateBoss();
-          updateBossProjectiles();
+          if (state.gameActive) {
+            updatePaddle();
+            updateBall();
+            updateParticles();
+          }
+          
           updateStars();
           
           requestAnimationFrame(gameLoop);
@@ -444,12 +560,13 @@
         
         // Initialize game
         function init() {
-          player.style.left = `${state.playerX}px`;
-          player.style.top = `${state.playerY}px`;
+          paddle.style.left = `${state.paddleX}px`;
+          ball.style.left = `${state.ballX}px`;
+          ball.style.top = `${state.ballY}px`;
           
           createStars();
           createNebula();
-          createBoss();
+          createBricks();
           setupControls();
           gameLoop();
         }

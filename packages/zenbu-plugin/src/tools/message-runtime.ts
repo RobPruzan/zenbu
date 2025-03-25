@@ -10,7 +10,7 @@ import {
 } from "../ws/ws.js";
 import { nanoid } from "nanoid";
 import { smartEdit } from "./good-edit-impl.js";
-import { emit } from "node:process";
+import { abort, emit } from "node:process";
 
 // actually the main thread should definitely be scoped to the socket room itself, not to the message...
 /**
@@ -90,11 +90,12 @@ export const handleMessage = async ({
   });
 };
 
-const activeStreams: Array<{
-  abort: () => void;
-  kind: "main-thread";
-  stream: ReturnType<typeof streamText>["fullStream"];
-}> = [];
+export let activeStreams: {
+  current: Array<{
+    abort: () => void;
+    kind: "main-thread";
+  }>;
+} = { current: [] };
 
 let roomEvents: Array<EventLogEvent> = [];
 
@@ -112,7 +113,7 @@ type TaskSetItem =
       taskId: string;
       lockedFiles: Array<string>;
     };
-const taskSet = new Set<TaskSetItem>();
+export const taskSet = new Set<TaskSetItem>();
 /**
  * main thread message cases:
  * - no ongoing generation, implicitly create a task for the model
@@ -123,19 +124,198 @@ const taskSet = new Set<TaskSetItem>();
 
 export const sendActiveMainThreadMessage = async ({
   emitEvent,
-  event,
+  message,
+  previousChatMessages,
+  requestId,
 }: {
   emitEvent: (text: string) => void;
-  event:
-    | {
-        text: string;
-        kind: "message";
+  message: string;
+  previousChatMessages: Array<ChatMessage>;
+  requestId: string;
+}) => {
+  const accumulatedTextDeltas: Array<PluginServerEvent> = [];
+  const abortController = new AbortController();
+  const { fullStream } = streamText({
+    temperature: 1,
+    abortSignal: abortController.signal,
+    providerOptions: {
+      anthropic: {
+        // todo: what does this do
+        cacheControl: { type: "ephemeral" },
+      },
+    },
+    model: anthropic("claude-3-5-sonnet-latest"),
+    maxSteps: 50,
+    maxTokens: 8192,
+    messages: [
+      {
+        content: await getTemplatedZenbuPrompt(),
+        role: "system",
+      },
+      {
+        content: await getCodebaseIndexPrompt(),
+        role: "system",
+      },
+      ...previousChatMessages,
+      {
+        role: "user",
+        content: getTaskSetAsString(),
+      },
+    ],
+    toolCallStreaming: true,
+    tools: {
+      edit_file: tool({
+        // description: "",
+        parameters: z.object({
+          target_file: z.string().describe("File to edit"),
+        }),
+        execute: async ({ target_file }) => {
+          emitEvent("edit file tool");
+          const res = await smartEdit({
+            chatHistory: [
+              ...previousChatMessages,
+              {
+                role: "user",
+                content: message,
+              },
+
+              // {
+              //   role: "assistant",
+              //   content: toChatMessages(accumulatedTextDeltas)[0].content,
+              // },
+            ],
+            onChunk: (chunk) => {
+              emitEvent(chunk);
+            },
+            targetFile: target_file,
+          });
+          emitEvent("================== EDITING FILE END =============");
+
+          return res;
+        },
+      }),
+      pull_task: tool({
+        // description: "",
+        parameters: z.object({
+          taskId: z.string(),
+          lockedFiles: z.array(z.string()),
+        }),
+        execute: async ({ taskId, lockedFiles }) => {
+          emitEvent("pull task");
+          // triggers the multithreading attempt
+
+          const task = Array.from(taskSet.values()).find(
+            (task) => task.taskId === taskId
+          );
+
+          if (!task) {
+            emitEvent("errrrrrrrrrrrrrrrrrr");
+            throw new Error("No task with provided id found");
+          }
+
+          task.status = "executing";
+          if (task.status !== "executing") {
+            emitEvent("unreachable");
+            throw new Error("unreachable");
+          }
+
+          task.lockedFiles = lockedFiles;
+
+          parallelizeTaskSetIfPossible().catch(() => {
+            /**
+             *
+             */
+          });
+
+          return "Successfully pulled task";
+        },
+      }),
+      get_tasks: tool({
+        // description: "",
+        parameters: z.object({}),
+        execute: async ({}) => {
+          emitEvent("get tasks");
+          return getTaskSetAsString();
+        },
+      }),
+    },
+  });
+
+  activeStreams.current.push({
+    abort: () => abortController.abort(),
+    kind: "main-thread",
+  });
+
+  for await (const obj of fullStream) {
+    switch (obj.type) {
+      case "tool-call-delta": {
+        emitEvent(obj.argsTextDelta);
+        break;
       }
-    | {
-        kind: "task";
-        text: string;
-      };
-}) => {};
+      case "error": {
+        emitEvent(`Error: ${(obj.error as Error).message}`);
+        break;
+      }
+      case "redacted-reasoning": {
+        emitEvent(`Redacted reasoning: ${obj.data}`);
+        break;
+      }
+      case "reasoning": {
+        emitEvent(obj.textDelta);
+        break;
+      }
+      case "tool-call": {
+        emitEvent(`Tool call: ${obj.toolName}`);
+        break;
+      }
+      case "tool-result": {
+        emitEvent(`Tool result: ${JSON.stringify(obj.result)}`);
+        break;
+      }
+      case "text-delta": {
+        accumulatedTextDeltas.push({
+          kind: "assistant-simple-message",
+          associatedRequestId: requestId,
+          text: obj.textDelta,
+          timestamp: Date.now(),
+          id: crypto.randomUUID(),
+        });
+        emitEvent(obj.textDelta);
+        break;
+      }
+      // case "reasoning-signature": {
+      //   emitEvent(`Reasoning signature: ${obj.signature}`);
+      //   break;
+      // }
+      // case "source": {
+      //   emitEvent(`Source: ${obj.source}`);
+      //   break;
+      // }
+      case "finish": {
+        emitEvent("Finished reason:" + obj.finishReason);
+        break;
+      }
+      case "tool-call-streaming-start": {
+        emitEvent(`Starting tool call: ${obj.toolName}`);
+        break;
+      }
+      // case "step-start": {
+      //   emitEvent(`Step started: ${obj.request.body}`);
+      //   break;
+      // }
+      // case "step-finish": {
+      //   emitEvent(`Step finished: ${obj.finishReason}`);
+      //   break;
+      // }
+    }
+
+    // console.log(textPart);
+  }
+
+  activeStreams.current = activeStreams.current.filter(
+    ({ kind }) => kind !== "main-thread"
+  );
+};
 
 export const sendIdleMainThreadMessage = async ({
   emitEvent,
@@ -157,8 +337,11 @@ export const sendIdleMainThreadMessage = async ({
   });
 
   emitEvent("creating stream");
+  const abortController = new AbortController();
+
   const { fullStream } = streamText({
     temperature: 1,
+    abortSignal: abortController.signal,
     providerOptions: {
       anthropic: {
         // todo: what does this do
@@ -261,6 +444,11 @@ export const sendIdleMainThreadMessage = async ({
     },
   });
 
+  activeStreams.current.push({
+    abort: () => abortController.abort(),
+    kind: "main-thread",
+  });
+
   for await (const obj of fullStream) {
     switch (obj.type) {
       case "tool-call-delta": {
@@ -326,11 +514,15 @@ export const sendIdleMainThreadMessage = async ({
 
     // console.log(textPart);
   }
+
+  activeStreams.current = activeStreams.current.filter(
+    ({ kind }) => kind !== "main-thread"
+  );
 };
 
-const parallelizeTaskSetIfPossible = async () => null;
+export const parallelizeTaskSetIfPossible = async () => null;
 
-const spawnThread = ({
+export const spawnThread = ({
   emitEvent,
 }: {
   emitEvent: (text: string) => void;

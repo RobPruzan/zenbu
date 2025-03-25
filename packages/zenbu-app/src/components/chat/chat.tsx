@@ -1,9 +1,9 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useChatStore } from "./chat-instance-context";
+import { useChatStore } from "../chat-instance-context";
 import { iife } from "~/lib/utils";
 import { useEventWS } from "~/app/ws";
-import { ClientEvent } from "zenbu-plugin/src/ws/ws";
+import { ClientMessageEvent, ClientTaskEvent } from "zenbu-plugin/src/ws/ws";
 import { nanoid } from "nanoid";
 import {
   SendIcon,
@@ -18,96 +18,20 @@ import {
   Camera,
   PenTool,
   Inspect,
+  Clock,
 } from "lucide-react";
-import { Button } from "./ui/button";
-import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "../ui/button";
+import { ScrollArea } from "../ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "./ui/tooltip";
+} from "../ui/tooltip";
 import { ChatMessage, toChatMessages } from "zenbu-plugin/src/ws/utils";
-
-const UserMessage = ({ message }: { message: ChatMessage }) => {
-  return (
-    <div className="group mb-6 max-w-full">
-      <div className="rounded-2xl bg-[#121214] backdrop-blur-xl border border-[rgba(255,255,255,0.04)] shadow-[0_4px_24px_rgba(0,0,0,0.15)] overflow-hidden max-w-full transform hover:translate-y-[-1px] transition-all duration-300">
-        <div className="px-4 py-3 text-xs text-[#F2F2F7] whitespace-pre-wrap font-sans leading-relaxed break-words overflow-auto">
-          {message.content}
-        </div>
-
-        <div className="flex items-center justify-between text-[10px] px-4 py-2 text-[#A1A1A6] bg-[#1a1a1c]">
-          <div className="flex items-center">
-            <ChevronDown className="h-2.5 w-2.5 mr-1.5" />
-            <span className="font-light">gpt-4o</span>
-          </div>
-          <div className="flex items-center">
-            <button className="hover:text-white transition-colors">
-              <span className="flex items-center gap-1.5">
-                <RefreshCw className="h-2.5 w-2.5" />
-                Restore
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const AssistantMessage = ({ message }: { message: ChatMessage }) => {
-  return (
-    <div className="group mb-6 max-w-full pl-2">
-      <div className="text-xs text-[#F2F2F7] whitespace-pre-wrap font-light leading-relaxed break-words overflow-auto">
-        {message.content}
-      </div>
-    </div>
-  );
-};
-
-const Header = ({ onCloseChat }: { onCloseChat: () => void }) => {
-  return (
-    <div className="relative z-10 backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border-b border-[rgba(255,255,255,0.04)]">
-      <div className="flex items-center justify-between h-12 px-3">
-        <div className="flex-1"></div>
-        <div className="flex items-center bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-full h-7 w-[280px] px-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-2.5 shadow-[0_0_6px_rgba(52,211,153,0.6)]"></div>
-          <span className="font-light text-[11px] text-[#F2F2F7]">
-            localhost:4200
-          </span>
-          <div className="flex-1"></div>
-        </div>
-        <div className="flex-1 flex items-center justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-[#A1A1A6] hover:text-white rounded-full bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(40,40,46,0.7)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300"
-          >
-            <Search className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-[#A1A1A6] hover:text-white rounded-full bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(40,40,46,0.7)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300"
-          >
-            <MessageSquare className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            onClick={() => {
-              onCloseChat();
-            }}
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-[#A1A1A6] hover:text-white rounded-full bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(40,40,46,0.7)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300"
-          >
-            <PanelRightOpen className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { Header } from "./header";
+import { AssistantMessage } from "./assistant-message";
+import { UserMessage } from "./user-message";
 
 export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
   const { eventLog, inspector, chatControls } = useChatStore();
@@ -170,10 +94,17 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
     }
   }, [chatControls.state.input]);
 
-  const handleSendMessage = () => {
+  const updateInputSize = () => {
+    if (!textareaRef.current || !textareaRef.current.parentElement) {
+      return;
+    }
+    textareaRef.current.parentElement.style.height = "52px";
+  };
+
+  const sendMessage = () => {
     if (!chatControls.state.input.trim() || !socket) return;
 
-    const clientEvent: ClientEvent = {
+    const clientEvent: ClientMessageEvent = {
       requestId: nanoid(),
       context: [],
       kind: "user-message",
@@ -189,17 +120,29 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
     chatControls.actions.setInput("");
 
     socket.emit("message", clientEvent);
-
-    if (textareaRef.current && textareaRef.current.parentElement) {
-      textareaRef.current.parentElement.style.height = "52px";
-    }
+    updateInputSize();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+  const scheduleTask = () => {
+    if (!chatControls.state.input.trim() || !socket) return;
+
+    const clientEvent: ClientTaskEvent = {
+      requestId: nanoid(),
+      context: [],
+      kind: "user-task",
+      text: chatControls.state.input,
+      timestamp: Date.now(),
+      id: nanoid(),
+      previousEvents: eventLog.events,
+    };
+
+    eventLog.actions.pushEvent(clientEvent);
+
+    chatControls.actions.setInput("");
+
+    socket.emit("message", clientEvent);
+
+    updateInputSize();
   };
 
   return (
@@ -207,7 +150,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
       <div className="absolute inset-0 z-0 overflow-hidden">
         {/* Darker solid background */}
         <div className="absolute inset-0 bg-[#080809]"></div>
-        
+
         {/* Glass blur effect layer with distortion */}
         <div className="absolute inset-0 backdrop-filter backdrop-blur-lg"></div>
       </div>
@@ -349,7 +292,12 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                 ref={textareaRef}
                 value={chatControls.state.input}
                 onChange={(e) => chatControls.actions.setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
                 placeholder="Ask me anything..."
                 className="absolute top-0 left-0 w-full h-full pt-3.5 pl-4 pr-4 pb-1.5 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#F2F2F7] placeholder:text-[rgba(161,161,166,0.8)] overflow-auto leading-relaxed font-light"
                 style={{
@@ -359,19 +307,29 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
               />
             </div>
 
-            <div className="flex items-center justify-between px-4 py-2 border-t border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
-              <div className="text-[10px] text-[#A1A1A6] flex items-center gap-1.5 font-light">
-                <span>claude-3.7-sonnet</span>
-                <ChevronDown className="h-3 w-3" />
+            <div className="flex items-center justify-end px-4 py-2 border-t border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    // TODO: Implement schedule functionality
+                    console.log("Schedule task clicked");
+                    scheduleTask();
+                  }}
+                  disabled={!chatControls.state.input.trim()}
+                  className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300 ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <Clock className="h-3 w-3 mr-1.5" />
+                  <span>Task</span>
+                </button>
+                <button
+                  onClick={sendMessage}
+                  disabled={!chatControls.state.input.trim()}
+                  className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300 ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <span>Send</span>
+                  <SendIcon className="ml-1.5 h-3 w-3" />
+                </button>
               </div>
-              <button
-                onClick={handleSendMessage}
-                disabled={!chatControls.state.input.trim()}
-                className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300 ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                <span>Send</span>
-                <SendIcon className="ml-1.5 h-3 w-3" />
-              </button>
             </div>
           </div>
         </div>

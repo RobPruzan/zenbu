@@ -19,7 +19,15 @@ import { editFile } from "../tools/edit.js";
 import { groq } from "@ai-sdk/groq";
 import { openai } from "@ai-sdk/openai";
 import { smartEdit } from "../tools/good-edit-impl.js";
-import { sendIdleMainThreadMessage } from "../tools/message-runtime.js";
+import {
+  activeStreams,
+  iife,
+  parallelizeTaskSetIfPossible,
+  sendActiveMainThreadMessage,
+  sendIdleMainThreadMessage,
+  taskSet,
+} from "../tools/message-runtime.js";
+import { nanoid } from "nanoid";
 /**
  *
  *
@@ -38,11 +46,23 @@ import { sendIdleMainThreadMessage } from "../tools/message-runtime.js";
  *
  *
  */
-export type EventLogEvent = ClientEvent | PluginServerEvent;
+export type EventLogEvent =
+  | ClientMessageEvent
+  | PluginServerEvent
+  | ClientTaskEvent;
 
-export type ClientEvent = {
+export type ClientMessageEvent = {
   id: string;
   kind: "user-message";
+  context: any;
+  text: string;
+  requestId: string;
+  timestamp: number;
+  previousEvents: Array<EventLogEvent>;
+};
+export type ClientTaskEvent = {
+  id: string;
+  kind: "user-task";
   context: any;
   text: string;
   requestId: string;
@@ -139,27 +159,95 @@ export const injectWebSocket = (server: HttpServer) => {
     socket.join(roomId);
     console.log(`Socket ${socket.id} joined room ${roomId}`);
 
-    socket.on("message", async (event: ClientEvent) => {
-      // emitAssistantMessage({
-      //   ioServer,
-      //   requestId: event.requestId,
-      //   roomId,
-      //   text: "i got your message",
-      // }) 
-      sendIdleMainThreadMessage({
-        emitEvent: (text) =>
+    socket.on(
+      "message",
+      async (event: ClientMessageEvent | ClientTaskEvent) => {
+        const emitEvent = (text: string) =>
           emitAssistantMessage({
             ioServer,
             requestId: event.requestId,
             roomId,
             text,
-          }),
+          });
+        switch (event.kind) {
+          case "user-message": {
+            /**
+             * to implement interruption ill need to have the full in sync messages
+             * the model was generating with
+             */
 
-        message: event.text,
-        previousChatMessages: toChatMessages(event.previousEvents),
-        requestId: event.requestId,
-      });
-    });
+            const messageCase = iife(() => {
+              const mainThreadStream = activeStreams.current.find(
+                ({ kind }) => kind === "main-thread"
+              );
+              if (mainThreadStream) {
+                return { kind: "thread-active", mainThreadStream };
+              }
+              return { kind: "thread-idle" };
+            });
+
+            switch (messageCase.kind) {
+              case "thread-active": {
+                emitEvent("aborting");
+                messageCase.mainThreadStream?.abort();
+                activeStreams.current = activeStreams.current.filter(
+                  (obj) => obj !== messageCase.mainThreadStream
+                );
+
+                try {
+                  await sendIdleMainThreadMessage({
+                    emitEvent,
+                    message: event.text,
+                    previousChatMessages: toChatMessages(event.previousEvents),
+                    requestId: event.requestId,
+                  });
+                } catch {
+                  /**
+                   *
+                   */
+                }
+
+                return;
+              }
+              case "thread-idle": {
+                // try {
+
+                try {
+                  await sendIdleMainThreadMessage({
+                    emitEvent,
+                    message: event.text,
+                    previousChatMessages: toChatMessages(event.previousEvents),
+                    requestId: event.requestId,
+                  });
+                } catch {
+                  /**
+                   *
+                   */
+                }
+                // }
+                return;
+              }
+            }
+
+            return;
+          }
+          case "user-task": {
+            parallelizeTaskSetIfPossible().catch(() => {
+              taskSet.add({
+                taskId: nanoid(),
+                timestamp: Date.now(),
+                userMessage: event.text,
+                status: "idle",
+              });
+              /**
+               *
+               */
+            });
+            return;
+          }
+        }
+      }
+    );
   });
 };
 
