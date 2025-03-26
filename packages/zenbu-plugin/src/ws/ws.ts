@@ -22,7 +22,8 @@ import { smartEdit } from "../tools/good-edit-impl.js";
 import {
   activeStreams,
   iife,
-  parallelizeTaskSetIfPossible,
+  parallelizeTask,
+  parallelizeTaskSet,
   sendActiveMainThreadMessage,
   sendIdleMainThreadMessage,
   taskSet,
@@ -232,17 +233,20 @@ export const injectWebSocket = (server: HttpServer) => {
             return;
           }
           case "user-task": {
-            parallelizeTaskSetIfPossible().catch(() => {
-              taskSet.add({
-                taskId: nanoid(),
-                timestamp: Date.now(),
-                userMessage: event.text,
-                status: "idle",
-              });
+            parallelizeTask({
+              chatMessages: toChatMessages(event.previousEvents), // im actually not sure if I want the thread to see the models temporary work... i probably do
+              emitEvent,
+              message: event.text,
+            }).catch(() => {
               /**
                *
                */
             });
+
+            /**
+             *
+             */
+
             return;
           }
         }

@@ -1,8 +1,8 @@
-import { streamText, tool } from "ai";
+import { generateObject, streamText, tool } from "ai";
 import { ChatMessage, toChatMessages } from "../ws/utils.js";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
-import { getTemplatedZenbuPrompt } from "../create-server.js";
+import { getTemplatedZenbuPrompt, removeComments } from "../create-server.js";
 import {
   EventLogEvent,
   getCodebaseIndexPrompt,
@@ -11,6 +11,8 @@ import {
 import { nanoid } from "nanoid";
 import { smartEdit } from "./good-edit-impl.js";
 import { abort, emit } from "node:process";
+import { readFile } from "node:fs/promises";
+import { google } from "@ai-sdk/google";
 
 // actually the main thread should definitely be scoped to the socket room itself, not to the message...
 /**
@@ -221,7 +223,10 @@ export const sendActiveMainThreadMessage = async ({
 
           task.lockedFiles = lockedFiles;
 
-          parallelizeTaskSetIfPossible().catch(() => {
+          parallelizeTaskSet({
+            chatMessages: toChatMessages(accumulatedTextDeltas),
+            emitEvent,
+          }).catch(() => {
             /**
              *
              */
@@ -370,11 +375,18 @@ export const sendIdleMainThreadMessage = async ({
     tools: {
       edit_file: tool({
         // description: "",
+        // this is kinda wrong
         parameters: z.object({
           target_file: z.string().describe("File to edit"),
         }),
         execute: async ({ target_file }) => {
           emitEvent("edit file tool");
+
+          // this edit strat + prompt is really bad, really bad
+          // it should be edits over logical codeblocks, so scope edits to code scopes
+          // line number range you select to replace will always be (inclusive, inclusive)
+          // batch close scope modification together, but you must select the parent scope in that case
+          //
           const res = await smartEdit({
             chatHistory: [
               ...previousChatMessages,
@@ -424,7 +436,10 @@ export const sendIdleMainThreadMessage = async ({
 
           task.lockedFiles = lockedFiles;
 
-          parallelizeTaskSetIfPossible().catch(() => {
+          parallelizeTaskSet({
+            chatMessages: toChatMessages(accumulatedTextDeltas),
+            emitEvent,
+          }).catch(() => {
             /**
              *
              */
@@ -529,26 +544,281 @@ export const sendIdleMainThreadMessage = async ({
     ({ kind }) => kind !== "main-thread"
   );
 };
+const chatMessagesToString = (chatMessages: Array<ChatMessage>) => {
+  let result = "";
 
-export const parallelizeTaskSetIfPossible = async () => {
-  /**
-   *
-   * we will need to read tasks sequentially and determine if they can be parallelized
-   *
-   * wait you actually know immediately for every task if it can be made parallel (so you only need
-   * to check if the new task can be ran in parallel and if it depends on any other task in the batch)
-   *
-   *
-   * but after you complete a task you will need to check for each if any can now be ran in parallel given
-   * one is complete
-   */
+  for (const message of chatMessages) {
+    const role = message.role.charAt(0).toUpperCase() + message.role.slice(1);
+    result += `${role}: ${message.content}\n`;
+  }
+
+  return result;
 };
 
-export const spawnThread = ({
+export const parallelizeTask = async ({
+  chatMessages,
+  message,
   emitEvent,
 }: {
+  chatMessages: Array<ChatMessage>;
+  message: string;
+  emitEvent: (task: string) => void;
+}) => {
+  const sysPrompt = await readFile(
+    "/Users/robby/zenbu/packages/zenbu-plugin/src/should-parallelize.md",
+    "utf-8"
+  );
+
+  const { object: canParallelize } = await generateObject({
+    // @ts-expect-error
+    model: google("gemini-2.0-pro-exp-02-05"),
+    schema: z.boolean(),
+    messages: [
+      {
+        role: "system",
+        content: sysPrompt,
+      },
+      {
+        role: "user",
+        content: `\
+<chat-history>
+${chatMessagesToString(chatMessages)}
+</chat-history>
+<task-set>
+${getTaskSetAsString()}
+</task-set>
+<task-to-analyze>
+${message}
+</task-to-analyze>
+`,
+      },
+    ],
+  });
+
+  emitEvent("GOOGLE, CAN WE PARALLELIZE THIS TASK:" + canParallelize);
+
+  if (canParallelize) {
+    spawnThread({
+      emitEvent,
+      // this may get harry later since we never explicitly put this in the task set, we just immediately create a task inline
+      task: {
+        taskId: nanoid(),
+        status: "idle",
+        timestamp: Date.now(),
+        userMessage: message,
+      },
+      existingMessages: chatMessages,
+    });
+    return;
+  }
+
+  taskSet.add({
+    status: "idle",
+    taskId: nanoid(),
+    timestamp: Date.now(),
+    userMessage: message,
+  });
+};
+
+export const parallelizeTaskSet = async ({
+  chatMessages,
+  emitEvent,
+}: {
+  chatMessages: Array<ChatMessage>;
+  emitEvent: (task: string) => void;
+}) => {
+  const sysPrompt = await readFile(
+    "/Users/robby/zenbu/packages/zenbu-plugin/src/should-parallelize-all.md",
+    "utf-8"
+  );
+
+  const { object: parallelizableTasks } = await generateObject({
+    // @ts-expect-error
+    model: google("gemini-2.0-pro-exp-02-05"),
+    schema: z.array(z.string()),
+    messages: [
+      {
+        role: "system",
+        content: sysPrompt,
+      },
+      {
+        role: "user",
+        content: `\
+<chat-history>
+${chatMessagesToString(chatMessages)}
+</chat-history>
+<task-set>
+${getTaskSetAsString()}
+</task-set>
+`,
+      },
+    ],
+  });
+
+  const tasks = [...taskSet.values()].filter((task) =>
+    parallelizableTasks.includes(task.taskId)
+  );
+
+  tasks.forEach((task) => {
+    spawnThread({
+      emitEvent,
+      // this will 100% lead to a bug, i'm not thinking about which messages are inside here and what i want the agent to see
+      existingMessages: chatMessages,
+      task,
+    });
+  });
+};
+
+export const spawnThread = async ({
+  emitEvent,
+  task,
+  existingMessages,
+}: {
   emitEvent: (text: string) => void;
-}) => {};
+  task: TaskSetItem;
+  existingMessages: Array<ChatMessage>;
+}) => {
+  const accumulatedTextDeltas: Array<PluginServerEvent> = [];
+  const abortController = new AbortController();
+  const sysPrompt = await readFile(
+    "/Users/robby/zenbu/packages/zenbu-plugin/src/thread-prompt-v2.md",
+    "utf-8"
+  ).then(removeComments);
+
+  const { fullStream } = await streamText({
+    model: anthropic("claude-3-5-sonnet-latest"),
+    toolCallStreaming: true,
+    abortSignal: abortController.signal,
+    tools: {
+      edit_file: tool({
+        // description: "",
+        parameters: z.object({
+          target_file: z.string().describe("File to edit"),
+        }),
+        execute: async ({ target_file }) => {
+          emitEvent("edit file tool");
+          const res = await smartEdit({
+            chatHistory: [
+              ...existingMessages,
+              {
+                role: "user",
+                content: task.userMessage,
+              },
+
+              // {
+              //   role: "assistant",
+              //   content: toChatMessages(accumulatedTextDeltas)[0].content,
+              // },
+            ],
+            onChunk: (chunk) => {
+              emitEvent(chunk);
+            },
+            targetFile: target_file,
+          });
+          emitEvent("================== EDITING FILE END =============");
+
+          return res;
+        },
+      }),
+    },
+
+    messages: [
+      {
+        role: "system",
+        content: sysPrompt,
+      },
+      {
+        // probably should re-use a cache and use chat history updates as updates to index implicitly
+
+        // threads may be infrequent enough that this is optimal
+        content: await getCodebaseIndexPrompt(),
+        role: "system",
+      },
+      {
+        role: "user",
+        content: `\
+<chat-history>
+${chatMessagesToString(
+  existingMessages.filter((message) => message.role === "system")
+)}        
+</chat-history>
+`,
+      },
+      {
+        role: "user",
+        content: task.userMessage,
+      },
+
+      // ...existingMessages.filter(message => message.role === 'system')
+    ],
+  });
+
+  for await (const obj of fullStream) {
+    switch (obj.type) {
+      case "tool-call-delta": {
+        emitEvent(obj.argsTextDelta);
+        break;
+      }
+      case "error": {
+        emitEvent(`Error: ${(obj.error as Error).message}`);
+        break;
+      }
+      case "redacted-reasoning": {
+        emitEvent(`Redacted reasoning: ${obj.data}`);
+        break;
+      }
+      case "reasoning": {
+        emitEvent(obj.textDelta);
+        break;
+      }
+      case "tool-call": {
+        emitEvent(`Tool call: ${obj.toolName}`);
+        break;
+      }
+      case "tool-result": {
+        emitEvent(`Tool result: ${JSON.stringify(obj.result)}`);
+        break;
+      }
+      case "text-delta": {
+        accumulatedTextDeltas.push({
+          kind: "assistant-simple-message",
+          associatedRequestId: "thread-stuff-todo-not-implemented",
+          text: obj.textDelta,
+          timestamp: Date.now(),
+          id: crypto.randomUUID(),
+        });
+        emitEvent(obj.textDelta);
+        break;
+      }
+      // case "reasoning-signature": {
+      //   emitEvent(`Reasoning signature: ${obj.signature}`);
+      //   break;
+      // }
+      // case "source": {
+      //   emitEvent(`Source: ${obj.source}`);
+      //   break;
+      // }
+      case "finish": {
+        emitEvent("Finished reason:" + obj.finishReason);
+        break;
+      }
+      case "tool-call-streaming-start": {
+        emitEvent(`Starting tool call: ${obj.toolName}`);
+        break;
+      }
+      // case "step-start": {
+      //   emitEvent(`Step started: ${obj.request.body}`);
+      //   break;
+      // }
+      // case "step-finish": {
+      //   emitEvent(`Step finished: ${obj.finishReason}`);
+      //   break;
+      // }
+    }
+
+    // console.log(textPart);
+  }
+};
 
 export const getTaskSetAsString = () => {
   const asArr = [...taskSet.values()];
