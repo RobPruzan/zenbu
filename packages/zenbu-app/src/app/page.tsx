@@ -22,15 +22,16 @@ import {
 } from "lucide-react";
 import ChatInterface from "~/components/chat-interface";
 import { useState, useEffect } from "react";
-import { scan } from "react-scan";
+import { scan, useScan } from "react-scan";
 import DevTools from "../components/devtools";
 import { ChatInstanceContext } from "~/components/chat-instance-context";
 import { IFrameWrapper } from "./iframe-wrapper";
 import { Chat } from "~/components/chat/chat";
 
-scan();
+// scan();
 
 export default function Home() {
+  // useScan();
   const [showProjectsDialog, setShowProjectsDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [chatVisible, setChatVisible] = useState(true);

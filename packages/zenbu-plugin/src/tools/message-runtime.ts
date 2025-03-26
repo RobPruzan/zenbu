@@ -284,6 +284,7 @@ export const sendActiveMainThreadMessage = async ({
           text: obj.textDelta,
           timestamp: Date.now(),
           id: crypto.randomUUID(),
+          threadId: null,
         });
         emitEvent(obj.textDelta);
         break;
@@ -497,6 +498,7 @@ export const sendIdleMainThreadMessage = async ({
           text: obj.textDelta,
           timestamp: Date.now(),
           id: crypto.randomUUID(),
+          threadId: null,
         });
         emitEvent(obj.textDelta);
         break;
@@ -562,7 +564,7 @@ export const parallelizeTask = async ({
 }: {
   chatMessages: Array<ChatMessage>;
   message: string;
-  emitEvent: (task: string) => void;
+  emitEvent: (task: string, threadId?: string) => void;
 }) => {
   const sysPrompt = await readFile(
     "/Users/robby/zenbu/packages/zenbu-plugin/src/should-parallelize.md",
@@ -674,7 +676,7 @@ export const spawnThread = async ({
   task,
   existingMessages,
 }: {
-  emitEvent: (text: string) => void;
+  emitEvent: (text: string, threadId?: string) => void;
   task: TaskSetItem;
   existingMessages: Array<ChatMessage>;
 }) => {
@@ -684,6 +686,8 @@ export const spawnThread = async ({
     "/Users/robby/zenbu/packages/zenbu-plugin/src/thread-prompt-v2.md",
     "utf-8"
   ).then(removeComments);
+
+  const threadId = nanoid();
 
   const { fullStream } = await streamText({
     model: anthropic("claude-3-5-sonnet-latest"),
@@ -696,7 +700,7 @@ export const spawnThread = async ({
           target_file: z.string().describe("File to edit"),
         }),
         execute: async ({ target_file }) => {
-          emitEvent("edit file tool");
+          emitEvent("edit file tool", threadId);
           const res = await smartEdit({
             chatHistory: [
               ...existingMessages,
@@ -711,11 +715,14 @@ export const spawnThread = async ({
               // },
             ],
             onChunk: (chunk) => {
-              emitEvent(chunk);
+              emitEvent(chunk, threadId);
             },
             targetFile: target_file,
           });
-          emitEvent("================== EDITING FILE END =============");
+          emitEvent(
+            "================== EDITING FILE END =============",
+            threadId
+          );
 
           return res;
         },
@@ -756,27 +763,27 @@ ${chatMessagesToString(
   for await (const obj of fullStream) {
     switch (obj.type) {
       case "tool-call-delta": {
-        emitEvent(obj.argsTextDelta);
+        emitEvent(obj.argsTextDelta, threadId);
         break;
       }
       case "error": {
-        emitEvent(`Error: ${(obj.error as Error).message}`);
+        emitEvent(`Error: ${(obj.error as Error).message}`, threadId);
         break;
       }
       case "redacted-reasoning": {
-        emitEvent(`Redacted reasoning: ${obj.data}`);
+        emitEvent(`Redacted reasoning: ${obj.data}`, threadId);
         break;
       }
       case "reasoning": {
-        emitEvent(obj.textDelta);
+        emitEvent(obj.textDelta, threadId);
         break;
       }
       case "tool-call": {
-        emitEvent(`Tool call: ${obj.toolName}`);
+        emitEvent(`Tool call: ${obj.toolName}`, threadId);
         break;
       }
       case "tool-result": {
-        emitEvent(`Tool result: ${JSON.stringify(obj.result)}`);
+        emitEvent(`Tool result: ${JSON.stringify(obj.result)}`, threadId);
         break;
       }
       case "text-delta": {
@@ -786,8 +793,9 @@ ${chatMessagesToString(
           text: obj.textDelta,
           timestamp: Date.now(),
           id: crypto.randomUUID(),
+          threadId,
         });
-        emitEvent(obj.textDelta);
+        emitEvent(obj.textDelta, threadId);
         break;
       }
       // case "reasoning-signature": {
@@ -799,11 +807,11 @@ ${chatMessagesToString(
       //   break;
       // }
       case "finish": {
-        emitEvent("Finished reason:" + obj.finishReason);
+        emitEvent("Finished reason:" + obj.finishReason, threadId);
         break;
       }
       case "tool-call-streaming-start": {
-        emitEvent(`Starting tool call: ${obj.toolName}`);
+        emitEvent(`Starting tool call: ${obj.toolName}`, threadId);
         break;
       }
       // case "step-start": {

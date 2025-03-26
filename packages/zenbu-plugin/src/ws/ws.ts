@@ -11,7 +11,7 @@ import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import type { Socket } from "socket.io";
 import { z } from "zod";
-import { ChatMessage, toChatMessages } from "./utils.js";
+import { ChatMessage, toChatMessages, toGroupedChatMessages } from "./utils.js";
 import { getTemplatedZenbuPrompt, removeComments } from "../create-server.js";
 import { codeBaseSearch, indexCodebase } from "../tools/code-base-search.js";
 import { readFile, writeFile } from "node:fs/promises";
@@ -80,6 +80,7 @@ export type PluginServerEvent = {
   text: string;
   associatedRequestId: string;
   timestamp: number;
+  threadId: null | string
 };
 
 export const HARD_CODED_USER_PROJECT_PATH =
@@ -163,12 +164,13 @@ export const injectWebSocket = (server: HttpServer) => {
     socket.on(
       "message",
       async (event: ClientMessageEvent | ClientTaskEvent) => {
-        const emitEvent = (text: string) =>
+        const emitEvent = (text: string, threadId?: string) =>
           emitAssistantMessage({
             ioServer,
             requestId: event.requestId,
             roomId,
             text,
+            threadId: threadId ?? null
           });
         switch (event.kind) {
           case "user-message": {
@@ -260,11 +262,13 @@ const emitAssistantMessage = ({
   roomId,
   requestId,
   text,
+  threadId
 }: {
   ioServer: Server;
   roomId: string;
   requestId: string;
-  text: string;
+    text: string;
+  threadId: null | string
 }) => {
   ioServer.to(roomId).emit("message", {
     kind: "assistant-simple-message",
@@ -272,5 +276,6 @@ const emitAssistantMessage = ({
     text,
     timestamp: Date.now(),
     id: crypto.randomUUID(),
+    threadId
   } satisfies PluginServerEvent);
 };

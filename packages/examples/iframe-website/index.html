@@ -3,47 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modular Landing Page</title>
+    <title>Pong Game</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
-            color: #333;
+            background-color: #222;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
         }
-        .section {
-            padding: 4rem 2rem;
+        canvas {
+            border: 2px solid #fff;
+            background-color: #000;
+            margin: 20px auto;
+            display: block;
         }
-        #site-header, #site-footer {
-            padding: 1rem 2rem;
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .controls button {
+            padding: 8px 16px;
+            margin: 0 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background-color: #45a049;
+        }
+        .score {
+            font-size: 24px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <header id="site-header">
-        <!-- Header content will be managed by header.js -->
-    </header>
+    <h1>Pong Game</h1>
     
-    <main>
-        <section id="hero" class="section">
-            <!-- Hero section will be managed by hero.js -->
-        </section>
-        
-        <section id="features" class="section">
-            <!-- Features section will be managed by features.js -->
-        </section>
-        
-        <section id="contact" class="section">
-            <!-- Contact section will be managed by contact.js -->
-        </section>
-    </main>
+    <div class="score">
+        <span id="player-score">0</span> - <span id="computer-score">0</span>
+    </div>
     
-    <footer id="site-footer">
-        <!-- Footer content will be managed by footer.js -->
-    </footer>
+    <canvas id="pongCanvas" width="800" height="400"></canvas>
+    
+    <div class="controls">
+        <button id="start-btn">Start Game</button>
+        <button id="reset-btn">Reset Game</button>
+    </div>
+    
+    <div class="instructions">
+        <p>Use the mouse or up/down arrow keys to move your paddle</p>
+    </div>
 
-    <!-- Main entry point that coordinates all modules -->
-    <script type="module" src="/scripts/main.js"></script>
+    <!-- Game script -->
+    <script type="module" src="/scripts/pong.js"></script>
 </body>
 </html>

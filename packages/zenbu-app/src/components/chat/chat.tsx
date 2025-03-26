@@ -19,6 +19,7 @@ import {
   PenTool,
   Inspect,
   Clock,
+  X,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
@@ -28,7 +29,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { ChatMessage, toChatMessages } from "zenbu-plugin/src/ws/utils";
+import { ChatMessage, toGroupedChatMessages } from "zenbu-plugin/src/ws/utils";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
@@ -38,6 +39,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [hiddenThreads, setHiddenThreads] = useState<Set<number>>(new Set());
 
   const { socket } = useEventWS({
     onMessage: (message) => {
@@ -66,7 +68,9 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
     },
   });
 
-  const messages = toChatMessages(eventLog.events);
+  const { mainThreadMessages, otherThreadsMessages } = toGroupedChatMessages(
+    eventLog.events,
+  );
 
   // Add scroll handler to detect when user scrolls
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
@@ -81,7 +85,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
     if (isAtBottom) {
       messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }
-  }, [messages, isAtBottom]);
+  }, [mainThreadMessages, isAtBottom]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -162,7 +166,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
         onScroll={handleScroll}
       >
         <div className="space-y-4 pt-3 pb-2 w-full">
-          {messages.map((message, index) => (
+          {mainThreadMessages.map((message, index) => (
             <div key={index}>
               {iife(() => {
                 switch (message.role) {
@@ -183,6 +187,44 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
+
+      {otherThreadsMessages.length > 0 && (
+        <div className="px-4 py-2 relative z-10 w-full">
+          {otherThreadsMessages.map((thread, index) => (
+            !hiddenThreads.has(index) && (
+              <div key={index} className="mb-2 last:mb-0">
+                <div className="rounded-xl backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_4px_16px_rgba(0,0,0,0.12)] overflow-hidden">
+                  <div className="px-3 py-2 border-b border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-3 w-3 text-[#A1A1A6]" />
+                        <span className="text-[10px] font-light text-[#A1A1A6]">Thread {index + 1}</span>
+                      </div>
+                      <button
+                        onClick={() => setHiddenThreads(prev => {
+                          const next = new Set(prev);
+                          next.add(index);
+                          return next;
+                        })}
+                        className="text-[#A1A1A6] hover:text-white transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="px-3 py-2 max-h-[120px] overflow-y-auto">
+                    {thread.map((message, msgIndex) => (
+                      <div key={msgIndex} className="text-[11px] text-[#A1A1A6] font-light">
+                        {message.content}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          ))}
+        </div>
+      )}
 
       <div className="px-4 pb-4 relative z-10 w-full">
         <div className="rounded-2xl backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden w-full transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.18)]">

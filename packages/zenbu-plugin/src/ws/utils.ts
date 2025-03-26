@@ -1,10 +1,41 @@
 import { CoreMessage, Message } from "ai";
-import { EventLogEvent } from "./ws.js";
-export const toChatMessages = (events: Array<EventLogEvent>) => {
+import { EventLogEvent, PluginServerEvent } from "./ws.js";
+// what if we apply the same processing, but just split the arrays into groups of request ids pairs and order
+// we could just attach a thread id to the event log and call it a day
+
+/**
+ * okay now we have the thread is, so we can group thread messages into array groups
+ */
+
+const intoGroups = (events: Array<EventLogEvent>) => {
+  const groups: Record<"mainThread" | (string & {}), Array<EventLogEvent>> = {
+    mainThread: [],
+  };
+
+  events.forEach((event) => {
+    if (event.kind !== "assistant-simple-message" || event.threadId === null) {
+      groups["mainThread"].push(event);
+      return;
+    }
+
+    let thread = groups[event.threadId];
+
+    if (!thread) {
+      const threadGroup: Array<PluginServerEvent> = [];
+      groups[event.threadId] = threadGroup;
+      thread = threadGroup;
+    }
+
+    thread.push(event);
+  });
+
+  return groups;
+};
+
+export const toChatMessages = (inEvents: Array<EventLogEvent>) => {
   const messages: Array<Omit<Message, "id">> = [];
   const processedIndices = new Set<number>();
-
-  events.forEach((event, index) => {
+  inEvents.forEach((event, index) => {
     if (processedIndices.has(index)) {
       return;
     }
@@ -23,11 +54,11 @@ export const toChatMessages = (events: Array<EventLogEvent>) => {
           role: "assistant",
           content: "",
         };
-        const endAt = events.findIndex(
+        const endAt = inEvents.findIndex(
           (e, i) => i > index && e.kind === "user-message"
         );
 
-        const localEvents = events.slice(
+        const localEvents = inEvents.slice(
           index,
           endAt === -1 ? undefined : endAt
         );
@@ -46,8 +77,24 @@ export const toChatMessages = (events: Array<EventLogEvent>) => {
   });
   return messages;
 };
+export const toGroupedChatMessages = (events: Array<EventLogEvent>) => {
+  console.log("in events", events);
 
-export type ChatMessage = ReturnType<typeof toChatMessages>[number];
+  const { mainThread: mainThreadEvents, ...threads } = intoGroups(events);
+
+  console.log("wut", Object.keys(threads));
+  const mainThreadMessages = toChatMessages(mainThreadEvents);
+
+  const otherThreadsMessages = Object.keys(threads)
+    .map((threadId) => threads[threadId])
+    .map(toChatMessages);
+
+  return { mainThreadMessages, otherThreadsMessages };
+};
+
+export type ChatMessage = ReturnType<
+  typeof toGroupedChatMessages
+>["mainThreadMessages"][number];
 
 export const removeMarkdownComments = (content: string): string => {
   let result = content.replace(/^\/\/.*$/gm, "");

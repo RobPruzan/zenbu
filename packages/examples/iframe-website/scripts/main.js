@@ -1,18 +1,24 @@
-// Import all module components
-import { initHeader } from './header.js';
-import { initHero } from './hero.js';
-import { initFeatures } from './features.js';
-import { initContact } from './contact.js';
-import { initFooter } from './footer.js';
+// Import game components
+import { initCanvas } from './canvas.js';
+import { initPaddles } from './paddles.js';
+import { initBall } from './ball.js';
+import { initScoreBoard } from './scoreBoard.js';
+import { initControls } from './controls.js';
+import { startGameLoop } from './gameLoop.js';
 
-// Initialize all sections
+// Initialize Pong game
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize each section with their respective modules
-  initHeader();
-  initHero();
-  initFeatures();
-  initContact();
-  initFooter();
+  // Set up the game environment
+  const gameCanvas = initCanvas();
+  const paddles = initPaddles(gameCanvas);
+  const ball = initBall(gameCanvas);
+  const scoreBoard = initScoreBoard();
   
-  console.log('All modules initialized successfully');
-}); 
+  // Set up user controls
+  initControls(paddles);
+  
+  // Start the game loop
+  startGameLoop(gameCanvas, paddles, ball, scoreBoard);
+  
+  console.log('Pong game initialized successfully');
+});
