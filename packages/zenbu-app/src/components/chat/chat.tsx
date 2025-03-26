@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useChatStore } from "../chat-instance-context";
 import { iife } from "~/lib/utils";
 import { useEventWS } from "~/app/ws";
+import { ClientMessageEvent, ClientTaskEvent } from "zenbu-plugin/src/ws/ws";
 import { nanoid } from "nanoid";
 import {
   SendIcon,
@@ -32,38 +33,11 @@ import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
 
-type ClientEventType = {
-  requestId: string;
-  context: string[];
-  kind: "user-message";
-  text: string;
-  timestamp: number;
-  id: string;
-  previousEvents: any[];
-};
-
 export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
   const { eventLog, inspector, chatControls } = useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
-  const [mentionFilter, setMentionFilter] = useState("");
-  
-  const mentionOptions = [
-    { id: "network", display: "Network" },
-    { id: "console", display: "Console" },
-    { id: "performance", display: "Performance" },
-    { id: "memory", display: "Memory" },
-    { id: "storage", display: "Storage" },
-    { id: "accessibility", display: "Accessibility" },
-  ];
-
-  const filteredMentions = mentionFilter 
-    ? mentionOptions.filter(option => 
-        option.id.toLowerCase().includes(mentionFilter.toLowerCase()) || 
-        option.display.toLowerCase().includes(mentionFilter.toLowerCase()))
-    : mentionOptions;
 
   const { socket } = useEventWS({
     onMessage: (message) => {
@@ -120,60 +94,19 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
     }
   }, [chatControls.state.input]);
 
-  useEffect(() => {
-    // Check for @ symbol in the input
-    const inputText = chatControls.state.input;
-    const atIndex = inputText.lastIndexOf('@');
-    
-    if (atIndex !== -1 && (atIndex === 0 || inputText[atIndex - 1] === ' ')) {
-      // Extract the text after @ to filter suggestions
-      const filterText = inputText.slice(atIndex + 1).split(' ')[0];
-      setMentionFilter(filterText || "");
-      setShowMentionSuggestions(true);
-    } else {
-      setShowMentionSuggestions(false);
+  const updateInputSize = () => {
+    if (!textareaRef.current || !textareaRef.current.parentElement) {
+      return;
     }
-  }, [chatControls.state.input]);
-
-  const insertMention = (mention: string) => {
-    const inputText = chatControls.state.input;
-    const atIndex = inputText.lastIndexOf('@');
-    
-    if (atIndex !== -1) {
-      // Find the end of the current mention being typed
-      const textAfterAt = inputText.substring(atIndex + 1);
-      const spaceMatch = textAfterAt.match(/\s/);
-      const spaceIndex = spaceMatch ? spaceMatch.index! : textAfterAt.length;
-      
-      // Construct the new input text with the chosen mention
-      const beforeMention = inputText.substring(0, atIndex);
-      const afterMention = inputText.substring(atIndex + 1 + spaceIndex);
-      
-      const newInput = `${beforeMention}@${mention} ${afterMention}`;
-      chatControls.actions.setInput(newInput);
-    }
-    
-    setShowMentionSuggestions(false);
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
+    textareaRef.current.parentElement.style.height = "52px";
   };
 
-  const handleSendMessage = () => {
+  const sendMessage = () => {
     if (!chatControls.state.input.trim() || !socket) return;
 
-    // Extract @mentions from the input
-    const mentions: string[] = [];
-    const regex = /@(\w+)/g;
-    let match;
-    
-    while ((match = regex.exec(chatControls.state.input)) !== null) {
-      mentions.push(match[1]);
-    }
-
-    const clientEvent: ClientEventType = {
+    const clientEvent: ClientMessageEvent = {
       requestId: nanoid(),
-      context: mentions, // Use the extracted mentions as context
+      context: [],
       kind: "user-message",
       text: chatControls.state.input,
       timestamp: Date.now(),
@@ -187,17 +120,29 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
     chatControls.actions.setInput("");
 
     socket.emit("message", clientEvent);
-
-    if (textareaRef.current && textareaRef.current.parentElement) {
-      textareaRef.current.parentElement.style.height = "52px";
-    }
+    updateInputSize();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+  const scheduleTask = () => {
+    if (!chatControls.state.input.trim() || !socket) return;
+
+    const clientEvent: ClientTaskEvent = {
+      requestId: nanoid(),
+      context: [],
+      kind: "user-task",
+      text: chatControls.state.input,
+      timestamp: Date.now(),
+      id: nanoid(),
+      previousEvents: eventLog.events,
+    };
+
+    eventLog.actions.pushEvent(clientEvent);
+
+    chatControls.actions.setInput("");
+
+    socket.emit("message", clientEvent);
+
+    updateInputSize();
   };
 
   return (
@@ -347,33 +292,19 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                 ref={textareaRef}
                 value={chatControls.state.input}
                 onChange={(e) => chatControls.actions.setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask me anything... (Use @ to include context)"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                placeholder="Ask me anything..."
                 className="absolute top-0 left-0 w-full h-full pt-3.5 pl-4 pr-4 pb-1.5 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#F2F2F7] placeholder:text-[rgba(161,161,166,0.8)] overflow-auto leading-relaxed font-light"
                 style={{
                   minHeight: "50px",
                   maxHeight: "100px",
                 }}
               />
-              {showMentionSuggestions && (
-                <div className="absolute bottom-full left-4 mb-1 bg-[rgba(30,30,34,0.95)] backdrop-blur-xl border border-[rgba(255,255,255,0.08)] rounded-lg shadow-lg z-50">
-                  <div className="max-h-[150px] overflow-y-auto py-1">
-                    {filteredMentions.length > 0 ? (
-                      filteredMentions.map((option) => (
-                        <div
-                          key={option.id}
-                          className="px-3 py-1.5 hover:bg-[rgba(50,50,56,0.8)] cursor-pointer text-xs text-[#F2F2F7] font-light"
-                          onClick={() => insertMention(option.id)}
-                        >
-                          @{option.display}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-3 py-1.5 text-xs text-[#A1A1A6] font-light">No matches</div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="flex items-center justify-end px-4 py-2 border-t border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
@@ -382,14 +313,16 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                   onClick={() => {
                     // TODO: Implement schedule functionality
                     console.log("Schedule task clicked");
+                    scheduleTask();
                   }}
-                  className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300"
+                  disabled={!chatControls.state.input.trim()}
+                  className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300 ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <Clock className="h-3 w-3 mr-1.5" />
                   <span>Task</span>
                 </button>
                 <button
-                  onClick={handleSendMessage}
+                  onClick={sendMessage}
                   disabled={!chatControls.state.input.trim()}
                   className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300 ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
