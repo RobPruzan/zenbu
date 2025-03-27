@@ -88,12 +88,12 @@ export const textEditor = async ({
   fullChatHistory,
   filePath,
   emit,
-  writeToPath
+  writeToPath,
 }: {
   fullChatHistory: Array<ChatMessage>;
   filePath: string;
   emit: (text: string) => void;
-  writeToPath: string
+  writeToPath: string;
 }) => {
   const abortController = new AbortController();
 
@@ -102,6 +102,10 @@ export const textEditor = async ({
 
   const { textStream } = streamText({
     model: anthropic("claude-3-7-sonnet-20250219"),
+    maxTokens: 8000,
+    onFinish: (reason) => {
+      console.log("finished", reason.finishReason);
+    },
     abortSignal: abortController.signal,
     messages: [
       {
@@ -130,11 +134,12 @@ export const textEditor = async ({
   try {
     for await (const txt of textStream) {
       accResponse += txt;
+
       emit(txt);
 
-      const parsed = parseCommandOutput(accResponse);
+      const complete = isCommandsComplete(accResponse);
 
-      if (parsed) {
+      if (complete) {
         abortController.abort();
       }
     }
@@ -149,7 +154,11 @@ export const textEditor = async ({
   // Apply insert commands first
   if (insertCommands.length > 0) {
     for (const cmd of insertCommands) {
-      currentContent = insertCodeAfterLine(currentContent, cmd.insert_line, cmd.new_str);
+      currentContent = insertCodeAfterLine(
+        currentContent,
+        cmd.insert_line,
+        cmd.new_str
+      );
     }
   }
 
@@ -158,11 +167,10 @@ export const textEditor = async ({
     for (const cmd of replaceCommands) {
       const result = await applyReplaceCommands([cmd], currentContent);
       switch (result.status) {
-        case "multiple_matches": {
-          throw new Error(`Multiple matches found for replacement: "${cmd.old_str}"`);
-        }
         case "no_match": {
-          throw new Error(`No matches found for replacement: "${cmd.old_str}"`);
+          throw new Error(
+            `No matches found for replacement: "${cmd.old_str}". Closest were ${JSON.stringify(result.similarMatches)}`
+          );
         }
         case "success": {
           currentContent = result.content;
@@ -179,12 +187,21 @@ export const textEditor = async ({
   }
 
   const formatted = await formatFileContent(currentContent, {
-    filepath: filePath
+    filepath: filePath,
   });
 
   await writeFile(writeToPath, formatted);
 
   return formatted;
+};
+
+/**
+ * Determines if the command output is complete by checking for both opening and closing tags.
+ * @param output The raw output string to check
+ * @returns True if the commands section is complete with opening and closing tags, false otherwise
+ */
+export const isCommandsComplete = (output: string): boolean => {
+  return output.includes("<commands>") && output.includes("</commands>");
 };
 
 /**
@@ -196,11 +213,6 @@ export const applyReplaceCommands = async (
   content: string
 ): Promise<
   | { status: "success"; content: string }
-  | {
-      status: "multiple_matches";
-      command: StringReplaceCommand;
-      matches: number;
-    }
   | {
       status: "no_match";
       command: StringReplaceCommand;
@@ -225,16 +237,12 @@ export const applyReplaceCommands = async (
         similarMatches,
       };
     } else if (matches > 1) {
-      // Multiple matches found
-      return {
-        status: "multiple_matches",
-        command,
-        matches,
-      };
+      // Multiple matches found - replace all instances
+      fileContent = fileContent.replace(regex, new_str);
+    } else {
+      // Exactly one match, perform the replacement
+      fileContent = fileContent.replace(old_str, new_str);
     }
-
-    // Exactly one match, perform the replacement
-    fileContent = fileContent.replace(old_str, new_str);
   }
 
   return {
@@ -400,20 +408,18 @@ It is \_EXTREMELY\* important that your generated code can be run immediately by
 - The string_replace command allows you to replace a specific string in a file with a new string. This is used for making precise edits.
 Parameters:
   name: Must be string_replace
-  old_str: The text to replace (must match exactly, including whitespace and indentation)
+  old_str: The text to replace (must match exactly, including whitespace and indentation). If there are multiple results returned, all instances will be updated.
   new_str: The new text to insert in place of the old text
+
+Both strings will be parsed directly out of the XML tags, so do not add extra indentation to format the XML, since that will be added to the search
 
 Required response format:
 <command>
   <name>
   string_replace
   </name>
-  <old_str>
-  // old text here (exactly what will be searched for)
-  </old_str>
-  <new_str>
-  // new text here
-  </new_str>
+  <old_str>// old text here (exactly what will be searched for)</old_str>
+  <new_str>// new text here</new_str>
 </command>
 
 ## insert_after
@@ -430,9 +436,7 @@ Required response format:
   <insert_line>
   // line number here
   </insert_line>
-  <new_str>
-  // new text here
-  </new_str>
+  <new_str>// new text here</new_str>
 </command>
 
 
@@ -458,9 +462,7 @@ For example:
     <insert_line>
     // line number here
     </insert_line>
-    <new_str>
-    // new text here
-    </new_str>
+    <new_str>// new text here</new_str>
   </command>
   // other commands as needed
 </commands>\
@@ -481,18 +483,19 @@ export const parseStringReplaceCommand = (
 
   // Normalize indentation and trim extra whitespace
   const normalizeString = (str: string) => {
-    const lines = str.split('\n');
-    const trimmedLines = lines.map(line => line.trimEnd());
+    const lines = str.split("\n");
+    const trimmedLines = lines.map((line) => line.trimEnd());
     // Remove empty lines at start and end
-    while (trimmedLines[0]?.trim() === '') trimmedLines.shift();
-    while (trimmedLines[trimmedLines.length - 1]?.trim() === '') trimmedLines.pop();
-    return trimmedLines.join('\n');
+    while (trimmedLines[0]?.trim() === "") trimmedLines.shift();
+    while (trimmedLines[trimmedLines.length - 1]?.trim() === "")
+      trimmedLines.pop();
+    return trimmedLines.join("\n");
   };
 
   return {
     kind: "string_replace",
     old_str: normalizeString(oldStrMatch[1]),
-    new_str: normalizeString(newStrMatch[1])
+    new_str: normalizeString(newStrMatch[1]),
   };
 };
 
@@ -518,18 +521,19 @@ export const parseInsertAfterCommand = (
 
   // Normalize indentation and trim extra whitespace
   const normalizeString = (str: string) => {
-    const lines = str.split('\n');
-    const trimmedLines = lines.map(line => line.trimEnd());
+    const lines = str.split("\n");
+    const trimmedLines = lines.map((line) => line.trimEnd());
     // Remove empty lines at start and end
-    while (trimmedLines[0]?.trim() === '') trimmedLines.shift();
-    while (trimmedLines[trimmedLines.length - 1]?.trim() === '') trimmedLines.pop();
-    return trimmedLines.join('\n');
+    while (trimmedLines[0]?.trim() === "") trimmedLines.shift();
+    while (trimmedLines[trimmedLines.length - 1]?.trim() === "")
+      trimmedLines.pop();
+    return trimmedLines.join("\n");
   };
 
   return {
     kind: "insert_after",
     insert_line: insertLine,
-    new_str: normalizeString(newStrMatch[1])
+    new_str: normalizeString(newStrMatch[1]),
   };
 };
 
@@ -602,7 +606,7 @@ export const parseCommandOutput = (text: string): CommandResult[] => {
  * Each line is prefixed with its line number starting from 1.
  */
 export const addLineNumbers = (fileContent: string): string => {
-  if (!fileContent) return '';
+  if (!fileContent) return "";
   const lines = fileContent.split("\n");
   return lines.map((line, index) => `${index + 1}: ${line}`).join("\n");
 };
@@ -651,64 +655,64 @@ export const formatFileContent = async (
       printWidth: 80,
       tabWidth: 2,
       useTabs: false,
-      endOfLine: 'lf' as const
+      endOfLine: "lf" as const,
     };
 
     // Determine parser based on file extension if not specified
     if (!options.parser && options.filepath) {
-      const extension = options.filepath.split('.').pop()?.toLowerCase();
+      const extension = options.filepath.split(".").pop()?.toLowerCase();
       switch (extension) {
-        case 'html':
+        case "html":
           options = {
             ...baseOptions,
             ...options,
-            parser: 'html',
-            htmlWhitespaceSensitivity: 'css',
+            parser: "html",
+            htmlWhitespaceSensitivity: "css",
             bracketSameLine: false,
             bracketSpacing: true,
             singleQuote: false,
-            proseWrap: 'preserve'
+            proseWrap: "preserve",
           };
           break;
-        case 'css':
+        case "css":
           options = {
             ...baseOptions,
             ...options,
-            parser: 'css'
+            parser: "css",
           };
           break;
-        case 'json':
-        case 'jsonc':
+        case "json":
+        case "jsonc":
           options = {
             ...baseOptions,
             ...options,
-            parser: 'json'
+            parser: "json",
           };
           break;
-        case 'ts':
-        case 'tsx':
+        case "ts":
+        case "tsx":
           options = {
             ...baseOptions,
             ...options,
-            parser: 'typescript'
+            parser: "typescript",
           };
           break;
-        case 'js':
-        case 'jsx':
+        case "js":
+        case "jsx":
           options = {
             ...baseOptions,
             ...options,
-            parser: 'babel'
+            parser: "babel",
           };
           break;
       }
     }
 
     // For HTML specifically, we need to ensure proper newlines
-    if (options.parser === 'html') {
+    if (options.parser === "html") {
       const formatted = await prettier.format(fileContent, options);
       // Force newlines between tags if not present
-      return formatted.replace(/><(?!\/)/g, '>\n<');
+      return formatted.replace(/><(?!\/)/g, ">\n<");
     }
 
     const formatted = await prettier.format(fileContent, options);
@@ -762,46 +766,47 @@ export const checkSyntax = async (
     if (extension === "css") {
       try {
         await prettier.format(fileContent, { parser: "css" });
-        
+
         // Remove comments and normalize whitespace
         const cssWithoutComments = fileContent
-          .replace(/\/\*[\s\S]*?\*\//g, '')  // Remove multi-line comments
+          .replace(/\/\*[\s\S]*?\*\//g, "") // Remove multi-line comments
           .trim();
-        
+
         // Basic CSS validation
         const errors = [];
-        
+
         // Check for unclosed braces
         const openBraces = (cssWithoutComments.match(/{/g) || []).length;
         const closeBraces = (cssWithoutComments.match(/}/g) || []).length;
         if (openBraces !== closeBraces) {
-          errors.push('unclosed braces');
+          errors.push("unclosed braces");
         }
-        
+
         // Check for missing semicolons in declarations (but not for last property in rule)
-        const missingTerminator = /[a-zA-Z0-9%'")\s](?!\s*}|;)\s*[a-zA-Z-]/g.test(cssWithoutComments);
+        const missingTerminator =
+          /[a-zA-Z0-9%'")\s](?!\s*}|;)\s*[a-zA-Z-]/g.test(cssWithoutComments);
         if (missingTerminator) {
-          errors.push('missing semicolon');
+          errors.push("missing semicolon");
         }
-        
+
         // Check for empty declarations
         if (/{\s*}/g.test(cssWithoutComments)) {
-          errors.push('empty rule');
+          errors.push("empty rule");
         }
-        
+
         // Check for invalid property values
         if (/:\s*;/.test(cssWithoutComments)) {
-          errors.push('empty property value');
+          errors.push("empty property value");
         }
 
         // Only return invalid if we found actual errors
         if (errors.length > 0) {
           return {
             valid: false,
-            error: `Invalid CSS syntax: ${errors.join(', ')}`
+            error: `Invalid CSS syntax: ${errors.join(", ")}`,
           };
         }
-        
+
         // If prettier didn't throw and we found no errors, it's valid CSS
         return { valid: true };
       } catch (error) {
