@@ -13,6 +13,9 @@ import { smartEdit } from "./good-edit-impl.js";
 import { abort, emit } from "node:process";
 import { readFile } from "node:fs/promises";
 import { google } from "@ai-sdk/google";
+import { planner } from "../ws/planner.js";
+import { bestEdit } from "./best-edit-impl.js";
+import { editFileSpec } from "../ws/apply.js";
 
 // actually the main thread should definitely be scoped to the socket room itself, not to the message...
 /**
@@ -52,7 +55,7 @@ export const handleMessage = async ({
         cacheControl: { type: "ephemeral" },
       },
     },
-    model: anthropic("claude-3-5-sonnet-latest"),
+    model: google("gemini-2.0-flash-exp"),
     maxSteps: 50,
     maxTokens: 8192,
     messages: [
@@ -76,18 +79,18 @@ export const handleMessage = async ({
         parameters: z.object({}),
         execute: async ({}) => {},
       }),
-      pull_task: tool({
-        // description: "",
-        parameters: z.object({}),
-        execute: async ({}) => {
-          // triggers the multithreading attempt
-        },
-      }),
-      get_tasks: tool({
-        // description: "",
-        parameters: z.object({}),
-        execute: async ({}) => {},
-      }),
+      // pull_task: tool({
+      //   // description: "",
+      //   parameters: z.object({}),
+      //   execute: async ({}) => {
+      //     // triggers the multithreading attempt
+      //   },
+      // }),
+      // get_tasks: tool({
+      //   // description: "",
+      //   parameters: z.object({}),
+      //   execute: async ({}) => {},
+      // }),
     },
   });
 };
@@ -137,6 +140,8 @@ export const sendActiveMainThreadMessage = async ({
 }) => {
   const accumulatedTextDeltas: Array<PluginServerEvent> = [];
   const abortController = new AbortController();
+  const codebaseIndex = await getCodebaseIndexPrompt();
+
   const { fullStream } = streamText({
     temperature: 1,
     abortSignal: abortController.signal,
@@ -155,7 +160,7 @@ export const sendActiveMainThreadMessage = async ({
         role: "system",
       },
       {
-        content: await getCodebaseIndexPrompt(),
+        content: codebaseIndex,
         role: "system",
       },
       ...previousChatMessages,
@@ -169,11 +174,16 @@ export const sendActiveMainThreadMessage = async ({
       edit_file: tool({
         // description: "",
         parameters: z.object({
-          target_file: z.string().describe("File to edit"),
+          target_file_path: z
+            .string()
+            .describe(
+              "The path of the file that will be edited. Anytime you want to modify a file, you should use this tool, you should never write code yourself, you should always delegate it to this edit tool"
+            ),
         }),
-        execute: async ({ target_file }) => {
+        execute: async ({ target_file_path }) => {
           emitEvent("edit file tool");
-          const res = await smartEdit({
+          const res = await editFileSpec({
+            targetFilePath: target_file_path,
             chatHistory: [
               ...previousChatMessages,
               {
@@ -186,63 +196,64 @@ export const sendActiveMainThreadMessage = async ({
               //   content: toChatMessages(accumulatedTextDeltas)[0].content,
               // },
             ],
-            onChunk: (chunk) => {
-              emitEvent(chunk);
-            },
-            targetFile: target_file,
+            // emitEvent,
+            emit: emitEvent,
+            // targetFile: target_file,
+
+            threadId: null,
           });
           emitEvent("================== EDITING FILE END =============");
 
           return res;
         },
       }),
-      pull_task: tool({
-        // description: "",
-        parameters: z.object({
-          taskId: z.string(),
-          lockedFiles: z.array(z.string()),
-        }),
-        execute: async ({ taskId, lockedFiles }) => {
-          emitEvent("pull task");
-          // triggers the multithreading attempt
+      // pull_task: tool({
+      //   // description: "",
+      //   parameters: z.object({
+      //     taskId: z.string(),
+      //     lockedFiles: z.array(z.string()),
+      //   }),
+      //   execute: async ({ taskId, lockedFiles }) => {
+      //     emitEvent("pull task");
+      //     // triggers the multithreading attempt
 
-          const task = Array.from(taskSet.values()).find(
-            (task) => task.taskId === taskId
-          );
+      //     const task = Array.from(taskSet.values()).find(
+      //       (task) => task.taskId === taskId
+      //     );
 
-          if (!task) {
-            emitEvent("errrrrrrrrrrrrrrrrrr");
-            throw new Error("No task with provided id found");
-          }
+      //     if (!task) {
+      //       emitEvent("errrrrrrrrrrrrrrrrrr");
+      //       throw new Error("No task with provided id found");
+      //     }
 
-          task.status = "executing";
-          if (task.status !== "executing") {
-            emitEvent("unreachable");
-            throw new Error("unreachable");
-          }
+      //     task.status = "executing";
+      //     if (task.status !== "executing") {
+      //       emitEvent("unreachable");
+      //       throw new Error("unreachable");
+      //     }
 
-          task.lockedFiles = lockedFiles;
+      //     task.lockedFiles = lockedFiles;
 
-          parallelizeTaskSet({
-            chatMessages: toChatMessages(accumulatedTextDeltas),
-            emitEvent,
-          }).catch(() => {
-            /**
-             *
-             */
-          });
+      //     parallelizeTaskSet({
+      //       chatMessages: toChatMessages(accumulatedTextDeltas),
+      //       emitEvent,
+      //     }).catch(() => {
+      //       /**
+      //        *
+      //        */
+      //     });
 
-          return "Successfully pulled task";
-        },
-      }),
-      get_tasks: tool({
-        // description: "",
-        parameters: z.object({}),
-        execute: async ({}) => {
-          emitEvent("get tasks");
-          return getTaskSetAsString();
-        },
-      }),
+      //     return "Successfully pulled task";
+      //   },
+      // }),
+      // get_tasks: tool({
+      //   // description: "",
+      //   parameters: z.object({}),
+      //   execute: async ({}) => {
+      //     emitEvent("get tasks");
+      //     return getTaskSetAsString();
+      //   },
+      // }),
     },
   });
 
@@ -378,9 +389,11 @@ export const sendIdleMainThreadMessage = async ({
         // description: "",
         // this is kinda wrong
         parameters: z.object({
-          target_file: z.string().describe("File to edit"),
+          target_file_path: z
+            .string()
+            .describe("The path of the file that will be edited"),
         }),
-        execute: async ({ target_file }) => {
+        execute: async ({ target_file_path }) => {
           emitEvent("edit file tool");
 
           // this edit strat + prompt is really bad, really bad
@@ -388,7 +401,7 @@ export const sendIdleMainThreadMessage = async ({
           // line number range you select to replace will always be (inclusive, inclusive)
           // batch close scope modification together, but you must select the parent scope in that case
           //
-          const res = await smartEdit({
+          const res = await editFileSpec({
             chatHistory: [
               ...previousChatMessages,
               {
@@ -400,63 +413,67 @@ export const sendIdleMainThreadMessage = async ({
                 content: toChatMessages(accumulatedTextDeltas)[0].content,
               },
             ],
-            onChunk: (chunk) => {
-              emitEvent(chunk);
-            },
-            targetFile: target_file,
-          });
+            emit: emitEvent,
+            threadId: null,
+            targetFilePath: target_file_path,
+          }).catch((e: Error) =>
+            JSON.stringify({
+              stack: e.stack,
+              msg: e.message,
+            })
+          );
           emitEvent("================== EDITING FILE END =============");
 
           return res;
         },
       }),
-      pull_task: tool({
-        // description: "",
-        parameters: z.object({
-          taskId: z.string(),
-          lockedFiles: z.array(z.string()),
-        }),
-        execute: async ({ taskId, lockedFiles }) => {
-          emitEvent("pull task");
-          // triggers the multithreading attempt
+      // pull_task: tool({
+      //   // description: "",
+      //   parameters: z.object({
+      //     taskId: z.string(),
+      //     lockedFiles: z.array(z.string()),
+      //   }),
+      //   execute: async ({ taskId, lockedFiles }) => {
+      //     emitEvent("pull task");
+      //     // triggers the multithreading attempt
 
-          const task = Array.from(taskSet.values()).find(
-            (task) => task.taskId === taskId
-          );
+      //     const task = Array.from(taskSet.values()).find(
+      //       (task) => task.taskId === taskId
+      //     );
 
-          if (!task) {
-            emitEvent("errrrrrrrrrrrrrrrrrr");
-            throw new Error("No task with provided id found");
-          }
+      //     if (!task) {
+      //       emitEvent("errrrrrrrrrrrrrrrrrr");
+      //       throw new Error("No task with provided id found");
+      //     }
 
-          task.status = "executing";
-          if (task.status !== "executing") {
-            emitEvent("unreachable");
-            throw new Error("unreachable");
-          }
+      //     task.status = "executing";
+      //     if (task.status !== "executing") {
+      //       emitEvent("unreachable");
+      //       throw new Error("unreachable");
+      //     }
 
-          task.lockedFiles = lockedFiles;
+      //     task.lockedFiles = lockedFiles;
 
-          parallelizeTaskSet({
-            chatMessages: toChatMessages(accumulatedTextDeltas),
-            emitEvent,
-          }).catch(() => {
-            /**
-             *
-             */
-          });
+      //     parallelizeTaskSet({
+      //       chatMessages: toChatMessages(accumulatedTextDeltas),
+      //       emitEvent,
+      //     }).catch(() => {
+      //       /**
+      //        *
+      //        */
+      //     });
 
-          return "Successfully pulled task";
-        },
-      }),
-      get_tasks: tool({
-        // description: "",
-        parameters: z.object({}),
-        execute: async ({}) => {
-          emitEvent("get tasks");
-          return getTaskSetAsString();
-        },
-      }),
+      //     return "Successfully pulled task";
+      //   },
+      // }),
+      // get_tasks: tool({
+      //   // description: "",
+      //   parameters: z.object({}),
+      //   execute: async ({}) => {
+      //     emitEvent("get tasks");
+      //     return getTaskSetAsString();
+      //   },
+      // }),
     },
   });
 
@@ -546,7 +563,7 @@ export const sendIdleMainThreadMessage = async ({
     ({ kind }) => kind !== "main-thread"
   );
 };
-const chatMessagesToString = (chatMessages: Array<ChatMessage>) => {
+export const chatMessagesToString = (chatMessages: Array<ChatMessage>) => {
   let result = "";
 
   for (const message of chatMessages) {
@@ -564,7 +581,7 @@ export const parallelizeTask = async ({
 }: {
   chatMessages: Array<ChatMessage>;
   message: string;
-  emitEvent: (task: string, threadId?: string) => void;
+  emitEvent: (task: string, threadId: string | null) => void;
 }) => {
   const sysPrompt = await readFile(
     "/Users/robby/zenbu/packages/zenbu-plugin/src/should-parallelize.md",
@@ -572,7 +589,6 @@ export const parallelizeTask = async ({
   );
 
   const { object: canParallelize } = await generateObject({
-    // @ts-expect-error
     model: google("gemini-2.0-pro-exp-02-05"),
     schema: z.boolean(),
     messages: [
@@ -597,9 +613,10 @@ ${message}
     ],
   });
 
-  emitEvent("GOOGLE, CAN WE PARALLELIZE THIS TASK:" + canParallelize);
+  emitEvent("GOOGLE, CAN WE PARALLELIZE THIS TASK:" + canParallelize, null);
 
-  if (canParallelize) {
+  if (canParallelize && false) {
+    emitEvent("parallel cause google", null);
     spawnThread({
       emitEvent,
       // this may get harry later since we never explicitly put this in the task set, we just immediately create a task inline
@@ -635,7 +652,6 @@ export const parallelizeTaskSet = async ({
   );
 
   const { object: parallelizableTasks } = await generateObject({
-    // @ts-expect-error
     model: google("gemini-2.0-pro-exp-02-05"),
     schema: z.array(z.string()),
     messages: [
@@ -662,6 +678,7 @@ ${getTaskSetAsString()}
   );
 
   tasks.forEach((task) => {
+    return;
     spawnThread({
       emitEvent,
       // this will 100% lead to a bug, i'm not thinking about which messages are inside here and what i want the agent to see
@@ -676,7 +693,7 @@ export const spawnThread = async ({
   task,
   existingMessages,
 }: {
-  emitEvent: (text: string, threadId?: string) => void;
+  emitEvent: (text: string, threadId: string | null) => void;
   task: TaskSetItem;
   existingMessages: Array<ChatMessage>;
 }) => {
@@ -690,7 +707,7 @@ export const spawnThread = async ({
   const threadId = nanoid();
 
   const { fullStream } = await streamText({
-    model: anthropic("claude-3-5-sonnet-latest"),
+    model: google("gemini-2.0-flash-exp"),
     toolCallStreaming: true,
     abortSignal: abortController.signal,
     tools: {
@@ -701,7 +718,7 @@ export const spawnThread = async ({
         }),
         execute: async ({ target_file }) => {
           emitEvent("edit file tool", threadId);
-          const res = await smartEdit({
+          const res = await bestEdit({
             chatHistory: [
               ...existingMessages,
               {
@@ -714,9 +731,8 @@ export const spawnThread = async ({
               //   content: toChatMessages(accumulatedTextDeltas)[0].content,
               // },
             ],
-            onChunk: (chunk) => {
-              emitEvent(chunk, threadId);
-            },
+            emitEvent,
+            threadId,
             targetFile: target_file,
           });
           emitEvent(

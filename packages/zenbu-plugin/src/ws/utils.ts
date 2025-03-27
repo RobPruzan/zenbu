@@ -87,6 +87,7 @@ export const toGroupedChatMessages = (events: Array<EventLogEvent>) => {
 
   const otherThreadsMessages = Object.keys(threads)
     .map((threadId) => threads[threadId])
+
     .map(toChatMessages);
 
   return { mainThreadMessages, otherThreadsMessages };

@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0f172a; /* Dark blue-black background */
+  --foreground: #e2e8f0; /* Light text color */
+  --primary-color: #3b82f6; /* Blue for primary elements */
+  --secondary-color: #10b981; /* Emerald for secondary elements */
+  --accent-color: #8b5cf6; /* Purple for accents */
+  --card-bg: #1e293b; /* Card background */
+  --border-color: #334155; /* Border color */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a; /* Dark blue-black background */
+    --foreground: #e2e8f0; /* Light text color */
+    --primary-color: #3b82f6; /* Blue for primary elements */
+    --secondary-color: #10b981; /* Emerald for secondary elements */
+    --accent-color: #8b5cf6; /* Purple for accents */
+    --card-bg: #1e293b; /* Card background */
+    --border-color: #334155; /* Border color */
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.8; /* Increased line height for better readability */
+  margin: 0;
+  padding: 0;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease; /* Smooth transition for theme changes */
+}
+
+/* Common elements styling */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-color);
+}
+
+button, .button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover, .button:hover {
+  background-color: var(--accent-color);
+}
+
+.card {
+  background-color: var(--card-bg);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}

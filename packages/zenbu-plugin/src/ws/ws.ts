@@ -29,6 +29,7 @@ import {
   taskSet,
 } from "../tools/message-runtime.js";
 import { nanoid } from "nanoid";
+import { planner } from "./planner.js";
 /**
  *
  *
@@ -80,7 +81,7 @@ export type PluginServerEvent = {
   text: string;
   associatedRequestId: string;
   timestamp: number;
-  threadId: null | string
+  threadId: null | string;
 };
 
 export const HARD_CODED_USER_PROJECT_PATH =
@@ -170,7 +171,7 @@ export const injectWebSocket = (server: HttpServer) => {
             requestId: event.requestId,
             roomId,
             text,
-            threadId: threadId ?? null
+            threadId: threadId ?? null,
           });
         switch (event.kind) {
           case "user-message": {
@@ -179,6 +180,16 @@ export const injectWebSocket = (server: HttpServer) => {
              * the model was generating with
              */
 
+            // const plannerResult = await planner({
+            //   codebase: await getCodebaseIndexPrompt(),
+            //   emitEvent,
+            //   message: event.text,
+            //   previousMessages: toChatMessages(event.previousEvents),
+            // });
+
+            // emitEvent(
+            //   "GEMINI PLAN:" + JSON.stringify(plannerResult.plan, null, 2)
+            // );
             const messageCase = iife(() => {
               const mainThreadStream = activeStreams.current.find(
                 ({ kind }) => kind === "main-thread"
@@ -198,7 +209,7 @@ export const injectWebSocket = (server: HttpServer) => {
                 );
 
                 try {
-                  await sendIdleMainThreadMessage({
+                  await sendActiveMainThreadMessage({
                     emitEvent,
                     message: event.text,
                     previousChatMessages: toChatMessages(event.previousEvents),
@@ -262,13 +273,13 @@ const emitAssistantMessage = ({
   roomId,
   requestId,
   text,
-  threadId
+  threadId,
 }: {
   ioServer: Server;
   roomId: string;
   requestId: string;
-    text: string;
-  threadId: null | string
+  text: string;
+  threadId: null | string;
 }) => {
   ioServer.to(roomId).emit("message", {
     kind: "assistant-simple-message",
@@ -276,6 +287,6 @@ const emitAssistantMessage = ({
     text,
     timestamp: Date.now(),
     id: crypto.randomUUID(),
-    threadId
+    threadId,
   } satisfies PluginServerEvent);
 };
