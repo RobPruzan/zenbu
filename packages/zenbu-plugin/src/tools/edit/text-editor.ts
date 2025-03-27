@@ -88,10 +88,12 @@ export const textEditor = async ({
   fullChatHistory,
   filePath,
   emit,
+  writeToPath
 }: {
   fullChatHistory: Array<ChatMessage>;
   filePath: string;
   emit: (text: string) => void;
+  writeToPath: string
 }) => {
   const abortController = new AbortController();
 
@@ -141,33 +143,46 @@ export const textEditor = async ({
   const output = parseCommandOutput(accResponse);
   const { insertCommands, replaceCommands } = segmentCommands(output);
 
-  await applyInsertCommands(insertCommands, filePath);
+  // Start with the original file content
+  let currentContent = fileContent;
 
-  const result = await applyReplaceCommands(replaceCommands, filePath);
-
-  switch (result.status) {
-    case "multiple_matches": {
-      throw new Error("not implemented");
-      return;
-    }
-    case "no_match": {
-      throw new Error("not implemented");
-      return;
-    }
-    case "success": {
-      break;
+  // Apply insert commands first
+  if (insertCommands.length > 0) {
+    for (const cmd of insertCommands) {
+      currentContent = insertCodeAfterLine(currentContent, cmd.insert_line, cmd.new_str);
     }
   }
 
-  const syntaxResult = await checkSyntax(result.content, filePath);
+  // Then apply replace commands
+  if (replaceCommands.length > 0) {
+    for (const cmd of replaceCommands) {
+      const result = await applyReplaceCommands([cmd], currentContent);
+      switch (result.status) {
+        case "multiple_matches": {
+          throw new Error(`Multiple matches found for replacement: "${cmd.old_str}"`);
+        }
+        case "no_match": {
+          throw new Error(`No matches found for replacement: "${cmd.old_str}"`);
+        }
+        case "success": {
+          currentContent = result.content;
+          break;
+        }
+      }
+    }
+  }
+
+  const syntaxResult = await checkSyntax(currentContent, filePath);
 
   if (!syntaxResult.valid) {
-    throw new Error("not implemented");
+    throw new Error(`Syntax check failed: ${syntaxResult.error}`);
   }
 
-  const formatted = await formatFileContent(result.content, {});
+  const formatted = await formatFileContent(currentContent, {
+    filepath: filePath
+  });
 
-  await writeFile(filePath, formatted);
+  await writeFile(writeToPath, formatted);
 
   return formatted;
 };
@@ -178,7 +193,7 @@ export const textEditor = async ({
  */
 export const applyReplaceCommands = async (
   commands: StringReplaceCommand[],
-  targetFilePath: string
+  content: string
 ): Promise<
   | { status: "success"; content: string }
   | {
@@ -192,8 +207,7 @@ export const applyReplaceCommands = async (
       similarMatches: string[];
     }
 > => {
-  // Read the file content
-  let fileContent = await readFile(targetFilePath, "utf-8");
+  let fileContent = content;
 
   for (const command of commands) {
     const { old_str, new_str } = command;

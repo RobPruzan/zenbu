@@ -126,7 +126,7 @@ importers:
         version: 4.1.0
       drizzle-orm:
         specifier: ^0.33.0
-        version: 0.33.0(@libsql/client@0.9.0)(@opentelemetry/api@1.9.0)(@types/react@18.3.18)(better-sqlite3@11.9.0)(bun-types@1.2.6)(react@18.3.1)
+        version: 0.33.0(@libsql/client@0.9.0)(@opentelemetry/api@1.9.0)(@types/react@18.3.18)(better-sqlite3@11.9.0)(bun-types@1.2.7)(react@18.3.1)
       embla-carousel-react:
         specifier: 8.5.1
         version: 8.5.1(react@18.3.1)
@@ -320,6 +320,9 @@ importers:
       hono:
         specifier: ^4.7.4
         version: 4.7.4
+      kleur:
+        specifier: ^4.1.5
+        version: 4.1.5
       marked:
         specifier: ^15.0.7
         version: 15.0.7
@@ -345,9 +348,15 @@ importers:
       '@types/node':
         specifier: ^20.11.17
         version: 20.17.24
+      bun-types:
+        specifier: latest
+        version: 1.2.7
       tsx:
         specifier: ^4.7.1
         version: 4.19.3
+      typescript:
+        specifier: ^5.3.3
+        version: 5.8.2
       zenbu-devtools:
         specifier: workspace:*
         version: link:../zenbu-devtools
@@ -1695,8 +1704,8 @@ packages:
   '@radix-ui/react-dialog@1.1.6':
     resolution: {integrity: sha512-/IVhJV5AceX620DUJ4uYVMymzsipdKBzo3edo+omeskCKGm9FRHM0ebIdbPnlQVJqyuHbuBltQUOG2mOTq2IYw==}
     peerDependencies:
-      '@types/react': '*'
-      '@types/react-dom': '*'
+      '@types/react': 19.0.10
+      '@types/react-dom': 19.0.4
       react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
       react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
     peerDependenciesMeta:
@@ -2816,8 +2825,8 @@ packages:
   bun-types@1.2.5:
     resolution: {integrity: sha512-3oO6LVGGRRKI4kHINx5PIdIgnLRb7l/SprhzqXapmoYkFl5m4j6EvALvbDVuuBFaamB46Ap6HCUxIXNLCGy+tg==}
 
-  bun-types@1.2.6:
-    resolution: {integrity: sha512-FbCKyr5KDiPULUzN/nm5oqQs9nXCHD8dVc64BArxJadCvbNzAI6lUWGh9fSJZWeDIRD38ikceBU8Kj/Uh+53oQ==}
+  bun-types@1.2.7:
+    resolution: {integrity: sha512-P4hHhk7kjF99acXqKvltyuMQ2kf/rzIw3ylEDpCxDS9Xa0X0Yp/gJu/vDCucmWpiur5qJ0lwB2bWzOXa2GlHqA==}
 
   bundle-require@5.1.0:
     resolution: {integrity: sha512-3WrrOuZiyaaZPWiEt4G3+IffISVC9HYlWueJEBWED4ZH4aIAC2PnkdnuRrR94M+w6yGWn4AglWtJtBI8YqvgoA==}
@@ -3951,6 +3960,7 @@ packages:
 
   libsql@0.4.7:
     resolution: {integrity: sha512-T9eIRCs6b0J1SHKYIvD8+KCJMcWZ900iZyxdnSCdqxN12Z1ijzT+jY5nrk72Jw4B0HGzms2NgpryArlJqvc3Lw==}
+    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   lilconfig@3.1.3:
@@ -4461,7 +4471,7 @@ packages:
     resolution: {integrity: sha512-pnAi91oOk8g8ABQKGF5/M9qxmmOPxaAnopyTHYfqYEwJhyFrbbBtHuSgtKEoH0jpcxx5o3hXqH1mNd9/Oi+8iQ==}
     engines: {node: '>=10'}
     peerDependencies:
-      '@types/react': '*'
+      '@types/react': 19.0.10
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc
     peerDependenciesMeta:
       '@types/react':
@@ -7528,11 +7538,10 @@ snapshots:
       '@types/node': 20.17.24
       '@types/ws': 8.5.14
 
-  bun-types@1.2.6:
+  bun-types@1.2.7:
     dependencies:
       '@types/node': 20.17.24
-      '@types/ws': 8.5.14
-    optional: true
+      '@types/ws': 8.18.0
 
   bundle-require@5.1.0(esbuild@0.25.1):
     dependencies:
@@ -7850,13 +7859,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.33.0(@libsql/client@0.9.0)(@opentelemetry/api@1.9.0)(@types/react@18.3.18)(better-sqlite3@11.9.0)(bun-types@1.2.6)(react@18.3.1):
+  drizzle-orm@0.33.0(@libsql/client@0.9.0)(@opentelemetry/api@1.9.0)(@types/react@18.3.18)(better-sqlite3@11.9.0)(bun-types@1.2.7)(react@18.3.1):
     optionalDependencies:
       '@libsql/client': 0.9.0
       '@opentelemetry/api': 1.9.0
       '@types/react': 18.3.18
       better-sqlite3: 11.9.0
-      bun-types: 1.2.6
+      bun-types: 1.2.7
       react: 18.3.1
 
   dunder-proto@1.0.1:

@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "example": "tsx watch examples/index.ts",
-    "test":"vitest"
+    "test": "vitest",
+    "test:integration": "bun run src/tools/edit/run-integration-tests.ts"
   },
   "main": "src/create-server.ts",
   "dependencies": {
@@ -21,6 +22,7 @@
     "dotenv": "^16.4.7",
     "effect": "^3.13.11",
     "hono": "^4.7.4",
+    "kleur": "^4.1.5",
     "marked": "^15.0.7",
     "nanoid": "^5.1.3",
     "prettier": "^3.3.2",
@@ -31,7 +33,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
+    "bun-types": "latest",
     "tsx": "^4.7.1",
+    "typescript": "^5.3.3",
     "zenbu-devtools": "workspace:*"
   }
 }

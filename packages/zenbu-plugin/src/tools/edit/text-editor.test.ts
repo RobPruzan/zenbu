@@ -619,30 +619,17 @@ describe("applyInsertCommands", () => {
 });
 
 describe("applyReplaceCommands", () => {
-  let tempFilePath: string;
-
-  beforeEach(async () => {
-    // Create a temporary file for testing
-    const content =
-      'const value1 = "old value 1";\nconst value2 = "old value 2";\nconst value3 = "unique value";';
-    tempFilePath = await createTempFile("replace_test.txt", content);
-  });
-
-  afterEach(async () => {
-    // Clean up temporary file
-    await removeTempFile(tempFilePath);
-  });
-
   it("should replace a single occurrence of a string", async () => {
-    const commands: StringReplaceCommand[] = [
+    const content = 'const value1 = "old value 1";\nconst value2 = "old value 2";\nconst value3 = "unique value";';
+    const commands = [
       {
-        kind: "string_replace",
+        kind: "string_replace" as const,
         old_str: 'const value1 = "old value 1";',
         new_str: 'const value1 = "new value 1";',
       },
     ];
 
-    const result = await applyReplaceCommands(commands, tempFilePath);
+    const result = await applyReplaceCommands(commands, content);
 
     expect(result.status).toBe("success");
     if (result.status === "success") {
@@ -653,20 +640,21 @@ describe("applyReplaceCommands", () => {
   });
 
   it("should replace multiple strings in sequence", async () => {
-    const commands: StringReplaceCommand[] = [
+    const content = 'const value1 = "old value 1";\nconst value2 = "old value 2";\nconst value3 = "unique value";';
+    const commands = [
       {
-        kind: "string_replace",
+        kind: "string_replace" as const,
         old_str: 'const value1 = "old value 1";',
         new_str: 'const value1 = "new value 1";',
       },
       {
-        kind: "string_replace",
+        kind: "string_replace" as const,
         old_str: 'const value2 = "old value 2";',
         new_str: 'const value2 = "new value 2";',
       },
     ];
 
-    const result = await applyReplaceCommands(commands, tempFilePath);
+    const result = await applyReplaceCommands(commands, content);
 
     expect(result.status).toBe("success");
     if (result.status === "success") {
@@ -677,15 +665,16 @@ describe("applyReplaceCommands", () => {
   });
 
   it('should return "no_match" status when a string is not found', async () => {
-    const commands: StringReplaceCommand[] = [
+    const content = 'const value1 = "old value 1";';
+    const commands = [
       {
-        kind: "string_replace",
+        kind: "string_replace" as const,
         old_str: "non-existent value",
         new_str: "new value",
       },
     ];
 
-    const result = await applyReplaceCommands(commands, tempFilePath);
+    const result = await applyReplaceCommands(commands, content);
 
     expect(result.status).toBe("no_match");
     if (result.status === "no_match") {
@@ -700,14 +689,9 @@ describe("applyReplaceCommands", () => {
   return true;
 }`;
 
-    const multilineFilePath = await createTempFile(
-      "multiline_test.txt",
-      content
-    );
-
-    const commands: StringReplaceCommand[] = [
+    const commands = [
       {
-        kind: "string_replace",
+        kind: "string_replace" as const,
         old_str: `function test() {
   console.log("Hello");
   return true;
@@ -719,7 +703,7 @@ describe("applyReplaceCommands", () => {
       },
     ];
 
-    const result = await applyReplaceCommands(commands, multilineFilePath);
+    const result = await applyReplaceCommands(commands, content);
 
     expect(result.status).toBe("success");
     if (result.status === "success") {
@@ -728,8 +712,6 @@ describe("applyReplaceCommands", () => {
   return false;
 }`);
     }
-
-    await removeTempFile(multilineFilePath);
   });
 });
 
