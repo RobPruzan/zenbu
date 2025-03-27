@@ -89,12 +89,16 @@ export const textEditor = async ({
   filePath,
   emit,
   writeToPath,
+  previousAttempt,
+  failedMatch,
 }: {
   fullChatHistory: Array<ChatMessage>;
   filePath: string;
   emit: (text: string) => void;
   writeToPath: string;
-}) => {
+  previousAttempt?: string;
+  failedMatch?: { oldStr: string; similarMatches: string[] };
+}): Promise<string> => {
   const abortController = new AbortController();
 
   const fileContent = await readFile(filePath, "utf-8");
@@ -114,7 +118,6 @@ export const textEditor = async ({
       },
       {
         role: "user",
-        // we will want to make this cacheable
         content: `\
 <data>
   <chat_history>
@@ -124,6 +127,18 @@ export const textEditor = async ({
   <file_content>
   ${withLineNumbers}
   </file_content>
+  ${previousAttempt ? `
+  <previous_attempt>
+  ${previousAttempt}
+  </previous_attempt>
+  ` : ''}
+  ${failedMatch ? `
+  <error>
+  No matches found for replacement: "${failedMatch.oldStr}".
+  Closest matches were: ${JSON.stringify(failedMatch.similarMatches)}
+  Please revise your edit to use one of the existing matches or a different approach.
+  </error>
+  ` : ''}
 </data>\
 `,
       },
@@ -168,9 +183,18 @@ export const textEditor = async ({
       const result = await applyReplaceCommands([cmd], currentContent);
       switch (result.status) {
         case "no_match": {
-          throw new Error(
-            `No matches found for replacement: "${cmd.old_str}". Closest were ${JSON.stringify(result.similarMatches)}`
-          );
+          // Recursively retry with error feedback
+          return textEditor({
+            fullChatHistory,
+            filePath,
+            emit,
+            writeToPath,
+            previousAttempt: accResponse,
+            failedMatch: {
+              oldStr: cmd.old_str,
+              similarMatches: result.similarMatches,
+            },
+          });
         }
         case "success": {
           currentContent = result.content;

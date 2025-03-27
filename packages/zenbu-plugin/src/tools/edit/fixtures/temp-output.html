@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RPG Game</title>
+    <style>
+      :root {
+        --primary-color: #4a90e2;
+        --secondary-color: #e24a90;
+        --background-color: #1a1a1a;
+        --text-color: #ffffff;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: "Arial", sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
+      }
+
+      #game-container {
+        display: grid;
+        grid-template-columns: 250px 1fr 250px;
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      #character-panel {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 15px;
+        border-radius: 8px;
+      }
+
+      #game-world {
+        background: rgba(0, 0, 0, 0.3);
+        height: 600px;
+        border-radius: 8px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #ui-panel {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 15px;
+        border-radius: 8px;
+      }
+
+      .stat-bar {
+        width: 100%;
+        height: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        margin: 5px 0;
+        overflow: hidden;
+      }
+
+      .stat-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+      }
+
+      .health {
+        background-color: #ff4444;
+      }
+      .mana {
+        background-color: #4444ff;
+      }
+      .experience {
+        background-color: #44ff44;
+      }
+
+      .character {
+        width: 32px;
+        height: 32px;
+        position: absolute;
+        transition: all 0.2s ease;
+      }
+
+      .player {
+        background-color: var(--primary-color);
+      }
+
+      .enemy {
+        background-color: var(--secondary-color);
+      }
+
+      .item {
+        width: 24px;
+        height: 24px;
+        margin: 4px;
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+      @keyframes attack-pulse {
+        0% {
+          transform: translate(-25%, -25%) scale(0.5);
+          opacity: 0.8;
+        }
+        100% {
+          transform: translate(-25%, -25%) scale(1.5);
+          opacity: 0;
+        }
+      }
+
+      .level-indicator {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: gold;
+        color: black;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container">
+      <div id="character-panel">
+        <h2>Character</h2>
+        <div class="stats">
+          <div>Health: <span id="health">100</span>/100</div>
+          <div class="stat-bar">
+            <div class="stat-fill health" style="width: 100%"></div>
+          </div>
+
+          <div>Mana: <span id="mana">50</span>/50</div>
+          <div class="stat-bar">
+            <div class="stat-fill mana" style="width: 100%"></div>
+          </div>
+
+          <div>
+            Level: <span id="level">1</span> | XP: <span id="xp">0</span>/<span
+              id="max-xp"
+              >100</span
+            >
+          </div>
+          <div class="stat-bar">
+            <div class="stat-fill experience" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="game-world"></div>
+
+      <div id="ui-panel">
+        <h2>Equipment</h2>
+        <div id="inventory-grid">
+          <!-- Items will be added here dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      class Game {
+        constructor() {
+          this.player = new Player(100, 50);
+          this.gameWorld = document.getElementById("game-world");
+          this.enemies = [];
+          this.items = [];
+          this.setupEventListeners();
+          this.setupSpawnTimers();
+          this.gameLoop();
+
+          // Make game instance globally accessible for enemy AI
+          window.gameInstance = this;
+        }
+
+        setupSpawnTimers() {
+          // Spawn new enemies periodically
+          setInterval(() => {
+            if (this.enemies.length < 10) {
+              this.spawnEnemy();
+            }
+          }, 5000);
+
+          // Spawn new items periodically
+          setInterval(() => {
+            if (this.items.length < 8) {
+              this.spawnItem();
+            }
+          }, 8000);
+
+          // Regenerate player mana over time
+          setInterval(() => {
+            if (this.player.mana < this.player.maxMana) {
+              this.player.mana = Math.min(
+                this.player.maxMana,
+                this.player.mana + 1,
+              );
+              this.player.updateStats();
+            }
+          }, 1000);
+        }
+
+        setupEventListeners() {
+          document.addEventListener("keydown", (e) => {
+            switch (e.key) {
+              case "ArrowUp":
+                this.player.move(0, -1);
+                break;
+              case "ArrowDown":
+                this.player.move(0, 1);
+                break;
+              case "ArrowLeft":
+                this.player.move(-1, 0);
+                break;
+              case "ArrowRight":
+                this.player.move(1, 0);
+                break;
+              case " ":
+                this.player.attack();
+                break;
+            }
+          });
+        }
+
+        gameLoop() {
+          this.update();
+          requestAnimationFrame(() => this.gameLoop());
+        }
+
+        update() {
+          this.player.update();
+          this.enemies.forEach((enemy) => enemy.update());
+          this.checkCollisions();
+        }
+
+        checkCollisions() {
+          // Check player collision with enemies
+          this.enemies.forEach((enemy, enemyIndex) => {
+            const dx = this.player.x - enemy.x;
+            const dy = this.player.y - enemy.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < 30) {
+              // Collision threshold
+              if (this.player.isAttacking) {
+                enemy.takeDamage(20);
+                if (enemy.health <= 0) {
+                  this.enemies.splice(enemyIndex, 1);
+                  this.player.gainXP(10);
+                }
+              }
+            }
+          });
+
+          // Check player collision with items
+          this.items.forEach((item, itemIndex) => {
+            const dx = this.player.x - item.x;
+            const dy = this.player.y - item.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < 30) {
+              // Collision threshold
+              this.items.splice(itemIndex, 1);
+              item.element.remove();
+              this.player.collectItem();
+            }
+          });
+        }
+
+        spawnEnemy() {
+          const enemy = new Enemy(
+            Math.random() * (this.gameWorld.clientWidth - 32),
+            Math.random() * (this.gameWorld.clientHeight - 32),
+          );
+          this.enemies.push(enemy);
+          this.gameWorld.appendChild(enemy.element);
+        }
+
+        spawnItem() {
+          const item = new Item(
+            Math.random() * (this.gameWorld.clientWidth - 24),
+            Math.random() * (this.gameWorld.clientHeight - 24),
+          );
+          this.items.push(item);
+          this.gameWorld.appendChild(item.element);
+        }
+      }
+
+      class Player {
+        constructor(health, mana) {
+          this.health = health;
+          this.maxHealth = health;
+          this.mana = mana;
+          this.maxMana = mana;
+          this.x = 100;
+          this.y = 100;
+          this.xp = 0;
+          this.maxXp = 100;
+          this.level = 1;
+          this.isAttacking = false;
+          this.element = document.createElement("div");
+          this.element.className = "character player";
+          this.updatePosition();
+          document.getElementById("game-world").appendChild(this.element);
+        }
+
+        gainXP(amount) {
+          this.xp += amount;
+          if (this.xp >= this.maxXp) {
+            this.levelUp();
+          }
+          this.updateStats();
+        }
+
+        levelUp() {
+          this.level++;
+          this.xp = this.xp - this.maxXp;
+          this.maxXp = Math.floor(this.maxXp * 1.5);
+          this.maxHealth += 20;
+          this.health = this.maxHealth;
+          this.maxMana += 10;
+          this.mana = this.maxMana;
+
+          // Level up effect
+          const levelUpMsg = document.createElement("div");
+          levelUpMsg.textContent = "LEVEL UP!";
+          levelUpMsg.style.position = "absolute";
+          levelUpMsg.style.left = "50%";
+          levelUpMsg.style.top = "50%";
+          levelUpMsg.style.transform = "translate(-50%, -50%)";
+          levelUpMsg.style.color = "gold";
+          levelUpMsg.style.fontSize = "32px";
+          levelUpMsg.style.fontWeight = "bold";
+          levelUpMsg.style.textShadow = "0 0 10px rgba(255, 215, 0, 0.7)";
+          levelUpMsg.style.zIndex = "100";
+          document.getElementById("game-world").appendChild(levelUpMsg);
+
+          setTimeout(() => levelUpMsg.remove(), 2000);
+        }
+
+        collectItem() {
+          // Restore some health and mana when collecting items
+          this.health = Math.min(this.maxHealth, this.health + 10);
+          this.mana = Math.min(this.maxMana, this.mana + 5);
+          this.updateStats();
+        }
+
+        move(dx, dy) {
+          const gameWorld = document.getElementById("game-world");
+          const newX = this.x + dx * 10;
+          const newY = this.y + dy * 10;
+
+          if (newX >= 0 && newX <= gameWorld.clientWidth - 32) {
+            this.x = newX;
+          }
+          if (newY >= 0 && newY <= gameWorld.clientHeight - 32) {
+            this.y = newY;
+          }
+
+          this.updatePosition();
+        }
+
+        updatePosition() {
+          this.element.style.left = `${this.x}px`;
+          this.element.style.top = `${this.y}px`;
+        }
+
+        attack() {
+          if (this.mana >= 10) {
+            this.mana -= 10;
+            this.updateStats();
+
+            // Visual attack effect
+            const attackEffect = document.createElement("div");
+            attackEffect.style.position = "absolute";
+            attackEffect.style.left = `${this.x}px`;
+            attackEffect.style.top = `${this.y}px`;
+            attackEffect.style.width = "60px";
+            attackEffect.style.height = "60px";
+            attackEffect.style.borderRadius = "50%";
+            attackEffect.style.backgroundColor = "rgba(255, 255, 100, 0.5)";
+            attackEffect.style.transform = "translate(-25%, -25%)";
+            attackEffect.style.animation = "attack-pulse 0.5s forwards";
+            document.getElementById("game-world").appendChild(attackEffect);
+
+            // Set attacking flag for collision detection
+            this.isAttacking = true;
+            setTimeout(() => {
+              this.isAttacking = false;
+              attackEffect.remove();
+            }, 500);
+          }
+        }
+
+        takeDamage(amount) {
+          this.health = Math.max(0, this.health - amount);
+          this.updateStats();
+          if (this.health <= 0) {
+            this.die();
+          }
+        }
+
+        die() {
+          alert("Game Over! You died.");
+          location.reload(); // Restart the game
+        }
+
+        update() {
+          this.updateStats();
+        }
+
+        updateStats() {
+          document.getElementById("health").textContent = this.health;
+          document.getElementById("mana").textContent = this.mana;
+
+          const healthBar = document.querySelector(".stat-fill.health");
+          const manaBar = document.querySelector(".stat-fill.mana");
+
+          healthBar.style.width = `${(this.health / this.maxHealth) * 100}%`;
+          manaBar.style.width = `${(this.mana / this.maxMana) * 100}%`;
+        }
+      }
+
+      class Enemy {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.health = 50;
+          this.element = document.createElement("div");
+          this.element.className = "character enemy";
+          this.updatePosition();
+        }
+
+        updatePosition() {
+          this.element.style.left = `${this.x}px`;
+          this.element.style.top = `${this.y}px`;
+        }
+
+        update() {
+          // Enemy AI logic - move toward player
+          const game = window.gameInstance;
+          if (game && game.player) {
+            // Move toward player with some randomness
+            const dx = game.player.x - this.x;
+            const dy = game.player.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 40) {
+              // Only move if not too close
+              const speed = 1;
+              this.x += (dx / distance) * speed + (Math.random() - 0.5);
+              this.y += (dy / distance) * speed + (Math.random() - 0.5);
+              this.updatePosition();
+            } else {
+              // Attack player when close
+              if (Math.random() < 0.05) {
+                // 5% chance to attack per frame
+                game.player.takeDamage(5);
+              }
+            }
+          }
+        }
+
+        takeDamage(amount) {
+          this.health -= amount;
+          if (this.health <= 0) {
+            this.die();
+          }
+        }
+
+        die() {
+          this.element.remove();
+          // Drop loot, give XP, etc.
+        }
+      }
+
+      class Item {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.element = document.createElement("div");
+          this.element.className = "item";
+          this.updatePosition();
+        }
+
+        updatePosition() {
+          this.element.style.left = `${this.x}px`;
+          this.element.style.top = `${this.y}px`;
+        }
+      }
+
+      // Start the game when the page loads
+      window.addEventListener("load", () => {
+        const game = new Game();
+
+        // Spawn some initial enemies
+        for (let i = 0; i < 3; i++) {
+          game.spawnEnemy();
+        }
+
+        // Spawn some initial items
+        for (let i = 0; i < 5; i++) {
+          game.spawnItem();
+        }
+      });
+    </script>
+  </body>
+</html>
