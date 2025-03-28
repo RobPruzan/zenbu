@@ -237,7 +237,7 @@ const makeRequest = async <
 
   sendMessage({
     ...message,
-    id: messageId,
+    id: messageId, // wat
   });
 
   return new Promise<ParentToChildMessage>((res, rej) => {

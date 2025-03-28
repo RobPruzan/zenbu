@@ -33,10 +33,14 @@ import { ChatMessage, toGroupedChatMessages } from "zenbu-plugin/src/ws/utils";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
+import { ContextMenuInput } from "./context-menu-input";
+import ChatComponent from "./context-input";
 
 export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
-  const { eventLog, inspector, chatControls } = useChatStore();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { eventLog, inspector, chatControls, context } = useChatStore();
+  const textareaRef = useRef<HTMLTextAreaElement>(
+    null,
+  ) as React.MutableRefObject<HTMLTextAreaElement>;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [hiddenThreads, setHiddenThreads] = useState<Set<number>>(new Set());
@@ -59,7 +63,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
         ) as HTMLIFrameElement | null;
 
         if (!iframe) {
-          throw new Error("invairant: must have child-iframe as preview");
+          throw new Error("invariant: must have child-iframe as preview");
         }
         iframe.src = iframe.src;
       }
@@ -190,39 +194,47 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
 
       {otherThreadsMessages.length > 0 && (
         <div className="px-4 py-2 relative z-10 w-full">
-          {otherThreadsMessages.map((thread, index) => (
-            !hiddenThreads.has(index) && (
-              <div key={index} className="mb-2 last:mb-0">
-                <div className="rounded-xl backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_4px_16px_rgba(0,0,0,0.12)] overflow-hidden">
-                  <div className="px-3 py-2 border-b border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="h-3 w-3 text-[#A1A1A6]" />
-                        <span className="text-[10px] font-light text-[#A1A1A6]">Thread {index + 1}</span>
+          {otherThreadsMessages.map(
+            (thread, index) =>
+              !hiddenThreads.has(index) && (
+                <div key={index} className="mb-2 last:mb-0">
+                  <div className="rounded-xl backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_4px_16px_rgba(0,0,0,0.12)] overflow-hidden">
+                    <div className="px-3 py-2 border-b border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-3 w-3 text-[#A1A1A6]" />
+                          <span className="text-[10px] font-light text-[#A1A1A6]">
+                            Thread {index + 1}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() =>
+                            setHiddenThreads((prev) => {
+                              const next = new Set(prev);
+                              next.add(index);
+                              return next;
+                            })
+                          }
+                          className="text-[#A1A1A6] hover:text-white transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => setHiddenThreads(prev => {
-                          const next = new Set(prev);
-                          next.add(index);
-                          return next;
-                        })}
-                        className="text-[#A1A1A6] hover:text-white transition-colors"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                    </div>
+                    <div className="px-3 py-2 max-h-[120px] overflow-y-auto">
+                      {thread.map((message, msgIndex) => (
+                        <div
+                          key={msgIndex}
+                          className="text-[11px] text-[#A1A1A6] font-light"
+                        >
+                          {message.content}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="px-3 py-2 max-h-[120px] overflow-y-auto">
-                    {thread.map((message, msgIndex) => (
-                      <div key={msgIndex} className="text-[11px] text-[#A1A1A6] font-light">
-                        {message.content}
-                      </div>
-                    ))}
-                  </div>
                 </div>
-              </div>
-            )
-          ))}
+              ),
+          )}
         </div>
       )}
 
@@ -330,7 +342,8 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
 
           <div className="flex flex-col text-xs">
             <div className="relative min-h-[50px] w-full bg-[rgba(20,20,22,0.4)] backdrop-filter backdrop-blur-md">
-              <textarea
+              <ChatComponent />
+              {/* <textarea
                 ref={textareaRef}
                 value={chatControls.state.input}
                 onChange={(e) => chatControls.actions.setInput(e.target.value)}
@@ -341,12 +354,12 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                   }
                 }}
                 placeholder="Ask me anything..."
-                className="absolute top-0 left-0 w-full h-full pt-3.5 pl-4 pr-4 pb-1.5 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-[#F2F2F7] placeholder:text-[rgba(161,161,166,0.8)] overflow-auto leading-relaxed font-light"
+                className="absolute top-0 left-0 w-full h-full pt-3.5 pl-4 pr-4 pb-1.5 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-transparent caret-white placeholder:text-[rgba(161,161,166,0.8)] overflow-auto leading-relaxed font-light"
                 style={{
                   minHeight: "50px",
                   maxHeight: "100px",
                 }}
-              />
+              /> */}
             </div>
 
             <div className="flex items-center justify-end px-4 py-2 border-t border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">

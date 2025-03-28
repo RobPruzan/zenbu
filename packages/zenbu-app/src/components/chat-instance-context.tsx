@@ -18,6 +18,24 @@ export type ChatInstanceInitialState = {
   eventLog: EventLogSliceInitialState;
   inspector: InspectorSliceInitialState;
   chatControls: ChatControlsInitialState;
+  context: ContextSliceInitialState;
+};
+
+type ContextItems = (
+  | ReactScanContextItem
+  | { kind: "inspector"; data: FocusedInfo }
+) & { id: string };
+
+type ReactScanContextItem = { kind: "react-scan"; data: any };
+
+export type ContextSlice = {
+  state: {
+    items: Array<ContextItems>;
+  };
+  actions: {
+    pushItem: (item: ContextItems) => void;
+    removeItem: (itemId: string) => void;
+  };
 };
 
 export type ChatInstanceStore = {
@@ -25,6 +43,7 @@ export type ChatInstanceStore = {
   eventLog: EventLogSlice;
   inspector: InspectorSlice;
   chatControls: ChatControlsSlice;
+  context: ContextSlice;
 };
 
 /**
@@ -58,6 +77,7 @@ export const ChatInstanceContext = createZustandContext(
         chatControls: createChatControlsSlice(initialState.chatControls)(
           ...args,
         ),
+        context: createContextSlice(initialState.context)(...args),
       })),
     ),
 );
@@ -81,6 +101,10 @@ type InspectorSlice = {
   actions: {
     setInspectorState: (state: InspectorState) => void;
   };
+};
+
+type ContextSliceInitialState = {
+  items: Array<ContextItems>;
 };
 type ChatControlsInitialState = {
   input: string;
@@ -109,6 +133,26 @@ const createInspectorSlice =
             ...state.inspector.state,
             ...inspectorState,
           };
+        }),
+    },
+  });
+
+const createContextSlice =
+  (initialState: ContextSliceInitialState): SliceCreator<ContextSlice> =>
+  (set, get) => ({
+    state: {
+      items: initialState.items,
+    },
+    actions: {
+      pushItem: (event) =>
+        set((state) => {
+          state.context.state.items.push(event);
+        }),
+      removeItem: (itemId) =>
+        set((state) => {
+          state.context.state.items = state.context.state.items.filter(
+            (item) => item.id !== itemId,
+          );
         }),
     },
   });
