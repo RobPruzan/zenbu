@@ -124,6 +124,10 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
       const data = event.data;
 
       switch (data.kind) {
+        case "notification": {
+          console.log("got notification");
+          return;
+        }
         case "mouse-position-update": {
           if (getState().inspector.state.kind !== "inspecting") {
             return;
@@ -160,6 +164,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
           sendMessage({
             kind: "get-state-response",
             state: getState().inspector.state,
+            // bruh
             id: event.data.id!,
           });
           return;

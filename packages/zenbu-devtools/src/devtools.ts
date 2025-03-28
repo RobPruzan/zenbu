@@ -1,5 +1,25 @@
 // import { nanoid } from "nanoid";
 
+// Load react-scan script synchronously
+// const reactScanScript = document.createElement("script");
+// reactScanScript.src = "https://unpkg.com/react-scan/dist/auto.global.js";
+// reactScanScript.async = false;
+// document.head.appendChild(reactScanScript);
+
+// console.log("hello");
+
+// setInterval(() => {
+//   const __REACT_SCAN__ = (window as any).__REACT_SCAN__;
+  console.log("bruh", window);
+
+//   // __REACT_SCAN__.ReactScanInternals.onNotification = (event: any) => {
+//   // sendMessage({
+//   //   kind: "notification",
+//   //   event,
+//   // });
+//   // };
+// }, 1000);
+
 const TARGET_ORIGIN = "http://localhost:3000";
 
 console.log("pls");
@@ -29,6 +49,10 @@ document.addEventListener("mousemove", (e) => {
 });
 
 export type ChildToParentMessage =
+  | {
+      kind: "notification";
+      event: any;
+    }
   | {
       kind: "mouse-position-update";
       rect: DOMRect;

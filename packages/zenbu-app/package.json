@@ -73,7 +73,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
-    "react-scan": "^0.3.3",
+    "react-scan": "file:/Users/robby/im-so-stupid/react-scan/packages/scan/react-scan-0.3.9.tgz",
     "recharts": "2.15.0",
     "server-only": "^0.0.1",
     "socket.io-client": "^4.8.1",

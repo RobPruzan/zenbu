@@ -30,6 +30,9 @@ import { Chat } from "~/components/chat/chat";
 
 // scan();
 
+
+
+
 export default function Home() {
   // useScan();
   const [showProjectsDialog, setShowProjectsDialog] = useState(false);

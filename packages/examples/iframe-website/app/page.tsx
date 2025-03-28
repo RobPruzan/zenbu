@@ -1,3 +1,6 @@
+"use client";
+import { scan } from "react-scan";
+scan();
 import React from "react";
 
 export default function HomePage() {
@@ -31,11 +34,35 @@ export default function HomePage() {
             Visualize Your Performance
           </h2>
           <p className="text-lg max-w-2xl mx-auto text-neutral-400">
-            Track, analyze, and optimize your metrics with our powerful dashboard. 
-            Built with the latest technology to ensure real-time insights and seamless user experience.
+            Track, analyze, and optimize your metrics with our powerful
+            dashboard. Built with the latest technology to ensure real-time
+            insights and seamless user experience.
           </p>
           <div className="mt-10">
-            <button className="bg-white hover:bg-white/90 text-black font-medium py-2 px-6 rounded-md transition-all duration-200">
+            <button
+              onClick={() => {
+                const startTime = Date.now();
+                const duration = 400; // 400ms
+
+                // Run a loop that checks if we've hit our time threshold
+                while (true) {
+                  const currentTime = Date.now();
+                  const elapsedTime = currentTime - startTime;
+
+                  // Check if we've reached our duration threshold
+                  if (elapsedTime >= duration) {
+                    break;
+                  }
+
+                  // Continue the loop (sync code running)
+                }
+
+                console.log(
+                  `Sync operation completed after ${Date.now() - startTime}ms`
+                );
+              }}
+              className="bg-white hover:bg-white/90 text-black font-medium py-2 px-6 rounded-md transition-all duration-200"
+            >
               Get Started
             </button>
           </div>
@@ -44,25 +71,37 @@ export default function HomePage() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
           <div className="bg-neutral-900 p-6 rounded-md border border-neutral-800 hover:border-neutral-700 transition-colors">
             <h3 className="text-lg font-medium mb-3">Real-time Analytics</h3>
-            <p className="text-neutral-400 text-sm">Monitor your performance metrics in real-time with interactive dashboards and customizable views.</p>
+            <p className="text-neutral-400 text-sm">
+              Monitor your performance metrics in real-time with interactive
+              dashboards and customizable views.
+            </p>
           </div>
-          
+
           <div className="bg-neutral-900 p-6 rounded-md border border-neutral-800 hover:border-neutral-700 transition-colors">
             <h3 className="text-lg font-medium mb-3">Deep Insights</h3>
-            <p className="text-neutral-400 text-sm">Gain valuable insights with advanced data analysis tools and predictive algorithms.</p>
+            <p className="text-neutral-400 text-sm">
+              Gain valuable insights with advanced data analysis tools and
+              predictive algorithms.
+            </p>
           </div>
-          
+
           <div className="bg-neutral-900 p-6 rounded-md border border-neutral-800 hover:border-neutral-700 transition-colors">
             <h3 className="text-lg font-medium mb-3">Seamless Integration</h3>
-            <p className="text-neutral-400 text-sm">Connect with your existing tools and platforms for a unified performance monitoring experience.</p>
+            <p className="text-neutral-400 text-sm">
+              Connect with your existing tools and platforms for a unified
+              performance monitoring experience.
+            </p>
           </div>
         </section>
 
         <section className="bg-neutral-900 p-8 rounded-md border border-neutral-800 mb-24">
-          <h2 className="text-2xl font-medium mb-4 text-center">Join Our Community</h2>
+          <h2 className="text-2xl font-medium mb-4 text-center">
+            Join Our Community
+          </h2>
           <p className="text-sm max-w-2xl mx-auto text-center text-neutral-400 mb-6">
             Connect with like-minded professionals and grow together. Our
-            community provides valuable resources, insights, and networking opportunities.
+            community provides valuable resources, insights, and networking
+            opportunities.
           </p>
           <div className="flex justify-center">
             <button className="bg-neutral-900 text-white font-medium py-2 px-6 rounded-md border border-neutral-700 hover:bg-neutral-800 transition-all duration-200">
