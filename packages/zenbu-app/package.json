@@ -81,6 +81,7 @@
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "tldraw": "^3.11.0",
     "vaul": "^0.9.6",
     "vitest": "^3.0.9",
     "zenbu-devtools": "workspace:*",
