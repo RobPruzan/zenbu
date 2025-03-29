@@ -35,6 +35,8 @@ import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
 import { ContextMenuInput } from "./context-menu-input";
 import ChatComponent from "./context-input";
+import TokenStreamingWrapper from "./wrapper";
+import { ThinkingUITester } from "./thinking";
 
 export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
   const { eventLog, inspector, chatControls, context } = useChatStore();
@@ -190,6 +192,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
           ))}
           <div ref={messagesEndRef} />
         </div>
+        {/* <ThinkingUITester/> */}
       </ScrollArea>
 
       {otherThreadsMessages.length > 0 && (
