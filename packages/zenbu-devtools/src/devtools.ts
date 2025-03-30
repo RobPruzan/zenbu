@@ -1,24 +1,5 @@
-// import { nanoid } from "nanoid";
-
-// Load react-scan script synchronously
-// const reactScanScript = document.createElement("script");
-// reactScanScript.src = "https://unpkg.com/react-scan/dist/auto.global.js";
-// reactScanScript.async = false;
-// document.head.appendChild(reactScanScript);
-
-// console.log("hello");
-
-// setInterval(() => {
-//   const __REACT_SCAN__ = (window as any).__REACT_SCAN__;
-  console.log("bruh", window);
-
-//   // __REACT_SCAN__.ReactScanInternals.onNotification = (event: any) => {
-//   // sendMessage({
-//   //   kind: "notification",
-//   //   event,
-//   // });
-//   // };
-// }, 1000);
+import { record } from "@rrweb/record";
+import type { eventWithTime } from "@rrweb/types";
 
 const TARGET_ORIGIN = "http://localhost:3000";
 
@@ -76,12 +57,24 @@ export type ParentToChildMessage =
   | {
       kind: "clicked-element-info-request";
       id: string;
+      // why is this a bool and not a literal lol
       responsePossible?: boolean;
     }
   | {
       kind: "get-state-response";
       id: string;
       state: InspectorState;
+    }
+  // an api where this automatically had a response included in the def would be nice vs
+  // having to manually define it on the
+  | {
+      kind: "start-recording";
+      id: string;
+      responsePossible: true;
+    }
+  | {
+      kind: "stop-recording";
+      id: string;
     };
 
 export type FocusedInfo = {
@@ -130,75 +123,6 @@ document.addEventListener("pointerdown", blockClick(false));
 
 document.addEventListener("click", blockClick(true));
 
-// document.addEventListener(
-//   "pointerup",
-//   () => {
-//     eventCatcher.style.pointerEvents = "none";
-//   },
-//   {
-//     capture: true,
-//   }
-// );
-
-// const handleParentMessage = (message: ParentToChildMessage) => {
-//   switch (message.kind) {
-//     case "clicked-element-info-request": {
-//       if (!currentMouseOverElement) {
-//         // should return an error but don't support errors yet, let the timeout handle it for now
-//         return;
-//       }
-//       console.log("wat");
-
-//       sendMessage({
-//         kind: "clicked-element-info-response",
-//         id: message.id,
-//         focusedInfo: {
-//           domRect: currentMouseOverElement.getBoundingClientRect(),
-//           name: currentMouseOverElement.tagName,
-//           outerHTML: currentMouseOverElement.outerHTML,
-//         },
-//       });
-
-//       return;
-//     }
-//     case "get-state-response": {
-//       // not handled here
-//       return null;
-//     }
-//   }
-//   message satisfies never;
-// };
-
-// window.addEventListener("message", (event) => {
-//   if (event.origin !== TARGET_ORIGIN) {
-//     return;
-//   }
-//   handleParentMessage(event.data as any);
-// });
-
-// const inspectorState =
-/**
- *
- * basically treat this as a websocket connection
- */
-
-/**
- *
- * todo: we need a ping pong server so parent knows if the child connection got interrupted
- */
-
-/**
- *
- * - get state async is not what we want, we want sync from the parent reactively so we don't have to pull, async get is pull
- * - todo: we need to read from the parent if we are in inspecting state,
- *  if we read a click while in inspecting we add an event capture, block it,
- *  then feed back to the parent the element that was clicked (pretty nice API)
- *
- */
-
-// document.addEventListener("pointerdown", () => {
-// });
-
 const getState: () => Promise<InspectorState> = async () => {
   const response = await makeRequest({
     kind: "get-state-request",
@@ -222,6 +146,37 @@ export type InspectorState =
       kind: "focused";
       focusedInfo: FocusedInfo;
     };
+
+let stopRecording: null | ReturnType<typeof record> = null;
+
+let events: Array<eventWithTime> = [];
+
+window.addEventListener("message", (event) => {
+  if (event.origin !== "http://localhost:3000") return;
+  const data = event.data as ParentToChildMessage;
+
+  switch (data.kind) {
+    case "start-recording": {
+      stopRecording = record({
+        recordCanvas: true,
+        emit: (event) => {
+          events.push(event);
+        },
+      });
+      console.log("is this anything lol?", stopRecording);
+      return;
+    }
+    case "stop-recording": {
+      if (!stopRecording) {
+        console.error(
+          "Invariant: cannot stop recording when a recording is not ongoing"
+        );
+      }
+
+      stopRecording?.();
+    }
+  }
+});
 
 const makeRequest = async <
   T extends ChildToParentMessage & { responsePossible: true },

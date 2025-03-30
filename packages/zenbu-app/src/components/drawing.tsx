@@ -1,6 +1,6 @@
 import { Tldraw } from "tldraw";
-
 import "tldraw/tldraw.css";
+
 export const Draw = ({ children }: { children: React.ReactNode }) => {
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>

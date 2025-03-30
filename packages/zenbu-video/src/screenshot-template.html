@@ -1,0 +1,346 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      $RRWEB_STYLE
+    </style>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      .replayer-wrapper {
+        transform: none !important;
+        width: 100% !important;
+        height: 100% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+      .rr-player {
+        width: 100% !important;
+        height: 100% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+      .replayer-mouse {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+      }
+      .replayer-mouse::after {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="replay"></div>
+    <script>
+      $RRWEB_CORE_RAW;
+      $REACT_SCAN_RAW;
+      $RRWEB_RAW;
+      const events = $EVENTS;
+
+      const plugin = new ReactScan.ReactScanReplayPlugin($SKIP_BEFORE);
+
+      // console.log("input", $RRWEB_EVENTS_NEAR_INTERACTION);
+
+      const nearPayload = $RRWEB_EVENTS_NEAR_INTERACTION.flat();
+
+      const replayer = new rrweb.Replayer(events, {
+        root: document.getElementById("replay"),
+        skipInactive: true,
+        showWarning: false,
+        mouseTail: false,
+      });
+
+      const checkRenderVisibility = () => {
+        const mirror = window.replayer.getMirror();
+        const componentStats = new Map();
+
+        // console.log(
+        //   "Processing nearPayload with length:",
+        //   // JSON.stringify(nearPayload),
+        //   nearPayload.length,
+        // );
+
+        const elements = nearPayload
+          .map((e) => {
+            // console.log(JSON.stringify(e));
+            return e;
+          })
+          .map((event) => {
+            // console.log("we got", event?.rrwebDomId, JSON.stringify(event));
+
+            return mirror.getNode(event.rrwebDomId);
+          })
+          .filter((node) => {
+            // console.log("node recv", event.rrwebDomId, node);
+
+            return node !== null;
+          });
+
+        console.log("Found elements:", elements.length);
+
+        // Check if element is in viewport
+        const isInViewport = (element) => {
+          const rect = element.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+
+          return !(
+            rect.right <= 0 ||
+            rect.bottom <= 0 ||
+            rect.left >= viewportWidth ||
+            rect.top >= viewportHeight
+          );
+        };
+
+        const visibilityMap = new Map();
+        elements.forEach((element) => {
+          visibilityMap.set(element, isInViewport(element));
+        });
+
+        nearPayload.forEach((renderEvent) => {
+          const node = mirror.getNode(renderEvent.rrwebDomId);
+          if (!node) return;
+
+          // ideally this is derived from intersection observer, but i think it wont work cause iframe, it just doesn't run
+          const isVisible = visibilityMap.get(node);
+          const componentName = renderEvent.componentName;
+          const selfTime = renderEvent.selfTime;
+
+          if (!componentStats.has(componentName)) {
+            componentStats.set(componentName, {
+              offscreenRenders: 0,
+              totalRenders: 0,
+              selfTime: 0,
+              offscreenSelfTime: 0,
+            });
+          }
+
+          const stats = componentStats.get(componentName);
+          stats.totalRenders++;
+          stats.selfTime += selfTime;
+          if (!isVisible) {
+            stats.offscreenRenders++;
+            stats.offscreenSelfTime += selfTime;
+          }
+        });
+
+        // console.log("Component stats size:", componentStats.size);
+
+        const aggregatedStats = Array.from(componentStats.entries()).map(
+          ([name, stats]) => ({
+            name,
+            ...stats,
+          }),
+        );
+
+        // console.log("Aggregated stats length:", aggregatedStats.length);
+        // console.log(
+        //   "Stats breakdown:",
+        //   aggregatedStats
+        //     .map(
+        //       (s) =>
+        //         `${s.name}: ${s.offscreenRenders}/${s.totalRenders} offscreen`,
+        //     )
+        //     .join(", "),
+        // );
+
+        window.onOffscreenRendersStats &&
+          window.onOffscreenRendersStats(aggregatedStats);
+        
+        const iframe = document.querySelector('iframe');
+        const iframeDoc = iframe?.contentDocument || iframe?.contentWindow?.document;
+        
+        if (!iframeDoc) {
+          console.error('Could not access iframe document');
+          return;
+        }
+
+        const allElements = iframeDoc.querySelectorAll("*");
+        const isOutOfViewport = (element) => {
+          const rect = element.getBoundingClientRect();
+          const viewportWidth = iframe.clientWidth;
+          const viewportHeight = iframe.clientHeight;
+
+          return (
+            rect.right <= 0 ||
+            rect.bottom <= 0 ||
+            rect.left >= viewportWidth ||
+            rect.top >= viewportHeight
+          );
+        };
+        console.log("GOT THIS MANY ELEMENTS", allElements.length);
+
+        const outOfViewportElements = 
+          Array.from(allElements).filter(isOutOfViewport);
+
+        window.onNonVisibleDomElements &&
+          window.onNonVisibleDomElements({
+            nonVisibleCount: outOfViewportElements.length,
+            totalCount: allElements.length,
+          });
+      };
+
+      window.replayer = replayer;
+
+      const getNodeBounds = (nodeId) => {
+        const mirror = window.replayer.getMirror();
+        const node = mirror.getNode(nodeId);
+        if (!node) return null;
+        const rect = node.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        if (
+          rect.right <= 0 ||
+          rect.bottom <= 0 ||
+          rect.left >= viewportWidth ||
+          rect.top >= viewportHeight
+        ) {
+          // console.log("Element is out of viewport:", {
+          //   elementBounds: rect,
+          //   viewport: { width: viewportWidth, height: viewportHeight },
+          // });
+          return null;
+        }
+
+        const elementSize = Math.sqrt(rect.width * rect.height);
+        const paddingBase = Math.min(elementSize * 0.2, 100);
+
+        const MIN_WIDTH = 50;
+        const MIN_HEIGHT = 50;
+
+        const desiredWidth = Math.max(rect.width + paddingBase * 2, MIN_WIDTH);
+        const desiredHeight = Math.max(
+          rect.height + paddingBase * 2,
+          MIN_HEIGHT,
+        );
+
+        const extraWidth = Math.max(
+          0,
+          MIN_WIDTH - (rect.width + paddingBase * 2),
+        );
+        const extraHeight = Math.max(
+          0,
+          MIN_HEIGHT - (rect.height + paddingBase * 2),
+        );
+
+        const paddedBounds = {
+          x: rect.x - paddingBase - extraWidth / 2,
+          y: rect.y - paddingBase - extraHeight / 2,
+          width: desiredWidth,
+          height: desiredHeight,
+        };
+
+        const boundedX = Math.max(
+          0,
+          Math.min(paddedBounds.x, viewportWidth - paddedBounds.width),
+        );
+        const boundedY = Math.max(
+          0,
+          Math.min(paddedBounds.y, viewportHeight - paddedBounds.height),
+        );
+
+        return {
+          x: boundedX,
+          y: boundedY,
+          width: Math.min(paddedBounds.width, viewportWidth - boundedX),
+          height: Math.min(paddedBounds.height, viewportHeight - boundedY),
+        };
+      };
+
+      console.log("Replayer created");
+
+      const checkReady = () => {
+        console.log("Checking replayer ready...");
+
+        if (window.replayer) {
+          console.log("Replayer found, seeking...");
+
+          if ($START_TIME) {
+            console.log("Seeking to time:", $START_TIME);
+            window.replayer.pause();
+            console.log("paused");
+
+            console.log("playing at", $START_TIME);
+            window.replayer.play($START_TIME);
+            console.log("skipped");
+
+            setTimeout(() => {
+              window.replayer.pause();
+              console.log("paused after delay");
+
+              // requestAnimationFrame(() => {
+              console.log("run raf cb runs");
+
+              console.log("if for", $DOM_NODE_ID);
+
+              if ($DOM_NODE_ID) {
+                console.log("Getting bounds for node:", $DOM_NODE_ID);
+                const bounds = getNodeBounds($DOM_NODE_ID);
+                checkRenderVisibility();
+                if (bounds) {
+                  window.onBounds(bounds);
+                }
+                console.log("Calling ready callback");
+                window.onReplayReady();
+              } else {
+                console.log("Calling ready callback");
+                window.onReplayReady();
+              }
+              // });
+            }, 100);
+          } else {
+            console.log("jhust gonna pause");
+
+            window.replayer.pause();
+          }
+          console.log("now we goon");
+
+          console.log("raf runs");
+
+          requestAnimationFrame(() => {
+            console.log("run raf cb runs");
+
+            console.log("if for", $DOM_NODE_ID);
+
+            if ($DOM_NODE_ID) {
+              console.log("Getting bounds for node:", $DOM_NODE_ID);
+              const bounds = getNodeBounds($DOM_NODE_ID);
+              checkRenderVisibility();
+              if (bounds) {
+                // window.nodeBounds = bounds;
+                window.onBounds(bounds);
+              }
+              console.log("Calling ready callback");
+              window.onReplayReady();
+            } else {
+              console.log("Calling ready callback");
+              window.onReplayReady();
+            }
+            console.log("wtf");
+          });
+          console.log("waiting for raf to run");
+        } else {
+          console.log("Replayer not ready, checking again in 100ms");
+          setTimeout(checkReady, 100);
+        }
+      };
+
+      setTimeout(() => {
+        console.log("Starting ready checks");
+        checkReady();
+      }, 500);
+    </script>
+  </body>
+</html>

@@ -18,6 +18,7 @@ import {
 } from "~/components/devtools-overlay";
 import { useChatStore } from "~/components/chat-instance-context";
 import { Draw } from "~/components/drawing";
+import { Recorder } from "~/components/screen-sharing";
 // import { ChildToParentMessage } from "~/devtools";
 // import {
 //   DevtoolsOverlay,
@@ -97,19 +98,22 @@ export const IFrameWrapper = () => {
       }}
     >
       <div className="relative w-full h-full">
-        <Draw>
-          <iframe
-            id="child-iframe"
-            key={lastUpdate}
-            ref={iframeRef}
-            src="http://localhost:4200"
-            style={{
-              height: "100%",
-              width: "100%",
-              border: "none",
-            }}
-          />
-        </Draw>
+        <Recorder>
+          <Draw>
+            <iframe
+              id="child-iframe"
+              key={lastUpdate}
+              ref={iframeRef}
+              src="http://localhost:4200"
+              style={{
+                height: "100%",
+                width: "100%",
+                border: "none",
+              }}
+            />
+          </Draw>
+        </Recorder>
+
         <DevtoolsOverlay iframeRef={iframeRef} />
       </div>
     </div>

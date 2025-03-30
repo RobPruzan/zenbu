@@ -1,0 +1,31 @@
+{
+  "name": "s3",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "vitest",
+    "dev": "bun run --watch --no-clear-screen src/index.ts",
+    "simulate": "bun run src/fps-simulation.ts"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.1.1",
+    "@rrweb/types": "^2.0.0-alpha.18",
+    "@types/fs-extra": "^11.0.4",
+    "@types/puppeteer": "^7.0.4",
+    "canvas": "^3.0.1",
+    "electron": "^33.3.1",
+    "elysia": "latest",
+    "fs-extra": "^11.2.0",
+    "playwright": "^1.49.1",
+    "puppeteer": "^23.11.1",
+    "puppeteer-cluster": "^0.24.0",
+    "react-scan": "file:/Users/robby/react-scan/packages/scan/react-scan-0.0.1083.tgz",
+    "rrweb": "2.0.0-alpha.4",
+    "rrweb-player": "^1.0.0-alpha.4",
+    "vitest": "^2.1.8",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}

@@ -282,6 +282,9 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      onClick={() => {
+                        // sendMessage()
+                    }}
                       variant="ghost"
                       size="sm"
                       className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"

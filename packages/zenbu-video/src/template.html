@@ -1,0 +1,232 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      $RRWEB_STYLE
+    </style>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      @keyframes cursorFlash {
+        0% {
+          filter: none;
+          background-image: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjMwMCIgd2lkdGg9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBkYXRhLW5hbWU9IkxheWVyIDEiIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9IiMwMDAwMDAiIGQ9Ik00OC43MSA0Mi45MUwzNC4wOCAyOC4yOSA0NC4zMyAxOGExIDEgMCAwMC0uMzMtMS42MUwyLjM1IDEuMDZhMSAxIDAgMDAtMS4yOSAxLjI5TDE2LjM5IDQ0YTEgMSAwIDAwMS42NS4zNmwxMC4yNS0xMC4yOCAxNC42MiAxNC42M2ExIDEgMCAwMDEuNDEgMGw0LjM4LTQuMzhhMSAxIDAgMDAuMDEtMS40MnptLTUuMDkgMy42N0wyOSAzMmExIDEgMCAwMC0xLjQxIDBsLTkuODUgOS44NUwzLjY5IDMuNjlsMzguMTIgMTRMMzIgMjcuNThBMSAxIDAgMDAzMiAyOWwxNC41OSAxNC42MnoiLz48L3N2Zz4=");
+        }
+        50% {
+          filter: none;
+          background-image: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjMwMCIgd2lkdGg9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBkYXRhLW5hbWU9IkxheWVyIDEiIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9IiNmZjAwMDAiIGQ9Ik00OC43MSA0Mi45MUwzNC4wOCAyOC4yOSA0NC4zMyAxOGExIDEgMCAwMC0uMzMtMS42MUwyLjM1IDEuMDZhMSAxIDAgMDAtMS4yOSAxLjI5TDE2LjM5IDQ0YTEgMSAwIDAwMS42NS4zNmwxMC4yNS0xMC4yOCAxNC42MiAxNC42M2ExIDEgMCAwMDEuNDEgMGw0LjM4LTQuMzhhMSAxIDAgMDAuMDEtMS40MnptLTUuMDkgMy42N0wyOSAzMmExIDEgMCAwMC0xLjQxIDBsLTkuODUgOS44NUwzLjY5IDMuNjlsMzguMTIgMTRMMzIgMjcuNThBMSAxIDAgMDAzMiAyOWwxNC41OSAxNC42MnoiLz48L3N2Zz4=");
+        }
+        100% {
+          filter: none;
+          background-image: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjMwMCIgd2lkdGg9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBkYXRhLW5hbWU9IkxheWVyIDEiIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9IiMwMDAwMDAiIGQ9Ik00OC43MSA0Mi45MUwzNC4wOCAyOC4yOSA0NC4zMyAxOGExIDEgMCAwMC0uMzMtMS42MUwyLjM1IDEuMDZhMSAxIDAgMDAtMS4yOSAxLjI5TDE2LjM5IDQ0YTEgMSAwIDAwMS42NS4zNmwxMC4yNS0xMC4yOCAxNC42MiAxNC42M2ExIDEgMCAwMDEuNDEgMGw0LjM4LTQuMzhhMSAxIDAgMDAuMDEtMS40MnptLTUuMDkgMy42N0wyOSAzMmExIDEgMCAwMC0xLjQxIDBsLTkuODUgOS44NUwzLjY5IDMuNjlsMzguMTIgMTRMMzIgMjcuNThBMSAxIDAgMDAzMiAyOWwxNC41OSAxNC42MnoiLz48L3N2Zz4=");
+        }
+      }
+      .replayer-mouse.flash-interaction {
+        animation: cursorFlash 500ms ease-in-out;
+      }
+      .replayer-wrapper {
+        transform: none !important;
+        width: 100% !important;
+        height: 100% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+      .rr-player {
+        width: 100% !important;
+        height: 100% !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+      .replayer-mouse {
+        background-image: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjMwMCIgd2lkdGg9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBkYXRhLW5hbWU9IkxheWVyIDEiIHZpZXdCb3g9IjAgMCA1MCA1MCI+PHBhdGggc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9IiMwMDAwMDAiIGQ9Ik00OC43MSA0Mi45MUwzNC4wOCAyOC4yOSA0NC4zMyAxOGExIDEgMCAwMC0uMzMtMS42MUwyLjM1IDEuMDZhMSAxIDAgMDAtMS4yOSAxLjI5TDE2LjM5IDQ0YTEgMSAwIDAwMS42NS4zNmwxMC4yNS0xMC4yOCAxNC42MiAxNC42M2ExIDEgMCAwMDEuNDEgMGw0LjM4LTQuMzhhMSAxIDAgMDAuMDEtMS40MnptLTUuMDkgMy42N0wyOSAzMmExIDEgMCAwMC0xLjQxIDBsLTkuODUgOS44NUwzLjY5IDMuNjlsMzguMTIgMTRMMzIgMjcuNThBMSAxIDAgMDAzMiAyOWwxNC41OSAxNC42MnoiLz48L3N2Zz4=") !important;
+        width: 20px !important;
+        height: 20px !important;
+        background-size: contain !important;
+        background-position: 50% !important;
+        background-repeat: no-repeat !important;
+        background-color: transparent !important;
+        border-radius: 0 !important;
+      }
+      .replayer-mouse::after {
+        display: none !important;
+      }
+      .replayer-mouse-tail {
+        position: absolute;
+        pointer-events: none;
+      }
+      @keyframes pulseCircle {
+        0% {
+          transform: translate(-50%, -50%) scale(0.5);
+          border-width: 2px;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.5);
+          border-width: 4px;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(2);
+          opacity: 0;
+          border-width: 4px;
+        }
+      }
+      .interaction-pulse {
+        pointer-events: none;
+        position: fixed;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #ef4444;
+        animation: pulseCircle 500ms ease-out forwards;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      $REACT_SCAN_RAW;
+      $RRWEB_RAW;
+
+      /**
+       * @typedef {Object} EventWithTime
+       * @property {number} timestamp
+       * @property {number} type
+       * @property {Object} data
+       * @property {string} [data.plugin]
+       * @property {any} [data.payload]
+       */
+
+      /** @type {EventWithTime[]} */
+      const events = $EVENTS;
+
+      /**
+       * @typedef {Object} RRwebPlayerProps
+       * @property {EventWithTime[]} events
+       * @property {boolean} showController
+       * @property {Array<any>} plugins
+       * @property {{duration: number, lineCap: string, lineWidth: number, strokeStyle: string, fillStyle: string}} mouseTail
+       */
+
+      /** @type {RRwebPlayerProps | {}} */
+      const userConfig = $USER_CONFIG;
+
+      /** @type {{}} */
+      const plugin = new ReactScan.ReactScanReplayPlugin();
+
+      /** @type {number | null} */
+      let interval = null;
+
+      /** @type {() => void} */
+      const startInterval = () => {
+        if (interval) {
+          return;
+        }
+        interval = setInterval(() => {
+          // console.log("calling should screenshot");
+
+          window.onShouldScreenshot?.();
+        }, 1000 / $FPS);
+      };
+
+      /**
+       * @typedef {Object} InteractionPayload
+       * @property {'interaction-start' | 'interaction-end'} kind
+       * @property {string} interactionUUID
+       * @property {number} dateNowTimestamp
+       */
+
+      /** @type {{target: HTMLElement, props: RRwebPlayerProps}} */
+      window.replayer = new rrwebPlayer({
+        target: document.body,
+        props: {
+          events,
+          showController: false,
+          plugins: [
+            //  could be useful in the future, don't need it rn though
+            // plugin,
+            {
+              /**
+               * @param {EventWithTime} event
+               * @returns {void}
+               */
+              handler: (event) => {
+                window.onTimeUpdate?.(event.timestamp - $FIRST_EVENT_TIMESTAMP);
+                if (
+                  event.type === 6 &&
+                  event.data.plugin === "react-scan-meta"
+                ) {
+                  /** @type {InteractionPayload} */
+                  const payload = event.data.payload;
+                  if (payload.kind === "interaction-start") {
+                    const mouseEl = document.querySelector(".replayer-mouse");
+                    if (mouseEl) {
+                      const rect = mouseEl.getBoundingClientRect();
+                      const pulseEl = document.createElement("div");
+                      pulseEl.className = "interaction-pulse";
+                      pulseEl.style.left = rect.left + rect.width / 2 + "px";
+                      pulseEl.style.top = rect.top + rect.height / 2 + "px";
+                      document.body.appendChild(pulseEl);
+                      pulseEl.addEventListener("animationend", () => {
+                        pulseEl.remove();
+                      });
+                    }
+                  }
+                  window.onInteractionMetadata?.(
+                    payload,
+                    event.timestamp - $FIRST_EVENT_TIMESTAMP
+                  );
+                }
+              },
+            },
+          ],
+          mouseTail: {
+            duration: 800,
+            lineCap: "round",
+            lineWidth: 3,
+            strokeStyle: "#3b82f6",
+            fillStyle: "#ffffff",
+          },
+          ...userConfig,
+        },
+      });
+
+      window.replayer.play();
+
+      window.replayer.addEventListener("finish", () => {
+        console.log("finished replay");
+
+        // ensures we always fade out outlines fully before we stop taking screenshots, allowing us to cheaply duplicate end frame when inactive
+        const maxTimeToFadeOut = 1000;
+
+        const maxIntervalBeforeScansTriggered = setTimeout(() => {
+          clearInterval(interval);
+          window.onReplayFinish?.();
+        }, maxTimeToFadeOut);
+      });
+
+      /**
+       * @typedef {Object} PlayerState
+       * @property {Object} player
+       * @property {number} player.speed
+       * @property {boolean} player.playing
+       * @property {number} player.progress
+       */
+
+      /**
+       * @param {PlayerState} state
+       * @returns {void}
+       */
+      const onStateChange = (state) => {
+        startInterval();
+      };
+
+      window.replayer.addEventListener("state-change", onStateChange);
+    </script>
+  </body>
+</html>
