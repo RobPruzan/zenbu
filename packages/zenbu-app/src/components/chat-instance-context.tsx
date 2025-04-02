@@ -1,72 +1,47 @@
 import { createStore, StateCreator, useStore } from "zustand";
 import { createZustandContext } from "./create-zustant-context";
 import { immer } from "zustand/middleware/immer";
-import { FocusedInfo, InspectorState } from "zenbu-devtools";
-import { EventLogEvent, PluginServerEvent } from "zenbu-plugin/src/ws/ws";
+import {
+  ChatControlsInitialState,
+  ChatControlsSlice,
+  createChatControlsSlice,
+} from "./slices/chat-controls-slice";
+import {
+  createInspectorSlice,
+  InspectorSlice,
+  InspectorSliceInitialState,
+} from "./slices/inspector-slice";
+import {
+  ContextSliceInitialState,
+  ContextSlice,
+  createContextSlice,
+} from "./slices/context-slice";
+import {
+  createEventLogSlice,
+  EventLogSlice,
+  EventLogSliceInitialState,
+} from "./slices/event-log-slice";
+import {
+  createToolbarSLice,
+  ToolbarSlice,
+  ToolbarSliceInitialState,
+} from "./slices/toolbar-slice";
 
-/**
- * okay so what do i want this event log to be
- *
- * the first i definitely just need user messages i sent, that's trivial since there's not many events i can send
- *
- * its just messages composed of any combination of context
- *
- * er i probably want this on the plugin so we can trivially distribute it
- */
 export type ChatInstanceInitialState = {
-  // messages: Array<{}>;
   eventLog: EventLogSliceInitialState;
   inspector: InspectorSliceInitialState;
   chatControls: ChatControlsInitialState;
   context: ContextSliceInitialState;
-};
-
-type ContextItems = (
-  | ReactScanContextItem
-  | { kind: "inspector"; data: FocusedInfo }
-) & { id: string };
-
-type ReactScanContextItem = { kind: "react-scan"; data: any };
-
-export type ContextSlice = {
-  state: {
-    items: Array<ContextItems>;
-  };
-  actions: {
-    pushItem: (item: ContextItems) => void;
-    removeItem: (itemId: string) => void;
-  };
+  toolbar: ToolbarSliceInitialState;
 };
 
 export type ChatInstanceStore = {
-  // messages: Array<{}>;
   eventLog: EventLogSlice;
   inspector: InspectorSlice;
   chatControls: ChatControlsSlice;
   context: ContextSlice;
+  toolbar: ToolbarSlice;
 };
-
-/**
- *
- * next now i probably need to actually fix the dog shit UI now that I've thought of the
- * whole thing e2e
- *
- * gr first should we migrate to t3 app?
- *
- * then we should fix the state management
- *
- * then we can hook up to ws events so we can start chatting with model :)
- *
- *
- *
- * i could do a little more depth for verification this makes sense since i've never paired streaming
- * event logs and ws connections in one app
- *
- * also it would be most fun to actually have a working chat, and migrating and knowing i have it working
- * when i have these large pillars working (inspect element, devtool hot reloading, chat)
- *
- *
- */
 
 export const ChatInstanceContext = createZustandContext(
   (initialState: ChatInstanceInitialState) =>
@@ -78,6 +53,7 @@ export const ChatInstanceContext = createZustandContext(
           ...args,
         ),
         context: createContextSlice(initialState.context)(...args),
+        toolbar: createToolbarSLice(initialState.toolbar)(...args),
       })),
     ),
 );
@@ -95,99 +71,3 @@ export type SliceCreator<SliceState> = StateCreator<
   [],
   SliceState
 >;
-
-type InspectorSlice = {
-  state: InspectorState;
-  actions: {
-    setInspectorState: (state: InspectorState) => void;
-  };
-};
-
-type ContextSliceInitialState = {
-  items: Array<ContextItems>;
-};
-type ChatControlsInitialState = {
-  input: string;
-};
-type ChatControlsSlice = {
-  state: {
-    input: string;
-  };
-  actions: {
-    setInput: (input: string) => void;
-  };
-};
-
-type InspectorSliceInitialState = {
-  state: InspectorState;
-};
-
-const createInspectorSlice =
-  (initialState: InspectorSliceInitialState): SliceCreator<InspectorSlice> =>
-  (set, get) => ({
-    state: initialState.state,
-    actions: {
-      setInspectorState: (inspectorState) =>
-        set((state) => {
-          state.inspector.state = {
-            ...state.inspector.state,
-            ...inspectorState,
-          };
-        }),
-    },
-  });
-
-const createContextSlice =
-  (initialState: ContextSliceInitialState): SliceCreator<ContextSlice> =>
-  (set, get) => ({
-    state: {
-      items: initialState.items,
-    },
-    actions: {
-      pushItem: (event) =>
-        set((state) => {
-          state.context.state.items.push(event);
-        }),
-      removeItem: (itemId) =>
-        set((state) => {
-          state.context.state.items = state.context.state.items.filter(
-            (item) => item.id !== itemId,
-          );
-        }),
-    },
-  });
-
-const createChatControlsSlice =
-  (initialState: ChatControlsInitialState): SliceCreator<ChatControlsSlice> =>
-  (set, get) => ({
-    state: {
-      input: initialState.input,
-    },
-    actions: {
-      setInput: (input) =>
-        set((prev) => {
-          prev.chatControls.state.input = input;
-        }),
-    },
-  });
-
-type EventLogSliceInitialState = {
-  events: Array<EventLogEvent>;
-};
-type EventLogSlice = {
-  events: Array<EventLogEvent>;
-  actions: {
-    pushEvent: (event: EventLogEvent) => void;
-  };
-};
-const createEventLogSlice =
-  (initialState: EventLogSliceInitialState): SliceCreator<EventLogSlice> =>
-  (set, get) => ({
-    events: initialState.events,
-    actions: {
-      pushEvent: (event) =>
-        set((state) => {
-          state.eventLog.events.push(event);
-        }),
-    },
-  });

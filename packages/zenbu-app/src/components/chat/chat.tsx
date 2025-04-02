@@ -33,13 +33,13 @@ import { ChatMessage, toGroupedChatMessages } from "zenbu-plugin/src/ws/utils";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
-import { ContextMenuInput } from "./context-menu-input";
 import ChatComponent from "./context-input";
 import TokenStreamingWrapper from "./wrapper";
 import { ThinkingUITester } from "./thinking";
 
 export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
-  const { eventLog, inspector, chatControls, context } = useChatStore();
+  const { eventLog, inspector, chatControls, context, toolbar } =
+    useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(
     null,
   ) as React.MutableRefObject<HTMLTextAreaElement>;
@@ -283,8 +283,16 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => {
-                        // sendMessage()
-                    }}
+                        toolbar.actions.setState(
+                          toolbar.state.kind === "recording"
+                            ? {
+                                kind: "idle",
+                              }
+                            : {
+                                kind: "recording",
+                              },
+                        );
+                      }}
                       variant="ghost"
                       size="sm"
                       className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"
@@ -327,6 +335,13 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      onClick={() => {
+                        toolbar.actions.setState(
+                          toolbar.state.kind === "drawing"
+                            ? { kind: "idle" }
+                            : { kind: "drawing" },
+                        );
+                      }}
                       variant="ghost"
                       size="sm"
                       className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"

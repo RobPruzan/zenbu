@@ -27,6 +27,8 @@ import DevTools from "../components/devtools";
 import { ChatInstanceContext } from "~/components/chat-instance-context";
 import { IFrameWrapper } from "./iframe-wrapper";
 import { Chat } from "~/components/chat/chat";
+import { motion, AnimatePresence } from "framer-motion";
+import { Toolbar } from "./toolbar";
 
 // scan();
 
@@ -34,9 +36,22 @@ export default function Home() {
   // useScan();
   const [showProjectsDialog, setShowProjectsDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-  const [chatVisible, setChatVisible] = useState(true);
+  const [chatVisible, setChatVisible] = useState(false);
   const [devtoolsVisible, setDevtoolsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    const handleToggleChat = () => {
+      if (!isAnimating) {
+        setIsAnimating(true);
+        setChatVisible(prev => !prev);
+        setTimeout(() => setIsAnimating(false), 300);
+      }
+    };
+
+    window.addEventListener('toggle-chat', handleToggleChat);
+    return () => window.removeEventListener('toggle-chat', handleToggleChat);
+  }, [isAnimating]);
 
   const toggleChat = () => {
     setIsAnimating(true);
@@ -84,10 +99,14 @@ export default function Home() {
 
       <ChatInstanceContext.Provider
         initialValue={{
+          toolbar: {
+            state: {
+              kind: "idle",
+            },
+          },
           context: {
             items: [],
           },
-
           inspector: {
             state: {
               kind: "off",
@@ -103,32 +122,35 @@ export default function Home() {
       >
         <ResizablePanelGroup direction="horizontal">
           {/* Left side: Chat interface */}
-
-          {chatVisible && (
-            <>
-              <ResizablePanel
-                defaultSize={25}
-                minSize={15}
-                maxSize={40}
-                className="transition-all duration-300 ease-in-out"
+          <AnimatePresence mode="wait">
+            {chatVisible && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ 
+                  width: "25%", 
+                  opacity: 1,
+                  transition: {
+                    width: { duration: 0.2, ease: [0.32, 0.72, 0, 1] },
+                    opacity: { duration: 0.1 }
+                  }
+                }}
+                exit={{ 
+                  width: 0, 
+                  opacity: 0,
+                  transition: {
+                    width: { duration: 0.2, ease: [0.32, 0.72, 0, 1] },
+                    opacity: { duration: 0.1 }
+                  }
+                }}
+                className="relative"
               >
                 <div className="relative flex h-full flex-col border-r border-border/40">
-                  {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
-                  onClick={toggleChat}
-                  disabled={isAnimating}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button> */}
-                  {/* <ChatInterface onClose={toggleChat} /> */}
                   <Chat onCloseChat={toggleChat} />
                 </div>
-              </ResizablePanel>
-              <ResizableHandle withHandle className="bg-border/40" />
-            </>
-          )}
+                <ResizableHandle withHandle className="bg-border/40" />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Main content area with iframe and bottom devtools */}
           <ResizablePanel defaultSize={chatVisible ? 75 : 100}>
@@ -171,6 +193,12 @@ export default function Home() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </ChatInstanceContext.Provider>
+
+      {/* Import from toolbar.tsx and render here to ensure it's shown */}
+      <div className="fixed left-0 bottom-0 z-50">
+        {/* This will render the toolbar in the bottom left corner */}
+        <Toolbar />
+      </div>
 
       {/* Projects Dialog */}
       <Dialog open={showProjectsDialog} onOpenChange={setShowProjectsDialog}>

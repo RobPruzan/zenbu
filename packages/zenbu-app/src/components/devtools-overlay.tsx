@@ -161,12 +161,15 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
           return;
         }
         case "get-state-request": {
-          sendMessage({
-            kind: "get-state-response",
-            state: getState().inspector.state,
-            // bruh
-            id: event.data.id!,
-          });
+          if ('id' in data && data.id) {
+            sendMessage({
+              kind: "get-state-response",
+              state: getState().inspector.state,
+              id: data.id,
+            });
+          } else {
+            console.warn("Received get-state-request without an ID");
+          }
           return;
         }
         case "click-element-info": {
@@ -299,15 +302,15 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
   return (
     <canvas
       ref={canvasRef}
+      data-devtools-overlay
       style={{
         position: "absolute",
-        pointerEvents: "none",
-        // pointerEvents:
-        //   useContext(InspectorStateContext).inspectorState.kind === "inspecting"
-        //     ? "none"
-        //     : "auto",
         top: 0,
         left: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: inspector.state.kind === "off" ? "none" : "auto",
+        zIndex: 1,
       }}
     />
   );

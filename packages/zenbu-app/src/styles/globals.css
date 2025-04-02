@@ -93,3 +93,8 @@
     scrollbar-width: none;
   }
 }
+
+/* Disable pointer events on DevtoolsOverlay when drawing */
+body.is-drawing-active [data-devtools-overlay] {
+  pointer-events: none;
+}

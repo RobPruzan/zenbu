@@ -19,6 +19,8 @@ import {
 import { useChatStore } from "~/components/chat-instance-context";
 import { Draw } from "~/components/drawing";
 import { Recorder } from "~/components/screen-sharing";
+import { iife } from "~/lib/utils";
+import { Toolbar } from "./toolbar";
 // import { ChildToParentMessage } from "~/devtools";
 // import {
 //   DevtoolsOverlay,
@@ -35,6 +37,8 @@ export const IFrameWrapper = () => {
   const refEventCatcher = useRef<HTMLDivElement | null>(null);
   // const { inspectorState, setInspectorState } = useInspectorStateContext();
   const { inspector } = useChatStore();
+
+  const { toolbar } = useChatStore();
 
   const sendMessage = useIFrameMessenger();
   const makeRequest = useMakeRequest({ iframeRef });
@@ -98,22 +102,32 @@ export const IFrameWrapper = () => {
       }}
     >
       <div className="relative w-full h-full">
-        <Recorder>
-          <Draw>
-            <iframe
-              id="child-iframe"
-              key={lastUpdate}
-              ref={iframeRef}
-              src="http://localhost:4200"
-              style={{
-                height: "100%",
-                width: "100%",
-                border: "none",
-              }}
-            />
-          </Draw>
-        </Recorder>
+        {iife(() => {
+          switch (toolbar.state.kind) {
+            case "drawing": {
+              return <Draw />;
+            }
+            case "recording": {
+              return <Recorder />;
+            }
+            case "idle": {
+              return;
+            }
+          }
+        })}
+        <Toolbar />
 
+        <iframe
+          id="child-iframe"
+          key={lastUpdate}
+          ref={iframeRef}
+          src="http://localhost:4200"
+          style={{
+            height: "100%",
+            width: "100%",
+            border: "none",
+          }}
+        />
         <DevtoolsOverlay iframeRef={iframeRef} />
       </div>
     </div>

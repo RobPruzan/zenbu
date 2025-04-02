@@ -4,7 +4,7 @@
     <script src="http://localhost:42069"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Juicy Brick Breaker</title>
+    <title>Classic Brick Breaker</title>
     <style>
       body {
         margin: 0;
@@ -13,24 +13,27 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background-color: #080810; /* Darker background */
+        background-color: #000000; /* Pure black background */
         color: white;
-        font-family: Arial, sans-serif;
+        font-family: "Courier New", monospace; /* Classic typewriter font */
         min-height: 100vh;
         overflow: hidden; /* Prevent scrolling */
       }
       h1 {
-        color: #ff6b6b;
-        text-shadow: 0 0 10px rgba(255, 107, 107, 0.7);
+        color: #ffffff;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
         margin-bottom: 10px;
+        font-weight: bold;
+        letter-spacing: 2px;
       }
       canvas {
-        background-color: rgba(20, 20, 30, 0.7); /* Darker canvas background */
-        border-radius: 8px;
-        box-shadow: 0 0 40px rgba(255, 107, 255, 0.6); /* More intense glow */
+        background-color: rgba(0, 0, 0, 0.7); /* Dark canvas background */
+        border-radius: 0px; /* Square corners for retro feel */
+        box-shadow: 0 0 40px rgba(255, 255, 255, 0.3); /* White glow */
         margin-bottom: 20px;
         position: relative;
         z-index: 10;
+       
       }
       .game-info {
         display: flex;
@@ -39,6 +42,7 @@
         margin-bottom: 10px;
         z-index: 10;
         position: relative;
+        font-family: "Courier New", monospace;
       }
       .score,
       .lives {
@@ -47,30 +51,35 @@
       }
       .controls {
         margin-top: 20px;
-        background-color: rgba(42, 42, 42, 0.8);
+        background-color: rgba(30, 30, 30, 0.8);
         padding: 15px;
-        border-radius: 8px;
+        border-radius: 0px; /* Square corners */
         max-width: 800px;
         text-align: center;
         position: relative;
         z-index: 10;
+        border: 1px solid #ffffff; /* White border */
       }
       .controls p {
         margin: 5px 0;
+        font-family: "Courier New", monospace;
       }
       button {
-        background-color: #ff6b6b;
+        background-color: #000000;
         color: white;
-        border: none;
+        border: 2px solid #ffffff;
         padding: 10px 20px;
-        border-radius: 4px;
+        border-radius: 0px; /* Square corners */
         font-size: 16px;
         cursor: pointer;
         margin-top: 10px;
         transition: all 0.2s;
+        font-family: "Courier New", monospace;
+        letter-spacing: 1px;
       }
       button:hover {
-        background-color: #ff8787;
+        background-color: #ffffff;
+        color: #000000;
         transform: scale(1.05);
       }
       .game-container {
@@ -92,7 +101,7 @@
   <body>
     <canvas id="background-canvas"></canvas>
     <div class="game-container">
-      <h1>Juicy Brick Breaker</h1>
+      <h1>CLASSIC BRICK BREAKER</h1>
 
       <div class="game-info">
         <div class="score">Score: <span id="score">0</span></div>
@@ -101,7 +110,7 @@
 
       <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-      <button id="startButton">Start Game</button>
+      <button id="startButton">START GAME</button>
 
       <div class="controls">
         <p>Use left and right arrow keys or mouse to move the paddle</p>
@@ -132,9 +141,9 @@
         const bgParticles = [];
         const stars = [];
         const nebulae = [];
-        const particleCount = 150;
-        const starCount = 300;
-        const nebulaCount = 10; // Increased nebula count
+        const particleCount = 100;
+        const starCount = 200;
+        const nebulaCount = 5; // Reduced nebula count for simpler look
 
         class BackgroundParticle {
           constructor() {
@@ -150,23 +159,12 @@
             this.size = Math.random() * 2 + 0.5;
             this.speedX = Math.random() * 0.3 - 0.15;
             this.speedY = Math.random() * 0.3 - 0.15;
-            this.color = this.getRandomColor();
-            this.alpha = Math.random() * 0.5 + 0.2;
+            this.color = "#ffffff"; // White particles
+            this.alpha = Math.random() * 0.3 + 0.1;
             this.twinkleSpeed = Math.random() * 0.03;
             this.twinkleDirection = Math.random() > 0.5 ? 1 : -1;
-            this.minAlpha = Math.random() * 0.2;
-            this.maxAlpha = Math.min(this.alpha + 0.3, 1);
-          }
-          getRandomColor() {
-            // Even darker, more spacey colors for background particles
-            const colors = [
-              "#1a2a4a", // Darker Blue
-              "#2a1a4a", // Darker Purple
-              "#0f3a39", // Darker Teal
-              "#2a2a5f", // Darker Slate Blue
-              "#4a2a4a", // Darker Magenta
-            ];
-            return colors[Math.floor(Math.random() * colors.length)];
+            this.minAlpha = Math.random() * 0.1;
+            this.maxAlpha = Math.min(this.alpha + 0.2, 0.5);
           }
 
           update() {
@@ -193,21 +191,21 @@
             bgCtx.fillStyle = this.color;
             bgCtx.fill();
 
-            // Add glow effect
+            // Add subtle glow effect
             const glow = bgCtx.createRadialGradient(
               this.x,
               this.y,
               0,
               this.x,
               this.y,
-              this.size * 3
+              this.size * 2
             );
             glow.addColorStop(0, this.color);
             glow.addColorStop(1, "transparent");
 
-            bgCtx.globalAlpha = this.alpha * 0.3;
+            bgCtx.globalAlpha = this.alpha * 0.2;
             bgCtx.beginPath();
-            bgCtx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+            bgCtx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
             bgCtx.fillStyle = glow;
             bgCtx.fill();
 
@@ -244,7 +242,7 @@
 
             // Add star rays for larger stars
             if (this.size > 1) {
-              const rayLength = this.size * 4;
+              const rayLength = this.size * 3;
               bgCtx.globalAlpha = this.alpha * 0.5;
               bgCtx.beginPath();
               bgCtx.moveTo(this.x - rayLength, this.y);
@@ -264,26 +262,12 @@
           constructor() {
             this.x = (Math.random() * bgCanvas.width) / dpr;
             this.y = (Math.random() * bgCanvas.height) / dpr;
-            this.radius = Math.random() * 200 + 75; // Slightly larger nebulae range
-            this.color = this.getRandomColor();
-            this.alpha = Math.random() * 0.08 + 0.03; // Slightly lower alpha for subtlety
-            this.pulseSpeed = Math.random() * 0.004 + 0.0005; // Slower pulse
+            this.radius = Math.random() * 150 + 50;
+            this.alpha = Math.random() * 0.05 + 0.02; // Lower alpha for subtlety
+            this.pulseSpeed = Math.random() * 0.003 + 0.0005;
             this.pulseDirection = Math.random() > 0.5 ? 1 : -1;
-            this.minAlpha = Math.max(0.01, this.alpha - 0.04); // Lower min alpha
-            this.maxAlpha = Math.min(this.alpha + 0.04, 0.15); // Lower max alpha
-          }
-          getRandomColor() {
-            // Even darker, deeper nebula colors
-            const colors = [
-              "#1a0535", // Deeper Purple
-              "#05091b", // Extremely Dark Blue
-              "#0c1221", // Darker Navy
-              "#1a304b", // Darker Slate Blue/Grey
-              "#050508", // Near Black
-              "#2b0052", // Darker Indigo
-              "#35115b", // Darker Purple
-            ];
-            return colors[Math.floor(Math.random() * colors.length)];
+            this.minAlpha = Math.max(0.01, this.alpha - 0.03);
+            this.maxAlpha = Math.min(this.alpha + 0.03, 0.1);
           }
 
           update() {
@@ -303,7 +287,7 @@
               this.y,
               this.radius
             );
-            gradient.addColorStop(0, this.color);
+            gradient.addColorStop(0, "rgba(255, 255, 255, " + this.alpha + ")");
             gradient.addColorStop(1, "transparent");
 
             bgCtx.globalAlpha = this.alpha;
@@ -331,17 +315,8 @@
         function animateBackground() {
           bgCtx.clearRect(0, 0, bgCanvas.width / dpr, bgCanvas.height / dpr);
 
-          // Draw a darker, deeper space gradient background
-          const gradient = bgCtx.createLinearGradient(
-            0,
-            0,
-            0,
-            bgCanvas.height / dpr
-          );
-          gradient.addColorStop(0, "#030308"); // Even darker near-black blue
-          gradient.addColorStop(0.5, "#05060a"); // Darker blue/purple
-          gradient.addColorStop(1, "#080810"); // Deeper dark purple
-          bgCtx.fillStyle = gradient;
+          // Draw a pure black background
+          bgCtx.fillStyle = "#000000";
           bgCtx.fillRect(0, 0, bgCanvas.width / dpr, bgCanvas.height / dpr);
 
           // Draw nebulae (behind everything)
@@ -363,7 +338,7 @@
           }
 
           // Occasionally add a shooting star
-          if (Math.random() < 0.01) {
+          if (Math.random() < 0.005) {
             createShootingStar();
           }
 
@@ -448,7 +423,7 @@
         let paddleSquashDuration = 0;
         let scorePopScale = 1;
         const ballTrail = [];
-        const MAX_TRAIL_LENGTH = 15;
+        const MAX_TRAIL_LENGTH = 10; // Reduced trail length for cleaner look
         let lastPaddleHitTime = 0;
         const PADDLE_HIT_COOLDOWN = 100; // milliseconds
         let lastWallHitTime = 0;
@@ -519,17 +494,15 @@
 
         // Create bricks with different patterns and properties
         const bricks = [];
-        const neonColors = [
-          "#ff00ff", // Magenta
-          "#00ffff", // Cyan
-          "#ffff00", // Yellow
-          "#ff3399", // Hot Pink
-          "#00ff66", // Bright Green
-          "#ff6600", // Orange
-          "#ff33cc", // Hot Pink
-          "#33ccff", // Bright Blue
-          "#9900ff", // Purple
-          "#ff0066", // Crimson
+        const monochromeColors = [
+          "#ffffff", // White
+          "#eeeeee", // Light gray
+          "#cccccc", // Medium light gray
+          "#aaaaaa", // Medium gray
+          "#888888", // Gray
+          "#666666", // Medium dark gray
+          "#444444", // Dark gray
+          "#222222", // Very dark gray
         ];
 
         // Create a more complex brick layout
@@ -539,7 +512,7 @@
             // Create different patterns and brick types
             let status = 1;
             let hitPoints = 1;
-            let colorIndex = Math.floor(Math.random() * neonColors.length);
+            let colorIndex = Math.floor(Math.random() * monochromeColors.length);
             let points = (brickRowCount - r) * 10; // Base points
 
             // Create a zigzag pattern in the middle rows
@@ -556,9 +529,9 @@
 
               // Create a checkerboard pattern for top rows
               if ((c + r) % 2 === 0) {
-                colorIndex = 0; // Magenta for checkerboard
+                colorIndex = 0; // White for checkerboard
               } else {
-                colorIndex = 2; // Yellow for checkerboard
+                colorIndex = 4; // Gray for checkerboard
               }
             }
 
@@ -569,7 +542,7 @@
             ) {
               hitPoints = 3; // Extra strong bricks
               points *= 3; // Triple points
-              colorIndex = 9; // Crimson color
+              colorIndex = 0; // White color for special bricks
             }
 
             // Create a diamond pattern in the center
@@ -579,7 +552,7 @@
               Math.abs(c - centerCol) + Math.abs(r - centerRow);
 
             if (distFromCenter <= 2 && distFromCenter > 0) {
-              colorIndex = 4; // Bright Green for diamond
+              colorIndex = 1; // Light gray for diamond
               points *= 1.5; // Bonus points
             }
 
@@ -590,7 +563,7 @@
               status: status,
               hitPoints: hitPoints,
               maxHitPoints: hitPoints, // Store original hit points for color calculation
-              color: neonColors[colorIndex],
+              color: monochromeColors[colorIndex],
               points: Math.floor(points),
               special: hitPoints > 1, // Flag for special effects
             };
@@ -608,7 +581,7 @@
             this.type = type;
             this.size = POWERUP_SIZE;
             this.speedY = POWERUP_SPEED;
-            this.color = this.getColor();
+            this.color = "#ffffff"; // White for all powerups
             this.symbol = this.getSymbol();
             this.rotation = 0;
             this.rotationSpeed = Math.random() * 0.1 - 0.05;
@@ -620,35 +593,18 @@
             this.lastTrailTime = 0;
           }
 
-          getColor() {
-            switch (this.type) {
-              case "widePaddle":
-                return "#00ff66"; // Brighter Green
-              case "extraLife":
-                return "#ffff00"; // Yellow
-              case "fireball":
-                return "#ff4500"; // Orange-Red
-              case "magnet":
-                return "#cc66ff"; // Brighter Purple
-              case "slowMotion":
-                return "#00ffff"; // Cyan
-              default:
-                return "#ffffff"; // White
-            }
-          }
-
           getSymbol() {
             switch (this.type) {
               case "widePaddle":
-                return "⟷"; // Double arrow
+                return "W"; // W for Wide
               case "extraLife":
-                return "♥"; // Heart
+                return "+"; // Plus for extra life
               case "fireball":
-                return "🔥"; // Fire
+                return "F"; // F for Fireball
               case "magnet":
-                return "⚡"; // Lightning bolt
+                return "M"; // M for Magnet
               case "slowMotion":
-                return "⏱️"; // Timer
+                return "S"; // S for Slow
               default:
                 return "?";
             }
@@ -694,7 +650,7 @@
               y: this.y,
               size: this.size * 0.5,
               life: 1,
-              color: this.color,
+              color: "#ffffff",
             });
           }
 
@@ -725,7 +681,7 @@
               0,
               this.size + this.glowSize
             );
-            outerGradient.addColorStop(0, this.color);
+            outerGradient.addColorStop(0, "#ffffff");
             outerGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
             ctx.fillStyle = outerGradient;
             ctx.globalAlpha = 0.7;
@@ -735,7 +691,7 @@
             // Draw powerup
             const currentSize = this.size * (1 + this.pulseAmount);
 
-            // Draw a glowing circle instead of a square
+            // Draw a glowing circle
             ctx.beginPath();
             ctx.arc(0, 0, currentSize, 0, Math.PI * 2);
 
@@ -749,8 +705,8 @@
               currentSize
             );
             gradient.addColorStop(0, "#ffffff");
-            gradient.addColorStop(0.3, this.color);
-            gradient.addColorStop(1, lightenDarkenColor(this.color, -30));
+            gradient.addColorStop(0.3, "#dddddd");
+            gradient.addColorStop(1, "#aaaaaa");
 
             ctx.fillStyle = gradient;
             ctx.fill();
@@ -761,8 +717,8 @@
             ctx.stroke();
 
             // Draw symbol inside
-            ctx.font = `bold ${currentSize}px Arial`;
-            ctx.fillStyle = "#ffffff";
+            ctx.font = `bold ${currentSize}px Courier New`;
+            ctx.fillStyle = "#000000"; // Black text for contrast
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(this.symbol, 0, 0);
