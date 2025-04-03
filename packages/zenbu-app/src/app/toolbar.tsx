@@ -313,7 +313,7 @@ const DrawingPanel = ({ editor }: { editor: any }) => {
         </div>
 
         {/* Brush Size */}
-        <div className="space-y-1.5">
+        {/* <div className="space-y-1.5">
           <div className="text-xs font-medium text-white/80">Brush Size</div>
           <div className="flex items-center gap-1">
             {brushSizes.map((size) => (
@@ -336,10 +336,10 @@ const DrawingPanel = ({ editor }: { editor: any }) => {
               </button>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Opacity */}
-        <div className="space-y-1.5">
+        {/* <div className="space-y-1.5">
           <div className="text-xs font-medium text-white/80">Opacity</div>
           <div className="flex items-center gap-1">
             {opacityLevels.map((opacity) => (
@@ -359,10 +359,10 @@ const DrawingPanel = ({ editor }: { editor: any }) => {
               </button>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Keyboard Shortcuts */}
-        <div className="mt-auto pt-3 border-t border-white/10 space-y-1 text-[10px] text-white/50">
+        {/* <div className="mt-auto pt-3 border-t border-white/10 space-y-1 text-[10px] text-white/50">
           <div className="font-medium text-xs text-white/70 mb-1.5">
             Keyboard Shortcuts
           </div>
@@ -416,7 +416,7 @@ const DrawingPanel = ({ editor }: { editor: any }) => {
               </kbd>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
@@ -1149,11 +1149,11 @@ export const Toolbar = () => {
   let targetWidth: number | string = 56;
   if (expanded) {
     if (showCombinedPanel) {
-      targetWidth = 1000;
+      targetWidth = 700;
     } else if (activeSection && !showAnyToolPanel) {
-      targetWidth = 800;
+      targetWidth = 700;
     } else if (showAnyToolPanel) {
-      targetWidth = 800;
+      targetWidth = 700;
     } else {
       targetWidth = "auto";
     }
@@ -1161,7 +1161,7 @@ export const Toolbar = () => {
 
   let targetHeight = 0;
   if (isPanelVisible) {
-    targetHeight = showCombinedPanel ? 450 : 400;
+    targetHeight = showCombinedPanel ? 300 : 300;
   }
 
   const backdropStyle =

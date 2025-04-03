@@ -6,6 +6,7 @@ import * as prettier from "prettier";
 import { anthropic } from "@ai-sdk/anthropic";
 import { readFile, writeFile } from "node:fs/promises";
 import { chatMessagesToString } from "../message-runtime.js";
+import { openai } from "@ai-sdk/openai";
 
 /**
  * The view command allows Claude to examine the contents of a file or list the contents of a directory. It can read the entire file or a specific range of lines.
@@ -106,6 +107,7 @@ export const textEditor = async ({
 
   const { textStream } = streamText({
     model: anthropic("claude-3-7-sonnet-20250219"),
+    // model: openai("gpt-4o"),
     maxTokens: 8000,
     onFinish: (reason) => {
       console.log("finished", reason.finishReason);
