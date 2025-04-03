@@ -30,7 +30,7 @@ Specifically, Zenbu wants to:
   - Zenbu is hidden when not being used
 
 **Be extremely clear what's happening**
-  - Tools like cursor hides prompts from you, limiting your ability to understand what the model knows and how you should interact with it
+  - Tools like cursor hide prompts from you, limiting your ability to understand what the model knows and how you should interact with it
   - Zenbu shows all system prompts, and allows them to be edited by you
 
 **Cross editor**
