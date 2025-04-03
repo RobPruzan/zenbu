@@ -28,7 +28,6 @@ import { ChatInstanceContext } from "~/components/chat-instance-context";
 import { IFrameWrapper } from "./iframe-wrapper";
 import { Chat } from "~/components/chat/chat";
 import { motion, AnimatePresence } from "framer-motion";
-import { Toolbar } from "./toolbar";
 
 // scan();
 
@@ -41,28 +40,46 @@ export default function Home() {
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    const handleToggleChat = () => {
+    const handleToggleChat = (event: Event) => {
       if (!isAnimating) {
         setIsAnimating(true);
         setChatVisible(prev => !prev);
+        
+        // Dispatch an event to notify other components about the visibility change
+        const visibilityEvent = new CustomEvent('chat-visibility-change', {
+          detail: !chatVisible
+        });
+        window.dispatchEvent(visibilityEvent);
+        
         setTimeout(() => setIsAnimating(false), 300);
       }
     };
 
     window.addEventListener('toggle-chat', handleToggleChat);
     return () => window.removeEventListener('toggle-chat', handleToggleChat);
-  }, [isAnimating]);
+  }, [isAnimating, chatVisible]);
 
   const toggleChat = () => {
+    if (isAnimating) return;
+    
     setIsAnimating(true);
     setChatVisible(!chatVisible);
-    setTimeout(() => setIsAnimating(false), 300); // Match transition duration
+    
+    // Dispatch an event to notify other components about the visibility change
+    const visibilityEvent = new CustomEvent('chat-visibility-change', {
+      detail: !chatVisible
+    });
+    window.dispatchEvent(visibilityEvent);
+    
+    setTimeout(() => setIsAnimating(false), 300);
   };
 
   const toggleDevtools = () => {
+    if (isAnimating) return;
+    
     setIsAnimating(true);
     setDevtoolsVisible(!devtoolsVisible);
-    setTimeout(() => setIsAnimating(false), 300); // Match transition duration
+    setTimeout(() => setIsAnimating(false), 300);
   };
 
   return (
@@ -120,46 +137,50 @@ export default function Home() {
           },
         }}
       >
-        <ResizablePanelGroup direction="horizontal">
-          {/* Left side: Chat interface */}
+        {/* Use Flexbox for the main horizontal layout */}
+        <div className="flex h-full w-full overflow-hidden">
+          {/* Left side: Chat interface (Animated Flex Item) */}
           <AnimatePresence mode="wait">
             {chatVisible && (
               <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ 
-                  width: "25%", 
+                key="chat-panel"
+                initial={{ width: 0, opacity: 0, marginRight: 0 }}
+                animate={{
+                  width: "25%", // Target width
                   opacity: 1,
+                  marginRight: 0, // Ensure no margin interferes
                   transition: {
-                    width: { duration: 0.2, ease: [0.32, 0.72, 0, 1] },
-                    opacity: { duration: 0.1 }
+                    width: { type: "spring", stiffness: 500, damping: 30, mass: 0.8 },
+                    opacity: { duration: 0.1, delay: 0.05 }
                   }
                 }}
-                exit={{ 
-                  width: 0, 
+                exit={{
+                  width: 0,
                   opacity: 0,
+                  marginRight: "-1px", // Add small negative margin on exit to prevent gap
                   transition: {
-                    width: { duration: 0.2, ease: [0.32, 0.72, 0, 1] },
+                    width: { type: "spring", stiffness: 500, damping: 30, mass: 0.8 },
                     opacity: { duration: 0.1 }
                   }
                 }}
-                className="relative"
+                className="h-full flex-shrink-0 border-r border-border/40 overflow-hidden" // flex-shrink-0 is crucial
+                style={{ minWidth: 0 }} // Allow shrinking below intrinsic size
               >
-                <div className="relative flex h-full flex-col border-r border-border/40">
+                <div className="relative flex h-full flex-col">
                   <Chat onCloseChat={toggleChat} />
                 </div>
-                <ResizableHandle withHandle className="bg-border/40" />
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Main content area with iframe and bottom devtools */}
-          <ResizablePanel defaultSize={chatVisible ? 75 : 100}>
-            <ResizablePanelGroup direction="vertical">
-              {/* Iframe */}
-              <ResizablePanel
-                defaultSize={devtoolsVisible ? 70 : 100}
-                className="h-full"
-              >
+          {/* Main content area (Takes remaining space) */}
+          {/* Add overflow-hidden to prevent content shift */}
+          <div className="h-full flex-1 overflow-hidden">
+            {/* Vertical Resizable Group for Iframe/DevTools */}
+            <ResizablePanelGroup direction="vertical" className="h-full">
+              {/* Iframe Panel - Let it take available space */}
+              <ResizablePanel defaultSize={devtoolsVisible ? 70 : 100} className="h-full">
+                {/* Make inner div full height too */}
                 <div className="flex h-full flex-col">
                   <IFrameWrapper />
                 </div>
@@ -169,11 +190,7 @@ export default function Home() {
               {devtoolsVisible && (
                 <>
                   <ResizableHandle withHandle className="bg-border/40" />
-                  <ResizablePanel
-                    defaultSize={30}
-                    minSize={15}
-                    className="transition-all duration-300 ease-in-out"
-                  >
+                  <ResizablePanel defaultSize={30} minSize={15} collapsible={true}>
                     <div className="relative flex h-full flex-col border-t border-zinc-800/80">
                       <Button
                         variant="ghost"
@@ -190,15 +207,9 @@ export default function Home() {
                 </>
               )}
             </ResizablePanelGroup>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          </div>
+        </div>
       </ChatInstanceContext.Provider>
-
-      {/* Import from toolbar.tsx and render here to ensure it's shown */}
-      <div className="fixed left-0 bottom-0 z-50">
-        {/* This will render the toolbar in the bottom left corner */}
-        <Toolbar />
-      </div>
 
       {/* Projects Dialog */}
       <Dialog open={showProjectsDialog} onOpenChange={setShowProjectsDialog}>

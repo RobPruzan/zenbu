@@ -18,27 +18,24 @@ export const apply = ({
 }) => {
   try {
     const maxTokens = model === "gpt-4o-mini" ? 8192 : 16384;
-    // if we add line numbers it may be confusing to model to tell it to remove line numbers, and not sure if we can do it programmatically
-    const applySystemPrompt = `Given an existing file, code edits, and edit instructions, you will apply the code edits to the file and return the updated file.
-These code edits can contain comments indicating where existing code should be copied and kept. Follow these comments to keep code, then remove these comments in your output.
-Interpret the <code_edits> as ALWAYS ADDING/CHANGING code, unless specifically instructed to remove code by the <edit_instructions>.
-Write the COMPLETE file content with the code edits applied in a single \`\`\` code block.
-The updated file should always be valid code and should always BE COMPLETE. This means that any code that you think should be kept, keep the code.`;
-    const applyPrompt = `<existing_file>
+    const applySystemPrompt = `Apply code edits to the file and return the complete updated file.
+Keep existing code unless instructed to remove it. Remove any comments about keeping code.
+Return the complete file in a single code block.`;
+    const applyPrompt = `<file>
 \`\`\`
 ${fileContent}
 \`\`\`
-</existing_file>
+</file>
 
-<code_edits>
+<edits>
 \`\`\`
 ${edits}
 \`\`\`
-</code_edits>
+</edits>
 
-<edit_instructions>
+<instructions>
 ${instructions}
-</edit_instructions>
+</instructions>
 
 Please apply the code edits to the file and return the COMPLETE new file content. Infer the <code_edits> as ALWAYS ADDING/CHANGING code, unless specifically instructed to remove code. Write a single \`\`\` code block of the entire file.`;
     // todo: context window check - prompt
