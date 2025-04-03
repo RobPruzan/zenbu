@@ -76,6 +76,7 @@ Zenbu can communicate with your project by running a server directly next to you
 - [ ] Diff viewier in browser
 - [ ] Source viewer in browser
   - Must at least support ts lsp
+- [ ] Migrate plugin server to Effect
 - [ ] Editable buffers in browser
   - Vim mode required
 - [ ] Expose MCP's for all data so accessible in cursor
