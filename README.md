@@ -27,7 +27,7 @@ Specifically, Zenbu wants to:
   - Zenbu exposes all data collected via an MCP server, you are not locked in to using zenbu
     
 **Be quiet when not needed**
-  - Zenbu is completely hidden when not being used
+  - Zenbu is hidden when not being used
 
 **Be extremely clear what's happening**
   - Tools like cursor hides prompts from you, limiting your ability to understand what the model knows and how you should interact with it
