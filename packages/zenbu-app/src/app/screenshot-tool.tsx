@@ -1,5 +1,7 @@
+import { nanoid } from "nanoid";
 import { useEffect, useRef, useState } from "react";
 import { set } from "zod";
+import { useMakeRequest } from "~/components/devtools-overlay";
 import { iife } from "~/lib/utils";
 
 const pivotMap = {
@@ -47,6 +49,14 @@ const getPosRelativeToPivot = ({
 
 /**
  *
+ * todos that we still want:
+ * - multi screenshot
+ * - crop after selecting
+ * - drawing/markup screenshot
+ */
+
+/**
+ *
  * assumes it will be placed under a relative container
  */
 export const ScreenshotTool = () => {
@@ -78,8 +88,10 @@ export const ScreenshotTool = () => {
     };
   }, []);
 
+  const makeRequest = useMakeRequest();
   useEffect(() => {
     const handleMouseUp = () => {
+      setIsDragging(false);
       setIsGloballyMouseDown(false);
     };
     document.addEventListener("mouseup", handleMouseUp);
@@ -104,8 +116,9 @@ export const ScreenshotTool = () => {
           x: e.clientX - rect.left,
         };
 
-
-        if (current.x < 0 || current.y < 0){return}
+        if (current.x < 0 || current.y < 0) {
+          return;
+        }
 
         const pos = getPosRelativeToPivot({
           current,
@@ -113,6 +126,7 @@ export const ScreenshotTool = () => {
         });
 
         const currentPivot = pivotMap[pos];
+        console.log("curr pivot", currentPivot);
 
         // perhaps i can just set the top/left/right/bottom properties to update the square?
 
@@ -124,7 +138,7 @@ export const ScreenshotTool = () => {
             // just manipulating the top/bottom/left/right
 
             setScreenshotElBoundingRect({
-              bottom:  e.currentTarget.getBoundingClientRect().height - pivot.y,
+              bottom: e.currentTarget.getBoundingClientRect().height - pivot.y,
               left: pivot.x,
               top: current.y,
               right: e.currentTarget.getBoundingClientRect().width - current.x,
@@ -132,10 +146,11 @@ export const ScreenshotTool = () => {
 
             return;
           }
-          
+
           case "top-left": {
             setScreenshotElBoundingRect({
-              bottom:  e.currentTarget.getBoundingClientRect().height - current.y,
+              bottom:
+                e.currentTarget.getBoundingClientRect().height - current.y,
               left: pivot.x,
               right: e.currentTarget.getBoundingClientRect().width - current.x,
               top: pivot.y,
@@ -144,20 +159,21 @@ export const ScreenshotTool = () => {
           }
           case "top-right": {
             setScreenshotElBoundingRect({
-              bottom:  e.currentTarget.getBoundingClientRect().height - current.y,
+              bottom:
+                e.currentTarget.getBoundingClientRect().height - current.y,
               left: current.x,
               top: pivot.y,
               right: e.currentTarget.getBoundingClientRect().width - pivot.x,
             });
             return;
           }
-              // dis kinda works
+          // dis kinda works
           case "bottom-right": {
             setScreenshotElBoundingRect({
-              bottom:  e.currentTarget.getBoundingClientRect().height - pivot.y,
+              bottom: e.currentTarget.getBoundingClientRect().height - pivot.y,
               left: current.x,
               top: current.y,
-              right:e.currentTarget.getBoundingClientRect().width- pivot.x,
+              right: e.currentTarget.getBoundingClientRect().width - pivot.x,
             });
             return;
           }
@@ -189,10 +205,18 @@ export const ScreenshotTool = () => {
         setPivot(pivot);
         setIsDragging(true);
       }}
-      onMouseUp={() => {
-        setScreenshotElBoundingRect(undefined)
+      onMouseUp={async () => {
+        setScreenshotElBoundingRect(undefined);
         setIsDragging(false);
-        setPivot(null)
+        setPivot(null);
+
+        // oh schmeat we need to overlay the drawing when do this :O
+        const dataUrl = await makeRequest({
+          kind: "take-screenshot",
+          id: nanoid(),
+          responsePossible: true,
+        });
+        console.log("we got dat screenshot", dataUrl);
       }}
       style={{
         zIndex: 1000000,
@@ -200,44 +224,12 @@ export const ScreenshotTool = () => {
       className="absolute h-full w-full top-0 left-0"
     >
       {isDragging && (
-        <div className="h-20 w-20 select-none bg-red-500">
-          dragging {JSON.stringify(screenshotElBoundingRect)}
-          pivot: {JSON.stringify(pivot)}
-          {iife(() => {
-            const current = {
-              x: screenshotElBoundingRect?.left || 0,
-              y: screenshotElBoundingRect?.top || 0
-            };
-            
-            if (!pivot) {
-              return null;
-            }
-
-
-        const pos = getPosRelativeToPivot({
-          current,
-          pivot,
-        });
-
-        const currentPivot = pivotMap[pos];
-        return "----------------" + currentPivot
-          })}
-        </div>
-      )}
-      {isDragging && (
         <div
           className="border absolute "
           style={screenshotElBoundingRect}
           ref={screenshotElRef}
         ></div>
       )}
-
-      {pivot && <div
-        style={{
-          top: pivot.y,
-          left: pivot.x
-      }}  
-       className="rounded-full h-10 w-10 absolute bg-blue-500"></div>}
     </div>
   );
 };

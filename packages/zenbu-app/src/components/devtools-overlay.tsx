@@ -67,7 +67,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
   const lastElementRef = useRef<Element | null>(null);
 
   const { socket } = useEventWS();
-  const makeRequest = useMakeRequest({ iframeRef });
+  const makeRequest = useMakeRequest();
   const { inspector, eventLog, chatControls } = useChatStore();
 
   useEffect(() => {
@@ -355,16 +355,13 @@ export const InspectorStateContext = createContext<{
   setInspectorState: Dispatch<SetStateAction<InspectorState>>;
 }>(null!);
 
-export const useMakeRequest = ({
-  iframeRef,
-}: {
-  iframeRef: RefObject<HTMLIFrameElement | null>;
-}) => {
+export const useMakeRequest = ( ) => {
   const sendMessage = useIFrameMessenger();
 
   return async <T extends ParentToChildMessage & { responsePossible: true }>(
     message: T,
   ) => {
+    // acts as explicit validation when defining on the type level
     if (!message.responsePossible) {
       throw new Error(
         "Invariant: response not available for request kind:" + message.kind,

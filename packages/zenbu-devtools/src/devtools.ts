@@ -50,7 +50,8 @@ export type ChildToParentMessage =
       focusedInfo: FocusedInfo;
     }
   // im stupid id isn't needed can't figure out type
-  | { kind: "get-state-request"; id?: string; responsePossible: true };
+  | { kind: "get-state-request"; id?: string; responsePossible: true }
+  | { kind: "screenshot-response"; dataUrl: string; id: string };
 
 export type ParentToChildMessage =
   | {
@@ -73,6 +74,11 @@ export type ParentToChildMessage =
     }
   | {
       kind: "stop-recording";
+      id: string;
+    }
+  | {
+      kind: "take-screenshot";
+      responsePossible: true;
       id: string;
     };
 
@@ -150,7 +156,7 @@ let stopRecording: null | ReturnType<typeof record> = null;
 
 let events: Array<eventWithTime> = [];
 
-window.addEventListener("message", (event) => {
+window.addEventListener("message", async (event) => {
   if (event.origin !== "http://localhost:3000") return;
   const data = event.data as ParentToChildMessage;
 
@@ -173,6 +179,16 @@ window.addEventListener("message", (event) => {
       }
 
       stopRecording?.();
+      return;
+    }
+
+    case "take-screenshot": {
+      const dataUrl = await screenshot();
+      sendMessage({
+        id: data.id,
+        kind: "screenshot-response",
+        dataUrl: dataUrl,
+      });
     }
   }
 });
@@ -216,3 +232,62 @@ let last = 0;
 const genId = () => {
   return `${last++}`;
 };
+
+// import workerUrl from 'modern-screenshot/worker?url'
+import { createContext, destroyContext, domToPng } from "modern-screenshot";
+import {} from "modern-screenshot/worker";
+
+// const workerCode = `var B=Object.defineProperty;var b=Object.getOwnPropertySymbols;var y=Object.prototype.hasOwnProperty,F=Object.prototype.propertyIsEnumerable;var g=(r,t,e)=>t in r?B(r,t,{enumerable:!0,configurable:!0,writable:!0,value:e}):r[t]=e,U=(r,t)=>{for(var e in t||(t={}))y.call(t,e)&&g(r,e,t[e]);if(b)for(var e of b(t))F.call(t,e)&&g(r,e,t[e]);return r};var p=(r,t)=>{var e={};for(var o in r)y.call(r,o)&&t.indexOf(o)<0&&(e[o]=r[o]);if(r!=null&&b)for(var o of b(r))t.indexOf(o)<0&&F.call(r,o)&&(e[o]=r[o]);return e};var x=(r,t,e)=>new Promise((o,w)=>{var h=n=>{try{d(e.next(n))}catch(u){w(u)}},R=n=>{try{d(e.throw(n))}catch(u){w(u)}},d=n=>n.done?o(n.value):Promise.resolve(n.value).then(h,R);d((e=e.apply(r,t)).next())});(function(){"use strict";var u;const r="[modern-screenshot]",e=typeof window!="undefined"?(u=window.navigator)==null?void 0:u.userAgent:"",o=e.includes("Chrome");e.includes("AppleWebKit"),e.includes("Firefox");const w=(...a)=>console.warn(r,...a);function h(a,l){return new Promise((i,s)=>{const c=new FileReader;c.onload=()=>i(c.result),c.onerror=()=>s(c.error),c.onabort=()=>s(new Error(`Failed read blob to ${l}`)),c.readAsDataURL(a)})}const R=a=>h(a,"dataUrl");function d(a){const E=a,{url:l,timeout:i,responseType:s}=E,c=p(E,["url","timeout","responseType"]),m=new AbortController,A=i?setTimeout(()=>m.abort(),i):void 0;return fetch(l,U({signal:m.signal},c)).then(f=>{if(!f.ok)throw new Error("Failed fetch, not 2xx response",{cause:f});switch(s){case"arrayBuffer":return f.arrayBuffer();case"dataUrl":return f.blob().then(R);case"text":default:return f.text()}}).finally(()=>clearTimeout(A))}const n=self;n.onmessage=a=>x(this,null,function*(){const l=a.data,i=l.rawUrl||l.url;try{const s=yield d(l);n.postMessage({url:i,result:s})}catch(s){w(s),n.postMessage({url:i})}})})();`
+var __WORKER_CODE__ = "";
+console.log("oy", __WORKER_CODE__);
+
+const screenshotNice = () => {
+  domToPng(document.documentElement).then((dataUrl) => {
+    console.log(dataUrl);
+  });
+};
+
+// @ts-expect-error
+window.ss = () => {
+  console.log("screenshotting");
+  screenshotNice();
+};
+
+// async function screenshotsPerSecond() {
+
+// }
+
+console.log("hai");
+
+const createWorkerContext = () => {
+  const blob = new Blob([__WORKER_CODE__], { type: "application/javascript" });
+  const workerUrl = URL.createObjectURL(blob);
+
+  return {
+    workerUrl,
+    cleanup: () => {
+      URL.revokeObjectURL(workerUrl);
+    },
+  };
+};
+
+// @ts-expect-error
+window.createWorkerContext = createWorkerContext;
+
+async function screenshot() {
+  console.log("taking screenshot");
+
+  const worker = createWorkerContext();
+  const context = await createContext(document.documentElement, {
+    workerNumber: 1,
+    workerUrl: worker.workerUrl,
+  });
+
+  return domToPng(context);
+  // for (let i = 0; i < 10; i++) {
+  //   await new Promise((resolve) => setTimeout(resolve, 1000));
+  // }
+}
+
+// @ts-expect-error
+window.sps = screenshot;
