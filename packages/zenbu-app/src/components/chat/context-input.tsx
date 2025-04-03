@@ -1,5 +1,16 @@
-import { useState, useRef, useEffect, SetStateAction, Dispatch } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  SetStateAction,
+  Dispatch,
+  FormEventHandler,
+} from "react";
 import { X } from "lucide-react";
+import { useWSContext } from "./chat";
+import { useChatStore } from "../chat-instance-context";
+import { nanoid } from "nanoid";
+import { ClientMessageEvent, ClientTaskEvent } from "zenbu-plugin/src/ws/ws";
 
 // Props for the MentionMenu component
 interface MentionMenuProps {
@@ -29,7 +40,7 @@ const MentionMenu = ({
       } else if (e.key === "ArrowUp" || (e.ctrlKey && e.key === "p")) {
         e.preventDefault();
         setSelectedIndex(
-          (prev) => (prev - 1 + filteredItems.length) % filteredItems.length
+          (prev) => (prev - 1 + filteredItems.length) % filteredItems.length,
         );
       }
     };
@@ -60,7 +71,6 @@ const MentionMenu = ({
   );
 };
 
-// Main ChatComponent with mention functionality
 const ChatComponent = () => {
   const items = ["react-scan", "console", "network", "localstorage"];
   const [showMenu, setShowMenu] = useState<boolean>(false);
@@ -69,6 +79,10 @@ const ChatComponent = () => {
   const [query, setQuery] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<string[]>(items);
   const chatInputRef = useRef<HTMLDivElement>(null);
+
+  const { eventLog, inspector, chatControls, context, toolbar } =
+    useChatStore();
+  const { socket } = useWSContext();
 
   const syncSelectedItems = () => {
     const chatInput = chatInputRef.current;
@@ -132,7 +146,7 @@ const ChatComponent = () => {
     }
 
     const filtered = items.filter((item) =>
-      item.toLowerCase().startsWith(currentQuery.toLowerCase())
+      item.toLowerCase().startsWith(currentQuery.toLowerCase()),
     );
     setFilteredItems(filtered);
 
@@ -273,6 +287,27 @@ const ChatComponent = () => {
         contentEditable
         className="w-full text-[13px] text-white caret-white font-light leading-relaxed min-h-[50px] pt-1.5 pl-2 pr-4 pb-1.5 focus:outline-none"
         onInput={handleInput}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.metaKey) {
+            const target = e.target as HTMLDivElement;
+            e.preventDefault();
+            e.stopPropagation();
+            const clientEvent: ClientMessageEvent = {
+              requestId: nanoid(),
+              context: [],
+              kind: "user-message",
+              text: target.textContent ?? "",
+              timestamp: Date.now(),
+              id: nanoid(),
+              previousEvents: eventLog.events,
+            };
+            console.log("sending dis");
+
+            eventLog.actions.pushEvent(clientEvent);
+            socket.emit("message", clientEvent);
+            target.textContent = "";
+          }
+        }}
       />
     </div>
   );

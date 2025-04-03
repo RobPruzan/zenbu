@@ -225,6 +225,7 @@ export const injectWebSocket = (server: HttpServer) => {
               }
               case "thread-idle": {
                 // try {
+                emitEvent("🔥");
 
                 try {
                   await sendIdleMainThreadMessage({

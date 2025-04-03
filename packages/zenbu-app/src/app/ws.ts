@@ -15,7 +15,7 @@ export const useEventWS = (opts?: { onMessage?: (message: EventLogEvent) => void
       }
     });
     socketInstance.on("connect", () => {
-      console.log("Socket connected successfully");
+      // console.log("Socket connected successfully");
     });
 
 
@@ -23,7 +23,7 @@ export const useEventWS = (opts?: { onMessage?: (message: EventLogEvent) => void
       opts?.onMessage?.(message)
     })
 
-    console.log("Socket connection status:", socketInstance.connected);
+    // console.log("Socket connection status:", socketInstance.connected);
 
     socketInstance.on("disconnect", (reason) => {
       console.log("Socket disconnected:", reason);

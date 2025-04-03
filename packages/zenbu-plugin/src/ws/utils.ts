@@ -78,11 +78,11 @@ export const toChatMessages = (inEvents: Array<EventLogEvent>) => {
   return messages;
 };
 export const toGroupedChatMessages = (events: Array<EventLogEvent>) => {
-  console.log("in events", events);
+  // console.log("in events", events);
 
   const { mainThread: mainThreadEvents, ...threads } = intoGroups(events);
 
-  console.log("wut", Object.keys(threads));
+  // console.log("wut", Object.keys(threads));
   const mainThreadMessages = toChatMessages(mainThreadEvents);
 
   const otherThreadsMessages = Object.keys(threads)

@@ -1130,7 +1130,7 @@ export const Toolbar = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [drawingCanvasVisible, editorInstance]);
 
-  console.log("[Toolbar Render] drawingCanvasVisible:", drawingCanvasVisible);
+  // console.log("[Toolbar Render] drawingCanvasVisible:", drawingCanvasVisible);
 
   useEffect(() => {
     if (drawingCanvasVisible) {

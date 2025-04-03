@@ -116,7 +116,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
       if (event.origin !== "http://localhost:4200") {
-        console.log("wrong origin");
+        // console.log("wrong origin");
 
         return;
       }
@@ -275,10 +275,10 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
     });
 
     resizeObserver.observe(iframe);
-    console.log("SETTING UP");
+    // console.log("SETTING UP");
 
     requestAnimationFrame(() => {
-      console.log("focused?", inspector.state.kind);
+      // console.log("focused?", inspector.state.kind);
 
       if (inspector.state.kind === "focused") {
         drawFocusedRect(inspector.state.focusedInfo);

@@ -3,7 +3,7 @@ import type { eventWithTime } from "@rrweb/types";
 
 const TARGET_ORIGIN = "http://localhost:3000";
 
-console.log("pls");
+// console.log("pls");
 
 let currentMouseOverElement: Element | null = null;
 

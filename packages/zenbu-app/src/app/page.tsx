@@ -43,40 +43,38 @@ export default function Home() {
     const handleToggleChat = (event: Event) => {
       if (!isAnimating) {
         setIsAnimating(true);
-        setChatVisible(prev => !prev);
-        
-        // Dispatch an event to notify other components about the visibility change
-        const visibilityEvent = new CustomEvent('chat-visibility-change', {
-          detail: !chatVisible
+        setChatVisible((prev) => !prev);
+
+        const visibilityEvent = new CustomEvent("chat-visibility-change", {
+          detail: !chatVisible,
         });
         window.dispatchEvent(visibilityEvent);
-        
+
         setTimeout(() => setIsAnimating(false), 300);
       }
     };
 
-    window.addEventListener('toggle-chat', handleToggleChat);
-    return () => window.removeEventListener('toggle-chat', handleToggleChat);
+    window.addEventListener("toggle-chat", handleToggleChat);
+    return () => window.removeEventListener("toggle-chat", handleToggleChat);
   }, [isAnimating, chatVisible]);
 
   const toggleChat = () => {
     if (isAnimating) return;
-    
+
     setIsAnimating(true);
     setChatVisible(!chatVisible);
-    
-    // Dispatch an event to notify other components about the visibility change
-    const visibilityEvent = new CustomEvent('chat-visibility-change', {
-      detail: !chatVisible
+
+    const visibilityEvent = new CustomEvent("chat-visibility-change", {
+      detail: !chatVisible,
     });
     window.dispatchEvent(visibilityEvent);
-    
+
     setTimeout(() => setIsAnimating(false), 300);
   };
 
   const toggleDevtools = () => {
     if (isAnimating) return;
-    
+
     setIsAnimating(true);
     setDevtoolsVisible(!devtoolsVisible);
     setTimeout(() => setIsAnimating(false), 300);
@@ -84,36 +82,6 @@ export default function Home() {
 
   return (
     <main className="relative flex h-screen overflow-hidden bg-background text-foreground">
-      {/* Left chat toggle button (when collapsed) */}
-      {!chatVisible && (
-        <div className="absolute left-2 top-2 z-30">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-full border-border/50 bg-background shadow-md hover:bg-accent"
-            onClick={toggleChat}
-            disabled={isAnimating}
-          >
-            <MessageSquare className="h-5 w-5 text-primary" />
-          </Button>
-        </div>
-      )}
-
-      {/* Bottom devtools toggle button (when collapsed) */}
-      {!devtoolsVisible && (
-        <div className="absolute bottom-2 right-2 z-30">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-full border-border/50 bg-background shadow-md hover:bg-accent"
-            onClick={toggleDevtools}
-            disabled={isAnimating}
-          >
-            <Terminal className="h-5 w-5 text-primary" />
-          </Button>
-        </div>
-      )}
-
       <ChatInstanceContext.Provider
         initialValue={{
           toolbar: {
@@ -137,34 +105,42 @@ export default function Home() {
           },
         }}
       >
-        {/* Use Flexbox for the main horizontal layout */}
         <div className="flex h-full w-full overflow-hidden">
-          {/* Left side: Chat interface (Animated Flex Item) */}
           <AnimatePresence mode="wait">
             {chatVisible && (
               <motion.div
                 key="chat-panel"
                 initial={{ width: 0, opacity: 0, marginRight: 0 }}
                 animate={{
-                  width: "25%", // Target width
+                  width: "25%",
                   opacity: 1,
-                  marginRight: 0, // Ensure no margin interferes
+                  marginRight: 0,
                   transition: {
-                    width: { type: "spring", stiffness: 500, damping: 30, mass: 0.8 },
-                    opacity: { duration: 0.1, delay: 0.05 }
-                  }
+                    width: {
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30,
+                      mass: 0.8,
+                    },
+                    opacity: { duration: 0.1, delay: 0.05 },
+                  },
                 }}
                 exit={{
                   width: 0,
                   opacity: 0,
-                  marginRight: "-1px", // Add small negative margin on exit to prevent gap
+                  marginRight: "-1px",
                   transition: {
-                    width: { type: "spring", stiffness: 500, damping: 30, mass: 0.8 },
-                    opacity: { duration: 0.1 }
-                  }
+                    width: {
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30,
+                      mass: 0.8,
+                    },
+                    opacity: { duration: 0.1 },
+                  },
                 }}
-                className="h-full flex-shrink-0 border-r border-border/40 overflow-hidden" // flex-shrink-0 is crucial
-                style={{ minWidth: 0 }} // Allow shrinking below intrinsic size
+                className="h-full flex-shrink-0 border-r border-border/40 overflow-hidden"
+                style={{ minWidth: 0 }}
               >
                 <div className="relative flex h-full flex-col">
                   <Chat onCloseChat={toggleChat} />
@@ -173,24 +149,25 @@ export default function Home() {
             )}
           </AnimatePresence>
 
-          {/* Main content area (Takes remaining space) */}
-          {/* Add overflow-hidden to prevent content shift */}
           <div className="h-full flex-1 overflow-hidden">
-            {/* Vertical Resizable Group for Iframe/DevTools */}
             <ResizablePanelGroup direction="vertical" className="h-full">
-              {/* Iframe Panel - Let it take available space */}
-              <ResizablePanel defaultSize={devtoolsVisible ? 70 : 100} className="h-full">
-                {/* Make inner div full height too */}
+              <ResizablePanel
+                defaultSize={devtoolsVisible ? 70 : 100}
+                className="h-full"
+              >
                 <div className="flex h-full flex-col">
                   <IFrameWrapper />
                 </div>
               </ResizablePanel>
 
-              {/* Bottom panel: Dev tools */}
               {devtoolsVisible && (
                 <>
                   <ResizableHandle withHandle className="bg-border/40" />
-                  <ResizablePanel defaultSize={30} minSize={15} collapsible={true}>
+                  <ResizablePanel
+                    defaultSize={30}
+                    minSize={15}
+                    collapsible={true}
+                  >
                     <div className="relative flex h-full flex-col border-t border-zinc-800/80">
                       <Button
                         variant="ghost"
@@ -211,7 +188,6 @@ export default function Home() {
         </div>
       </ChatInstanceContext.Provider>
 
-      {/* Projects Dialog */}
       <Dialog open={showProjectsDialog} onOpenChange={setShowProjectsDialog}>
         <DialogContent>
           <DialogHeader>
@@ -225,7 +201,6 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Settings Dialog */}
       <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
         <DialogContent>
           <DialogHeader>
