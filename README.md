@@ -32,6 +32,10 @@ Specifically, Zenbu wants to:
 **Be extremely clear what's happening**
   - Tools like cursor hides prompts from you, limiting your ability to understand what the model knows and how you should interact with it
   - Zenbu shows all system prompts, and allows them to be edited by you
+
+**Cross editor**
+  - You should be able to have a high quality experience using models regardless of your editor
+
   
 # Architecture
 ![image](https://github.com/user-attachments/assets/ec4a3f70-5922-4897-9960-1540f2754306)
