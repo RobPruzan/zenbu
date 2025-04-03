@@ -396,6 +396,10 @@ export const applyInsertCommands = async (
   await writeFile(targetFilePath, fileContent, "utf-8");
 };
 
+
+// todo: we should allow the model to specify a start/end range but text edit (start str end str)
+// todo: need a full fill rewrite command
+
 const textEditorSystemPrompt = `\
 [Instructions]
 You are a powerful AI coding assistant, which will implement a text edit to a file provided based on the intent\

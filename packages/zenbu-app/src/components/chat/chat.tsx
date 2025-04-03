@@ -86,7 +86,6 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
   );
 
 
-  // Add scroll handler to detect when user scrolls
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
     const isScrolledToBottom =

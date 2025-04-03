@@ -38,6 +38,7 @@ import {
   ResizablePanelGroup,
 } from "~/components/ui/resizable";
 import layout from "./layout";
+import CustomUiExample from "./custom-ui";
 
 type ToolSection =
   | "select"
@@ -160,9 +161,9 @@ const DrawingPanel = ({ editor }: { editor: any }) => {
         stylesForNextShape: {
           ...editor.getInstanceState().stylesForNextShape,
           geo: shapeType,
-          color: currentColor,
-          size: currentSize,
-          opacity: currentOpacity,
+          // color: currentColor,
+          // size: currentSize,
+          // opacity: currentOpacity,
         },
       });
       setCurrentTool("geo");
@@ -181,9 +182,9 @@ const DrawingPanel = ({ editor }: { editor: any }) => {
       editor.updateInstanceState({
         stylesForNextShape: {
           ...editor.getInstanceState().stylesForNextShape,
-          color: currentColor,
-          size: currentSize,
-          opacity: currentOpacity,
+          // color: currentColor,
+          // size: currentSize,
+          // opacity: currentOpacity,
         },
       });
     } catch (e) {
@@ -569,12 +570,12 @@ const TOOLBAR_CONFIG_KEY = "zenbu_toolbar_config";
 
 const DEFAULT_TOOLBAR_ITEMS = [
   { id: "select", label: "Select", icon: <SquareMousePointer size={8} /> },
-  { id: "console", label: "Console", icon: <Logs size={8} /> },
-  { id: "network", label: "Network", icon: <ArrowUpDown size={8} /> },
-  { id: "performance", label: "Performance", icon: <Activity size={8} /> },
-  { id: "record", label: "Recordings", icon: <ListVideo size={8} /> },
-  { id: "more", label: "More", icon: <EllipsisIcon size={8} /> },
-  { id: "settings", label: "Settings", icon: <Settings size={8} /> },
+  { id: "console", label: "Console", icon: <Logs suppressHydrationWarning size={8} /> },
+  { id: "network", label: "Network", icon: <ArrowUpDown suppressHydrationWarning size={8} /> },
+  { id: "performance", label: "Performance", icon: <Activity suppressHydrationWarning size={8} /> },
+  { id: "record", label: "Recordings", icon: <ListVideo suppressHydrationWarning size={8} /> },
+  { id: "more", label: "More", icon: <EllipsisIcon suppressHydrationWarning size={8} /> },
+  { id: "settings", label: "Settings", icon: <Settings suppressHydrationWarning size={8} /> },
 ];
 
 export const Toolbar = () => {
@@ -1455,6 +1456,7 @@ export const Toolbar = () => {
             }
           `}</style>
           <Tldraw
+          
             hideUi
             components={getDrawingComponents()}
             onMount={(editor) => {
@@ -1475,7 +1477,10 @@ export const Toolbar = () => {
         initial="collapsed"
         animate={expanded ? "expanded" : "collapsed"}
         transition={{ type: "spring", stiffness: 400, damping: 35 }}
-        className={`flex items-stretch absolute left-2 bottom-4 ${backdropStyle} rounded-xl overflow-hidden ${shadowStyle} z-20`}
+        style={{
+          zIndex: 2000000
+        }}
+        className={`flex items-stretch absolute left-2 bottom-4 ${backdropStyle} rounded-xl overflow-hidden ${shadowStyle}`}
       >
         <div className="flex-shrink-0 flex items-center h-10">
           <Button
@@ -1664,6 +1669,7 @@ export const Toolbar = () => {
                     </ResizablePanelGroup>
                   ) : showDrawPanel ? (
                     <DrawingPanel editor={editorInstance} />
+                    // <CustomUiExample/>
                   ) : showRecordPanel ? (
                     <RecordingsPanel
                       recordings={recordings}
