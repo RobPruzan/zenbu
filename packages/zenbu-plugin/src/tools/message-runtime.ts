@@ -16,6 +16,7 @@ import { google } from "@ai-sdk/google";
 import { planner } from "../ws/planner.js";
 import { bestEdit } from "./best-edit-impl.js";
 import { editFileSpec } from "../ws/apply.js";
+import { textEditor } from "./edit/text-editor.js";
 
 // actually the main thread should definitely be scoped to the socket room itself, not to the message...
 /**
@@ -401,8 +402,11 @@ export const sendIdleMainThreadMessage = async ({
           // line number range you select to replace will always be (inclusive, inclusive)
           // batch close scope modification together, but you must select the parent scope in that case
           //
-          const res = await editFileSpec({
-            chatHistory: [
+
+          const res = await textEditor({
+            emit: emitEvent,
+            filePath: target_file_path,
+            fullChatHistory: [
               ...previousChatMessages,
               {
                 role: "data",
@@ -413,15 +417,29 @@ export const sendIdleMainThreadMessage = async ({
                 content: toChatMessages(accumulatedTextDeltas)[0].content,
               },
             ],
-            emit: emitEvent,
-            threadId: null,
-            targetFilePath: target_file_path,
-          }).catch((e: Error) =>
-            JSON.stringify({
-              stack: e.stack,
-              msg: e.message,
-            })
-          );
+            writeToPath: target_file_path,
+          });
+          // const res = await editFileSpec({
+          //   chatHistory: [
+          //     ...previousChatMessages,
+          //     {
+          //       role: "data",
+          //       content: getTaskSetAsString(),
+          //     },
+          //     {
+          //       role: "assistant",
+          //       content: toChatMessages(accumulatedTextDeltas)[0].content,
+          //     },
+          //   ],
+          //   emit: emitEvent,
+          //   threadId: null,
+          //   targetFilePath: target_file_path,
+          // }).catch((e: Error) =>
+          //   JSON.stringify({
+          //     stack: e.stack,
+          //     msg: e.message,
+          //   })
+          // );
           emitEvent("================== EDITING FILE END =============");
 
           return res;

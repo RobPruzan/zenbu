@@ -127,18 +127,26 @@ export const textEditor = async ({
   <file_content>
   ${withLineNumbers}
   </file_content>
-  ${previousAttempt ? `
+  ${
+    previousAttempt
+      ? `
   <previous_attempt>
   ${previousAttempt}
   </previous_attempt>
-  ` : ''}
-  ${failedMatch ? `
+  `
+      : ""
+  }
+  ${
+    failedMatch
+      ? `
   <error>
   No matches found for replacement: "${failedMatch.oldStr}".
   Closest matches were: ${JSON.stringify(failedMatch.similarMatches)}
   Please revise your edit to use one of the existing matches or a different approach.
   </error>
-  ` : ''}
+  `
+      : ""
+  }
 </data>\
 `,
       },
@@ -394,6 +402,8 @@ You are a powerful AI coding assistant, which will implement a text edit to a fi
 of another AI assistant- which is acting on behalf of a USER
 You will be provided the chat history between a different AI assistant, and a USER. This will give\
 you full context of what the user wanted and what the previous assistant wanted in the code edit\
+You should start directly writing code based on the chat history, do not monologue about what the chat history says,
+it is enough information to immediately start performing the edit
 
 [Data Format]
 You will be provided with the chat history in the form of:
