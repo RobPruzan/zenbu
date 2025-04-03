@@ -36,7 +36,17 @@ Specifically, Zenbu wants to:
 **Cross editor**
   - You should be able to have a high quality experience using models regardless of your editor
 
-  
+# How?
+You use zenbu through the low footprint toolbar overlaid ontop your website.
+
+The toolbar provides:
+ - improved implementations of the most used chrome devtool features
+ - a chat sidebar that allows you to talk to a model that can access your projects file system
+
+This means models can see everything you see in your browser and code editor. With the ability to write directly to your project.
+
+Zenbu can communicate with your project by running a server directly next to your project, that communicates with the zenbu toolbar
+
 # Architecture
 ![image](https://github.com/user-attachments/assets/ec4a3f70-5922-4897-9960-1540f2754306)
 
