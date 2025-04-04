@@ -60,6 +60,7 @@ Zenbu can communicate with your project by running a server directly next to you
 - [ ] Modify styles on an element with AI apply
 - [ ] Plugin to add source location to components (sentry style)
 - [ ] Gemini semantic search
+- [ ] Experiments- optionally ask the model to write all UI in an experiments project. you can view the experiment through an iframe directly on the zenbu website
 - [ ] Reasoner debugger tool
 - [ ] Automated tests via raw simulated events
 - [ ] Code runner tool (exec in browser)
