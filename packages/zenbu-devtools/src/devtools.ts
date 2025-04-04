@@ -288,6 +288,7 @@ async function screenshot() {
   //   await new Promise((resolve) => setTimeout(resolve, 1000));
   // }
 }
+console.log('confirmation');
 
 // @ts-expect-error
 window.sps = screenshot;

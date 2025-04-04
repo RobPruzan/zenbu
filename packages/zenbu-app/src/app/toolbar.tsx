@@ -30,6 +30,7 @@ import {
   TLEditorComponents,
   createTLStore,
   TldrawEditor,
+  exportAs,
 } from "tldraw";
 import "tldraw/tldraw.css";
 import {
@@ -570,12 +571,36 @@ const TOOLBAR_CONFIG_KEY = "zenbu_toolbar_config";
 
 const DEFAULT_TOOLBAR_ITEMS = [
   { id: "select", label: "Select", icon: <SquareMousePointer size={8} /> },
-  { id: "console", label: "Console", icon: <Logs suppressHydrationWarning size={8} /> },
-  { id: "network", label: "Network", icon: <ArrowUpDown suppressHydrationWarning size={8} /> },
-  { id: "performance", label: "Performance", icon: <Activity suppressHydrationWarning size={8} /> },
-  { id: "record", label: "Recordings", icon: <ListVideo suppressHydrationWarning size={8} /> },
-  { id: "more", label: "More", icon: <EllipsisIcon suppressHydrationWarning size={8} /> },
-  { id: "settings", label: "Settings", icon: <Settings suppressHydrationWarning size={8} /> },
+  {
+    id: "console",
+    label: "Console",
+    icon: <Logs suppressHydrationWarning size={8} />,
+  },
+  {
+    id: "network",
+    label: "Network",
+    icon: <ArrowUpDown suppressHydrationWarning size={8} />,
+  },
+  {
+    id: "performance",
+    label: "Performance",
+    icon: <Activity suppressHydrationWarning size={8} />,
+  },
+  {
+    id: "record",
+    label: "Recordings",
+    icon: <ListVideo suppressHydrationWarning size={8} />,
+  },
+  {
+    id: "more",
+    label: "More",
+    icon: <EllipsisIcon suppressHydrationWarning size={8} />,
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: <Settings suppressHydrationWarning size={8} />,
+  },
 ];
 
 export const Toolbar = () => {
@@ -1421,7 +1446,14 @@ export const Toolbar = () => {
   }, [drawingCanvasVisible, editorInstance]);
 
   // console.log("[Toolbar Render] drawingCanvasVisible:", drawingCanvasVisible);
-
+  function blobToDataURI(blob: Blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result); // result is the data URI
+      reader.onerror = reject;
+      reader.readAsDataURL(blob); // This converts blob to data URI
+    });
+  }
   useEffect(() => {
     if (drawingCanvasVisible) {
       document.body.classList.add("is-drawing-active");
@@ -1456,8 +1488,10 @@ export const Toolbar = () => {
             }
           `}</style>
           <Tldraw
-          
             hideUi
+            cameraOptions={{
+              isLocked: true,
+            }}
             components={getDrawingComponents()}
             onMount={(editor) => {
               console.log(
@@ -1466,6 +1500,31 @@ export const Toolbar = () => {
               );
               setEditorInstance(editor);
               editor.user.updateUserPreferences({ colorScheme: "dark" });
+              const captureViewport = async () => {
+                const viewportBounds = editor.getViewportPageBounds();
+                if (!viewportBounds) return;
+
+                const shapes = editor.getCurrentPageShapes();
+
+                if (shapes.length) {
+                  const imageBlob = await editor.toImage(
+                    shapes.map((s) => s.id),
+                    {
+                      bounds: viewportBounds,
+                      background: false,
+                      padding: 0,
+                      format: "png",
+                      darkMode: true
+                    },
+                  );
+
+                  const dataURI = await blobToDataURI(imageBlob.blob);
+
+                  return dataURI;
+                }
+              };
+              // @ts-expect-error
+              window.cv = captureViewport;
             }}
           />
         </div>
@@ -1478,7 +1537,7 @@ export const Toolbar = () => {
         animate={expanded ? "expanded" : "collapsed"}
         transition={{ type: "spring", stiffness: 400, damping: 35 }}
         style={{
-          zIndex: 2000000
+          zIndex: 2000000,
         }}
         className={`flex items-stretch absolute left-2 bottom-4 ${backdropStyle} rounded-xl overflow-hidden ${shadowStyle}`}
       >
@@ -1669,8 +1728,8 @@ export const Toolbar = () => {
                     </ResizablePanelGroup>
                   ) : showDrawPanel ? (
                     <DrawingPanel editor={editorInstance} />
-                    // <CustomUiExample/>
-                  ) : showRecordPanel ? (
+                  ) : // <CustomUiExample/>
+                  showRecordPanel ? (
                     <RecordingsPanel
                       recordings={recordings}
                       onSelect={handleSelectRecording}

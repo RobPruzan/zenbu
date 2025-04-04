@@ -129,7 +129,7 @@ export const IFrameWrapper = () => {
             border: "none",
           }}
         />
-        <ScreenshotTool />
+        {/* <ScreenshotTool /> */}
         <DevtoolsOverlay iframeRef={iframeRef} />
       </div>
     </div>
