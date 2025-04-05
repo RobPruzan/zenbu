@@ -26,6 +26,11 @@ import {
   ToolbarSlice,
   ToolbarSliceInitialState,
 } from "./slices/toolbar-slice";
+import {
+  CommandPaletteSlice,
+  CommandPaletteSliceInitialState,
+  createCommandPaletteSlice,
+} from "./slices/command-palette-slice";
 
 export type ChatInstanceInitialState = {
   eventLog: EventLogSliceInitialState;
@@ -33,6 +38,7 @@ export type ChatInstanceInitialState = {
   chatControls: ChatControlsInitialState;
   context: ContextSliceInitialState;
   toolbar: ToolbarSliceInitialState;
+  commandPalette: CommandPaletteSliceInitialState;
 };
 
 export type ChatInstanceStore = {
@@ -41,6 +47,7 @@ export type ChatInstanceStore = {
   chatControls: ChatControlsSlice;
   context: ContextSlice;
   toolbar: ToolbarSlice;
+  commandPalette: CommandPaletteSlice;
 };
 
 export const ChatInstanceContext = createZustandContext(
@@ -54,6 +61,7 @@ export const ChatInstanceContext = createZustandContext(
         ),
         context: createContextSlice(initialState.context)(...args),
         toolbar: createToolbarSLice(initialState.toolbar)(...args),
+        commandPalette: createCommandPaletteSlice(initialState.commandPalette)(...args),
       })),
     ),
 );

@@ -41,8 +41,7 @@ export const IFrameWrapper = () => {
 
   const { toolbar } = useChatStore();
 
-  const sendMessage = useIFrameMessenger();
-  const makeRequest = useMakeRequest({ iframeRef });
+  const makeRequest = useMakeRequest();
 
   useEffect(() => {
     // @ts-expect-error
@@ -109,7 +108,9 @@ export const IFrameWrapper = () => {
               return <Draw />;
             }
             case "recording": {
-              return <Recorder />;
+              return <Recorder>
+                <div></div>
+              </Recorder>;
             }
             case "idle": {
               return;

@@ -19,6 +19,10 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Settings,
+  Search,
+  FileText,
+  Command,
 } from "lucide-react";
 import ChatInterface from "~/components/chat-interface";
 import { useState, useEffect } from "react";
@@ -28,6 +32,8 @@ import { ChatInstanceContext } from "~/components/chat-instance-context";
 import { IFrameWrapper } from "./iframe-wrapper";
 import { Chat } from "~/components/chat/chat";
 import { motion, AnimatePresence } from "framer-motion";
+import { CommandPalette } from "~/components/command-palette";
+import { useCommandPalette, createCommandItem } from "~/hooks/use-command-palette";
 
 // scan();
 
@@ -103,8 +109,14 @@ export default function Home() {
           chatControls: {
             input: "",
           },
+          commandPalette: {
+            isOpen: false,
+            items: [],
+          },
         }}
       >
+        <CommandPaletteProvider />
+        
         <div className="flex h-full w-full overflow-hidden">
           <AnimatePresence mode="wait">
             {chatVisible && (
@@ -186,6 +198,8 @@ export default function Home() {
             </ResizablePanelGroup>
           </div>
         </div>
+        
+        <CommandPalette />
       </ChatInstanceContext.Provider>
 
       <Dialog open={showProjectsDialog} onOpenChange={setShowProjectsDialog}>
@@ -215,4 +229,48 @@ export default function Home() {
       </Dialog>
     </main>
   );
+}
+
+// Separate component to register default command palette items
+function CommandPaletteProvider() {
+  const toggleChat = () => {
+    window.dispatchEvent(new Event("toggle-chat"));
+  };
+  
+  useCommandPalette({
+    items: [
+      createCommandItem('toggle-chat', 'Toggle Chat', {
+        category: 'View',
+        icon: <MessageSquare size={16} />,
+        shortcut: '⌘K',
+        onSelect: toggleChat,
+      }),
+      createCommandItem('settings', 'Settings', {
+        category: 'App',
+        icon: <Settings size={16} />,
+        shortcut: '⌘,',
+        onSelect: () => console.log('Open settings'),
+      }),
+      createCommandItem('search', 'Search', {
+        category: 'App',
+        icon: <Search size={16} />,
+        shortcut: '⌘F',
+        onSelect: () => console.log('Open search'),
+      }),
+      createCommandItem('new-file', 'New File', {
+        category: 'Files',
+        icon: <FileText size={16} />,
+        shortcut: '⌘N',
+        onSelect: () => console.log('New file'),
+      }),
+      createCommandItem('command-palette', 'Command Palette', {
+        category: 'App',
+        icon: <Command size={16} />,
+        shortcut: '⌘P',
+        onSelect: () => {}, // Already open when selected
+      }),
+    ],
+  });
+  
+  return null;
 }

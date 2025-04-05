@@ -5,25 +5,328 @@
     <script src="http://localhost:42069"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello World</title>
+    <title>Netflix Clone</title>
     <style>
-      body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
+      * {
         margin: 0;
-        font-family: Arial, sans-serif;
+        padding: 0;
+        box-sizing: border-box;
       }
 
-      .hello-text {
-        font-size: 3rem;
-        color: red;
-        text-align: center;
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #141414;
+        color: #fff;
+        margin: 0;
+        padding: 0;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 50px;
+        background-color: rgba(0, 0, 0, 0.8);
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+      }
+
+      .logo {
+        color: #e50914;
+        font-size: 2rem;
+        font-weight: bold;
+      }
+
+      .nav-links {
+        display: flex;
+        list-style: none;
+      }
+
+      .nav-links li {
+        margin-left: 20px;
+      }
+
+      .nav-links a {
+        color: #fff;
+        text-decoration: none;
+      }
+
+      .hero {
+        height: 40vh;
+        background:
+          linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+          url("https://source.unsplash.com/random/1600x900/?movie") no-repeat
+            center center/cover;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 0 50px;
+      }
+
+      .hero-content {
+        max-width: 500px;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .hero p {
+        font-size: 1rem;
+        margin-bottom: 15px;
+        max-width: 500px;
+      }
+
+      .btn {
+        display: inline-block;
+        background-color: #e50914;
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        margin-right: 10px;
+      }
+
+      .btn-secondary {
+        background-color: rgba(109, 109, 110, 0.7);
+      }
+
+      .movies-section {
+        padding: 50px;
+      }
+
+      .section-title {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+      }
+
+      .movie-row {
+        display: flex;
+        overflow-x: auto;
+        padding: 10px 0;
+        margin-bottom: 30px;
+        scrollbar-width: none;
+      }
+
+      .movie-row::-webkit-scrollbar {
+        display: none;
+      }
+
+      .movie-card {
+        position: relative;
+        min-width: 200px;
+        height: 300px;
+        margin-right: 15px;
+        border-radius: 4px;
+        transition: transform 0.3s;
+        background-color: #333;
+        overflow: hidden;
+      }
+
+      .movie-card:hover {
+        transform: scale(1.05);
+      }
+
+      .movie-thumbnail {
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+      .movie-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .movie-card:hover .movie-info {
+        opacity: 1;
+      }
+
+      .movie-title {
+        font-size: 1rem;
+        margin-bottom: 5px;
+      }
+
+      .movie-rating {
+        color: #ffc107;
+      }
+
+      @media (max-width: 768px) {
+        .navbar {
+          padding: 20px;
+        }
+
+        .hero {
+          padding: 0 20px;
+        }
+
+        .movies-section {
+          padding: 20px;
+        }
+
+        .movie-card {
+          min-width: 150px;
+          height: 225px;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="hello-text">Hello World</div>
+    <nav class="navbar">
+      <div class="logo">NETFLIX</div>
+      <ul class="nav-links">
+        <li>
+          <a href="#">Home</a>
+        </li>
+        <li>
+          <a href="#">TV Shows</a>
+        </li>
+        <li>
+          <a href="#">Movies</a>
+        </li>
+        <li>
+          <a href="#">New & Popular</a>
+        </li>
+        <li>
+          <a href="#">My List</a>
+        </li>
+      </ul>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Stranger Things</h1>
+        <p>
+          When a young boy vanishes, a small town uncovers a mystery involving
+          secret experiments, terrifying supernatural forces and one strange
+          little girl.
+        </p>
+        <div class="hero-buttons">
+          <a href="#" class="btn">Play</a>
+          <a href="#" class="btn btn-secondary">More Info</a>
+        </div>
+      </div>
+    </section>
+    <div
+      style="
+        color: #ff0000;
+        text-align: center;
+        font-size: 24px;
+        margin: 20px 0;
+      "
+    >
+      Hello World
+    </div>
+
+    <section class="movies-section">
+      <h2 class="section-title">Trending Now</h2>
+      <div class="movie-row">
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #e50914"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">The Crown</h3>
+            <div class="movie-rating">★★★★☆</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #5a189a"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Money Heist</h3>
+            <div class="movie-rating">★★★★★</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #3a0ca3"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Dark</h3>
+            <div class="movie-rating">★★★★☆</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #4361ee"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">The Witcher</h3>
+            <div class="movie-rating">★★★★☆</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #4cc9f0"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Ozark</h3>
+            <div class="movie-rating">★★★★★</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #f72585"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Squid Game</h3>
+            <div class="movie-rating">★★★★★</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="movies-section">
+      <h2 class="section-title">Popular on Netflix</h2>
+      <div class="movie-row">
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #7209b7"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Breaking Bad</h3>
+            <div class="movie-rating">★★★★★</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #560bad"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Peaky Blinders</h3>
+            <div class="movie-rating">★★★★☆</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #480ca8"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Narcos</h3>
+            <div class="movie-rating">★★★★☆</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #3f37c9"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">The Queen's Gambit</h3>
+            <div class="movie-rating">★★★★★</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #4361ee"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Bridgerton</h3>
+            <div class="movie-rating">★★★★☆</div>
+          </div>
+        </div>
+        <div class="movie-card">
+          <div class="movie-thumbnail" style="background-color: #4895ef"></div>
+          <div class="movie-info">
+            <h3 class="movie-title">Lupin</h3>
+            <div class="movie-rating">★★★★☆</div>
+          </div>
+        </div>
+      </div>
+    </section>
   </body>
 </html>
