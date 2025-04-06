@@ -99,3 +99,5 @@ Zenbu can communicate with your project by running a server directly next to you
 - [ ] explain area
 - [ ] find area
 - [ ] plugin system for browser utils
+- [ ] "new project" cli + global manager for quick switching + prewarming dev servers for instant switches
+- [ ] auto port scanning to find projects
