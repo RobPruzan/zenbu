@@ -393,6 +393,8 @@ export const ScreenshotTool = () => {
         }}
         className="absolute top-2 select-none left-1/2 transform -translate-x-1/2 border rounded-md bg-background"
       >
+        <div className="flex border-b w-full">
+
         <Button
           variant={"ghost"}
           className="rounded-none"
@@ -412,6 +414,30 @@ export const ScreenshotTool = () => {
         >
           Cancel Screenshot
         </Button>
+
+        </div>
+        {/* needs to be a list pookie */}
+        <div className="bg-background rounded-md flex items-center p-3 gap-x-3 w-full ">
+
+          {/* <div className="w-full flex justify-between items-center">
+          </div> */}
+
+          {/* lil img preview */}
+
+          <Button variant={"outline"}>Add to chat</Button>
+          <Button variant={"outline"}>View screenshot</Button>
+
+          <Button
+            className="px-2 py-0 ml-auto"
+            variant={"ghost"}
+            onClick={() => {
+              setIsSuccessMessageShown(false);
+              setSuccessMessageLocation(null);
+            }}
+          >
+            <X size={5} />
+          </Button>
+        </div>
       </div>
 
       <div
