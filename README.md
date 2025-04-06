@@ -98,3 +98,4 @@ Zenbu can communicate with your project by running a server directly next to you
 - [ ] remix area
 - [ ] explain area
 - [ ] find area
+- [ ] plugin system for browser utils
