@@ -7,6 +7,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { readFile, writeFile } from "node:fs/promises";
 import { chatMessagesToString } from "../message-runtime.js";
 import { openai } from "@ai-sdk/openai";
+import { groq } from "@ai-sdk/groq";
 
 /**
  * The view command allows Claude to examine the contents of a file or list the contents of a directory. It can read the entire file or a specific range of lines.
@@ -106,7 +107,8 @@ export const textEditor = async ({
   const withLineNumbers = addLineNumbers(fileContent);
 
   const { textStream } = streamText({
-    model: anthropic("claude-3-7-sonnet-20250219"),
+    // model: anthropic("claude-3-7-sonnet-20250219"),
+    model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
     // model: openai("gpt-4o"),
     maxTokens: 8000,
     onFinish: (reason) => {
@@ -397,7 +399,6 @@ export const applyInsertCommands = async (
   // Write the modified content back to the file
   await writeFile(targetFilePath, fileContent, "utf-8");
 };
-
 
 // todo: we should allow the model to specify a start/end range but text edit (start str end str)
 // todo: need a full fill rewrite command

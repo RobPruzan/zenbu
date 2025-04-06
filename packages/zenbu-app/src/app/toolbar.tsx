@@ -73,6 +73,7 @@ type InlineChatMessage = {
 };
 
 const getDrawingComponents = (): TLEditorComponents => {
+  // might be smart to have the option to apply a background incase you wanted to make something in isolation?
   return {
     Background: () => null,
   };
@@ -1507,6 +1508,7 @@ export const Toolbar = () => {
                 const shapes = editor.getCurrentPageShapes();
 
                 if (shapes.length) {
+
                   const imageBlob = await editor.toImage(
                     shapes.map((s) => s.id),
                     {

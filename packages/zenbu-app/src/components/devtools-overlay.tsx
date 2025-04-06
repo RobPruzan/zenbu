@@ -20,6 +20,7 @@ import {
 import { useChatContext } from "./chat-interface";
 import { useEventWS } from "~/app/ws";
 import { ChatInstanceContext, useChatStore } from "./chat-instance-context";
+import { IFRAME_ID } from "~/app/iframe-wrapper";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -58,7 +59,7 @@ interface RectPosition {
   height: number;
 }
 
-export function DevtoolsOverlay({ iframeRef }: Props) {
+export function DevtoolsOverlay() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const currentRectRef = useRef<RectPosition | null>(null);
   const targetRectRef = useRef<RectPosition | null>(null);
@@ -108,7 +109,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
   useEffect(() => {
     const getState = store.getState;
     const canvas = canvasRef.current;
-    const iframe = iframeRef.current;
+    const iframe = document.getElementById(IFRAME_ID)! as HTMLIFrameElement
     if (!canvas || !iframe) return;
 
     const ctx = canvas.getContext("2d");
@@ -294,7 +295,7 @@ export function DevtoolsOverlay({ iframeRef }: Props) {
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [iframeRef, store]);
+  }, [ store]);
 
   return (
     <canvas

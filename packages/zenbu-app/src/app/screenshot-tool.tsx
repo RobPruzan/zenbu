@@ -1,9 +1,12 @@
 import { nanoid } from "nanoid";
-import { useEffect, useRef, useState } from "react";
+import { act, useEffect, useRef, useState } from "react";
 import { set } from "zod";
+import { useChatStore } from "~/components/chat-instance-context";
 import { useMakeRequest } from "~/components/devtools-overlay";
 import { iife } from "~/lib/utils";
-import { inputTest } from "./input";
+import { captureViewport } from "./better-drawing";
+import { IFRAME_ID } from "./iframe-wrapper";
+// import { inputTest } from "./input";
 
 const pivotMap = {
   "left-above": "bottom-right",
@@ -62,10 +65,16 @@ const getPosRelativeToPivot = ({
  */
 export const ScreenshotTool = () => {
   const [isDragging, setIsDragging] = useState(false);
+  const { active } = useChatStore(
+    (state) => state.toolbar.state.screenshotting,
+  );
+  const getEditor = useChatStore(
+    (state) => state.toolbar.state.drawing.getEditor,
+  );
 
   const screenshotElRef = useRef<HTMLDivElement | null>(null);
 
-  const screenshotElRefLazy = () => screenshotElRef.current!;
+  // const screenshotElRefLazy = () => screenshotElRef.current!;
 
   const [pivot, setPivot] = useState<null | Pivot>(null);
 
@@ -79,6 +88,9 @@ export const ScreenshotTool = () => {
   }>();
 
   useEffect(() => {
+    if (!active) {
+      return;
+    }
     const handleMouseDown = () => {
       setIsGloballyMouseDown(true);
     };
@@ -87,10 +99,13 @@ export const ScreenshotTool = () => {
     return () => {
       document.removeEventListener("mousedown", handleMouseDown);
     };
-  }, []);
+  }, [active]);
 
   const makeRequest = useMakeRequest();
   useEffect(() => {
+    if (!active) {
+      return;
+    }
     const handleMouseUp = () => {
       setIsDragging(false);
       setIsGloballyMouseDown(false);
@@ -100,9 +115,13 @@ export const ScreenshotTool = () => {
     return () => {
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, []);
+  }, [active]);
   const containerRef = useRef<HTMLDivElement>(null);
   const containerRefLazy = () => containerRef.current!;
+
+  if (!active) {
+    return;
+  }
 
   return (
     <div
@@ -229,7 +248,6 @@ export const ScreenshotTool = () => {
           },
         };
 
-        // oh schmeat we need to overlay the drawing when do this :O
         const response = await makeRequest({
           kind: "take-screenshot",
           id: nanoid(),
@@ -238,16 +256,45 @@ export const ScreenshotTool = () => {
         if (response.kind !== "screenshot-response") {
           throw new Error("invariant");
         }
-        const shapesURI: string = await (window as any)?.cv();
+        const editor = getEditor();
+        const shapesURI = editor
+          ? await captureViewport(editor)
+          : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
-        console.log("oy oy");
-        const input = {
+        const iframe = document.getElementById(IFRAME_ID) as HTMLIFrameElement;
+
+        const { height, width } = iframe.getBoundingClientRect();
+
+        // scaleAndCopyImage(response.dataUrl as string,)
+        const input: Parameters<typeof overlayImages>[0] = {
           baseImageDataUrl: response.dataUrl,
           cropCoordinates: coordinates,
-          overlayImageDataUrl: shapesURI,
+          overlayImageDataUrl: shapesURI as string,
+          height,
+          width,
         };
 
+        console.log("da input", input);
+
         const newImg = await overlayImages(input).catch(() => null);
+
+        if (!newImg) {
+          console.log("theres nuttin to copy");
+
+          return;
+        }
+        try {
+          const response = await fetch(newImg.cropped);
+          const blob = await response.blob();
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              [blob.type]: blob,
+            }),
+          ]);
+        } catch (error) {
+          console.error("Failed to copy image to clipboard:", error);
+          await navigator.clipboard.writeText(newImg.cropped);
+        }
 
         // console.log("params", {
         //   baseImageDataUrl: response.dataUrl,
@@ -265,7 +312,7 @@ export const ScreenshotTool = () => {
     >
       {isDragging && (
         <div
-          className="border absolute "
+          className="border-2 absolute "
           style={screenshotElBoundingRect}
           ref={screenshotElRef}
         ></div>
@@ -273,44 +320,7 @@ export const ScreenshotTool = () => {
     </div>
   );
 };
-// okay not doing this just gonna have a test imgs
 
-// todo verify (maybe tests?)
-
-// Define interfaces for better type safety and clarity
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface CropCoordinates {
-  tl: Point; // Top-left corner
-  br: Point; // Bottom-right corner
-}
-
-interface OverlayImagesParams {
-  baseImageDataUrl: string;
-  overlayImageDataUrl: string;
-  cropCoordinates: CropCoordinates;
-}
-
-// Interface for the return value, containing both image versions
-interface OverlayResult {
-  cropped: string; // Data URL of the final cropped image
-  uncropped: string; // Data URL of the composite (overlay) image before cropping
-}
-
-// Define interfaces for better type safety and clarity
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface CropCoordinates {
-  tl: Point; // Top-left corner
-  br: Point; // Bottom-right corner
-}
-// Interfaces (Point, CropCoordinates, OverlayImagesParams, OverlayResult) remain the same as before
 interface Point {
   x: number;
   y: number;
@@ -332,8 +342,6 @@ interface OverlayResult {
   uncropped: string;
 }
 
-
-// loadImage function remains the same as before
 const loadImage = (dataUrl: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -343,179 +351,192 @@ const loadImage = (dataUrl: string): Promise<HTMLImageElement> => {
       source?: string,
       lineno?: number,
       colno?: number,
-      error?: Error
+      error?: Error,
     ) => {
-        const errorMessage = error?.message || (typeof event === 'string' ? event : 'Unknown image load error');
-        reject(new Error(`Failed to load image: ${errorMessage}`));
+      const errorMessage =
+        error?.message ||
+        (typeof event === "string" ? event : "Unknown image load error");
+      reject(new Error(`Failed to load image: ${errorMessage}`));
     };
-    // img.crossOrigin = 'anonymous';
     img.src = dataUrl;
   });
 };
 
+/**
+ *
+ * takes in the width/height of the iframe to determine the target resolution of the
+ * viewport (the bounds we pass when taking a screenshot to tldraw are in canvas coordinates)
+ * it may be the case it always correctly returns the correct resolution (since its directly overlaid with iframe)
+ * but this is a precaution
+ *
+ * we pass the base image data url, and then crop over the iframe dimensions since the screenshot we capture
+ * includes the entire page, not just the viewport, so we need to crop over the iframes viewport (height/width)
+ *
+ * we then overlay the tldraw shapes over the html snapshot image to get the  composited image
+ *
+ * last we crop over the region the user was screenshotting when using the screenshot tool
+ */
 
 export const overlayImages = async ({
   baseImageDataUrl,
   overlayImageDataUrl,
   cropCoordinates,
-}: OverlayImagesParams): Promise<OverlayResult> => {
+  width,
+  height,
+}: OverlayImagesParams & {
+  width?: number;
+  height?: number;
+}): Promise<OverlayResult> => {
   try {
-    // 1. Load both images
     const [baseImage, overlayImage] = await Promise.all([
       loadImage(baseImageDataUrl),
       loadImage(overlayImageDataUrl),
     ]);
 
-    // 2. Create a canvas for compositing
-    const compositeCanvas: HTMLCanvasElement = document.createElement('canvas');
-    const compositeCtx: CanvasRenderingContext2D | null = compositeCanvas.getContext('2d');
+    const compositeCanvas: HTMLCanvasElement = document.createElement("canvas");
+    const compositeCtx: CanvasRenderingContext2D | null =
+      compositeCanvas.getContext("2d");
 
     if (!compositeCtx) {
-        throw new Error('Could not get 2D context for the composite canvas.');
+      throw new Error("Could not get 2D context for the composite canvas.");
     }
 
-    // Set canvas dimensions based on the BASE image
-    const canvasWidth: number = baseImage.naturalWidth;
-    const canvasHeight: number = baseImage.naturalHeight;
+    const canvasWidth: number = width || baseImage.naturalWidth;
+    const canvasHeight: number = height || baseImage.naturalHeight;
     compositeCanvas.width = canvasWidth;
     compositeCanvas.height = canvasHeight;
 
-    // 3. Draw the base image (filling the canvas)
-    compositeCtx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
-
-    // 4. Draw the overlay image on top, SCALED to fit the canvas dimensions
-    //    This handles the different resolutions, assuming the same aspect ratio.
     compositeCtx.drawImage(
-        overlayImage,
-        0,             // Destination X position on canvas
-        0,             // Destination Y position on canvas
-        canvasWidth,   // Destination width (scale to fit canvas width)
-        canvasHeight   // Destination height (scale to fit canvas height)
+      baseImage,
+      0,
+      0,
+      canvasWidth,
+      canvasHeight,
+      0,
+      0,
+      canvasWidth,
+      canvasHeight,
     );
-    // --- End Fix ---
 
-    // --- Get the uncropped (composite) image data URL ---
-    const uncroppedDataUrl: string = compositeCanvas.toDataURL('image/png');
-    // ---
+    compositeCtx.drawImage(overlayImage, 0, 0, canvasWidth, canvasHeight);
 
-    // 5. Prepare for cropping
+    const uncroppedDataUrl: string = compositeCanvas.toDataURL("image/png");
+
     const cropX: number = cropCoordinates.tl.x;
     const cropY: number = cropCoordinates.tl.y;
     const cropWidth: number = cropCoordinates.br.x - cropX;
     const cropHeight: number = cropCoordinates.br.y - cropY;
 
-     if (cropWidth <= 0 || cropHeight <= 0) {
-        throw new Error('Invalid crop dimensions: width and height must be positive.');
+    if (cropWidth <= 0 || cropHeight <= 0) {
+      throw new Error(
+        "Invalid crop dimensions: width and height must be positive.",
+      );
     }
-     if (cropX < 0 || cropY < 0 || cropCoordinates.br.x > canvasWidth || cropCoordinates.br.y > canvasHeight) {
-        console.warn('Crop coordinates are partially or fully outside the composite image bounds.');
+    if (
+      cropX < 0 ||
+      cropY < 0 ||
+      cropCoordinates.br.x > canvasWidth ||
+      cropCoordinates.br.y > canvasHeight
+    ) {
+      console.warn(
+        "Crop coordinates are partially or fully outside the composite image bounds.",
+      );
     }
 
+    const croppedCanvas: HTMLCanvasElement = document.createElement("canvas");
+    const croppedCtx: CanvasRenderingContext2D | null =
+      croppedCanvas.getContext("2d");
 
-    // 6. Create a new canvas for the final cropped result
-    const croppedCanvas: HTMLCanvasElement = document.createElement('canvas');
-    const croppedCtx: CanvasRenderingContext2D | null = croppedCanvas.getContext('2d');
-
-     if (!croppedCtx) {
-        throw new Error('Could not get 2D context for the cropped canvas.');
+    if (!croppedCtx) {
+      throw new Error("Could not get 2D context for the cropped canvas.");
     }
 
     croppedCanvas.width = cropWidth;
     croppedCanvas.height = cropHeight;
 
-    // 7. Draw the cropped portion from the composite canvas onto the cropped canvas
     croppedCtx.drawImage(
-      compositeCanvas, // Source
-      cropX, cropY, cropWidth, cropHeight, // Source Rect
-      0, 0, cropWidth, cropHeight           // Destination Rect
+      compositeCanvas,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      cropWidth,
+      cropHeight,
     );
 
-    // 8. Convert the cropped canvas to a data URL
-    const croppedDataUrl: string = croppedCanvas.toDataURL('image/png');
+    const croppedDataUrl: string = croppedCanvas.toDataURL("image/png");
 
-    // 9. Return both data URLs
     return {
-        cropped: croppedDataUrl,
-        uncropped: uncroppedDataUrl,
+      cropped: croppedDataUrl,
+      uncropped: uncroppedDataUrl,
     };
-
   } catch (error: unknown) {
     if (error instanceof Error) {
-        console.error("Error during image overlay and crop:", error.message);
-        throw error;
+      console.error("Error during image overlay and crop:", error.message);
+      throw error;
     } else {
-        console.error("An unexpected error occurred during image overlay and crop:", error);
-        throw new Error('An unexpected error occurred during image overlay and crop.');
+      console.error(
+        "An unexpected error occurred during image overlay and crop:",
+        error,
+      );
+      throw new Error(
+        "An unexpected error occurred during image overlay and crop.",
+      );
     }
   }
 };
 
-// --- Example Usage (TypeScript) ---
-/*
-const exampleBase: string = 'data:image/jpeg;base64,...'; // Your base64 JPEG data
-const exampleOverlay: string = 'data:image/png;base64,...'; // Your base64 PNG data
+// for debugging
+export const scaleAndCopyImage = async (
+  imageDataUrl: string,
+  targetWidth?: number,
+  targetHeight?: number,
+): Promise<void> => {
+  if (!imageDataUrl.startsWith("data:image/png;base64,")) {
+    console.error("Invalid input: imageDataUrl must be a base64 PNG data URI.");
+    return;
+  }
 
-const cropArea: CropCoordinates = {
-  tl: { x: 50, y: 50 },   // Top-left corner
-  br: { x: 250, y: 200 } // Bottom-right corner
+  if (targetWidth !== undefined && targetHeight !== undefined) {
+    if (targetWidth <= 0 || targetHeight <= 0) {
+      console.error(
+        "Invalid dimensions: targetWidth and targetHeight must be positive.",
+      );
+      return;
+    }
+  }
+
+  try {
+    const originalImage = await loadImage(imageDataUrl);
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("Could not get 2D context for the canvas.");
+    }
+
+    canvas.width = targetWidth ?? originalImage.naturalWidth;
+    canvas.height = targetHeight ?? originalImage.naturalHeight;
+
+    ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+
+    const scaledImageDataUrl = canvas.toDataURL("image/png");
+
+    const response = await fetch(scaledImageDataUrl);
+    const blob = await response.blob();
+
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        [blob.type]: blob,
+      }),
+    ]);
+
+    console.log("Scaled image copied to clipboard successfully!");
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Failed to scale and copy image:", message);
+  }
 };
-
-overlayImages({
-  baseImageDataUrl: exampleBase,
-  overlayImageDataUrl: exampleOverlay,
-  cropCoordinates: cropArea,
-})
-.then((result: OverlayResult) => { // Expect the OverlayResult object
-  console.log('Overlay and crop successful!');
-
-  // Access the cropped version
-  console.log('Cropped Image Data URL:', result.cropped.substring(0, 50) + '...'); // Log start
-  const outputImageCropped = document.createElement('img');
-  outputImageCropped.src = result.cropped;
-  outputImageCropped.title = 'Cropped Result';
-  document.body.appendChild(outputImageCropped);
-
-  // Access the uncropped (composite) version
-  console.log('Uncropped Image Data URL:', result.uncropped.substring(0, 50) + '...'); // Log start
-  const outputImageUncropped = document.createElement('img');
-  outputImageUncropped.src = result.uncropped;
-  outputImageUncropped.title = 'Uncropped Composite Result';
-  document.body.appendChild(outputImageUncropped);
-
-})
-.catch((error: Error) => {
-  console.error('Failed to overlay and crop image:', error.message);
-});
-*/
-
-window.testme = async () => {
-  const result = await overlayImages(inputTest);
-  console.log("result", result);
-  console.log("the input", inputTest);
-};
-
-// --- Example Usage (TypeScript) ---
-/*
-const exampleBase: string = 'data:image/jpeg;base64,...'; // Your base64 JPEG data
-const exampleOverlay: string = 'data:image/png;base64,...'; // Your base64 PNG data
-
-const cropArea: CropCoordinates = {
-  tl: { x: 50, y: 50 },   // Top-left corner
-  br: { x: 250, y: 200 } // Bottom-right corner
-};
-
-overlayImages({
-  baseImageDataUrl: exampleBase,
-  overlayImageDataUrl: exampleOverlay,
-  cropCoordinates: cropArea,
-})
-.then((resultDataUrl: string) => {
-  console.log('Overlay and crop successful!');
-  const outputImage = document.createElement('img');
-  outputImage.src = resultDataUrl;
-  document.body.appendChild(outputImage); // Ensure body exists
-})
-.catch((error: Error) => { // Catching Error type specifically
-  console.error('Failed to overlay and crop image:', error.message);
-});
-*/

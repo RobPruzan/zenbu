@@ -22,6 +22,7 @@ import { Recorder } from "~/components/screen-sharing";
 import { iife } from "~/lib/utils";
 import { Toolbar } from "./toolbar";
 import { ScreenshotTool } from "./screenshot-tool";
+import { BetterToolbar } from "~/components/slices/better-toolbar";
 // import { ChildToParentMessage } from "~/devtools";
 // import {
 //   DevtoolsOverlay,
@@ -33,7 +34,7 @@ import { ScreenshotTool } from "./screenshot-tool";
 
 const snapshot = { kind: "off" as const };
 
-export const IFrameWrapper = () => {
+export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const refEventCatcher = useRef<HTMLDivElement | null>(null);
   // const { inspectorState, setInspectorState } = useInspectorStateContext();
@@ -102,25 +103,9 @@ export const IFrameWrapper = () => {
       }}
     >
       <div className="relative w-full h-full">
-        {iife(() => {
-          switch (toolbar.state.kind) {
-            case "drawing": {
-              return <Draw />;
-            }
-            case "recording": {
-              return <Recorder>
-                <div></div>
-              </Recorder>;
-            }
-            case "idle": {
-              return;
-            }
-          }
-        })}
-        <Toolbar />
-
+        {children}
         <iframe
-          id="child-iframe"
+          id={IFRAME_ID}
           key={lastUpdate}
           ref={iframeRef}
           src="http://localhost:4200"
@@ -131,11 +116,12 @@ export const IFrameWrapper = () => {
           }}
         />
         {/* <ScreenshotTool /> */}
-        <DevtoolsOverlay iframeRef={iframeRef} />
       </div>
     </div>
   );
 };
+
+export const IFRAME_ID = "child-iframe";
 
 // export const InspectorStateProvider = ({
 //   children,
@@ -162,3 +148,7 @@ export const IFrameWrapper = () => {
 // };
 
 // export const useInspectorStateContext = () => useContext(InspectorStateContext);
+
+
+
+

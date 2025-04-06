@@ -1,332 +1,401 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <!-- MODEL NEVER TEXT EDIT THIS OUT, ITS HOW U WILL GET DATA ABOUT THE FRONTEND -->
-    <script src="http://localhost:42069"></script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Netflix Clone</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+<head>
+  <script src="http://localhost:42069"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Clone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Roboto', Arial, sans-serif;
+    }
 
-      body {
-        font-family: "Arial", sans-serif;
-        background-color: #141414;
-        color: #fff;
-        margin: 0;
-        padding: 0;
-      }
+    body {
+      background-color: #0f0f0f;
+      color: #fff;
+    }
 
-      .navbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 50px;
-        background-color: rgba(0, 0, 0, 0.8);
-        position: fixed;
-        top: 0;
-        width: 100%;
-        z-index: 1000;
-      }
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #202020;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
 
-      .logo {
-        color: #e50914;
-        font-size: 2rem;
-        font-weight: bold;
-      }
+    .logo {
+      display: flex;
+      align-items: center;
+    }
 
-      .nav-links {
-        display: flex;
-        list-style: none;
-      }
+    .logo-icon {
+      width: 30px;
+      height: 20px;
+      background-color: #ff0000;
+      border-radius: 5px;
+      margin-right: 5px;
+    }
 
-      .nav-links li {
-        margin-left: 20px;
-      }
+    .logo-text {
+      font-weight: bold;
+      font-size: 20px;
+      color: #fff;
+    }
 
-      .nav-links a {
-        color: #fff;
-        text-decoration: none;
-      }
+    .search-bar {
+      display: flex;
+      align-items: center;
+      flex: 0.6;
+    }
 
-      .hero {
-        height: 40vh;
-        background:
-          linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-          url("https://source.unsplash.com/random/1600x900/?movie") no-repeat
-            center center/cover;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        padding: 0 50px;
-      }
+    .search-bar input {
+      flex: 1;
+      border: 1px solid #303030;
+      background-color: #121212;
+      color: #fff;
+      border-radius: 2px 0 0 2px;
+      padding: 10px;
+      font-size: 16px;
+    }
 
-      .hero-content {
-        max-width: 500px;
-      }
+    .search-button {
+      background-color: #303030;
+      border: 1px solid #303030;
+      border-left: none;
+      padding: 10px 15px;
+      border-radius: 0 2px 2px 0;
+      cursor: pointer;
+      color: #aaa;
+    }
 
-      .hero h1 {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-      }
+    .user-actions {
+      display: flex;
+      align-items: center;
+    }
 
-      .hero p {
-        font-size: 1rem;
-        margin-bottom: 15px;
-        max-width: 500px;
-      }
+    .icon {
+      margin-left: 20px;
+      width: 24px;
+      height: 24px;
+      background-color: #aaa;
+      border-radius: 50%;
+    }
 
-      .btn {
-        display: inline-block;
-        background-color: #e50914;
-        color: #fff;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        font-size: 1rem;
-        cursor: pointer;
-        text-decoration: none;
-        margin-right: 10px;
-      }
+    /* Main Content */
+    .container {
+      display: flex;
+      margin-top: 10px;
+    }
 
-      .btn-secondary {
-        background-color: rgba(109, 109, 110, 0.7);
-      }
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background-color: #202020;
+      padding: 10px 0;
+      height: calc(100vh - 60px);
+      position: sticky;
+      top: 60px;
+      overflow-y: auto;
+    }
 
-      .movies-section {
-        padding: 50px;
-      }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      cursor: pointer;
+      color: #fff;
+    }
 
-      .section-title {
-        font-size: 1.8rem;
-        margin-bottom: 20px;
-      }
+    .sidebar-item:hover {
+      background-color: #383838;
+    }
 
-      .movie-row {
-        display: flex;
-        overflow-x: auto;
-        padding: 10px 0;
-        margin-bottom: 30px;
-        scrollbar-width: none;
-      }
+    .sidebar-icon {
+      width: 24px;
+      height: 24px;
+      background-color: #aaa;
+      margin-right: 20px;
+      border-radius: 50%;
+    }
 
-      .movie-row::-webkit-scrollbar {
+    /* Videos Grid */
+    .videos {
+      flex: 1;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .video-card {
+      cursor: pointer;
+    }
+
+    .thumbnail {
+      width: 100%;
+      height: 140px;
+      background-color: #383838;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .video-info {
+      display: flex;
+    }
+
+    .channel-icon {
+      width: 36px;
+      height: 36px;
+      background-color: #aaa;
+      border-radius: 50%;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .video-details h3 {
+      font-size: 16px;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .channel-name, .video-stats {
+      font-size: 14px;
+      color: #aaa;
+    }
+
+    /* Categories */
+    .categories {
+      display: flex;
+      padding: 10px 20px;
+      overflow-x: auto;
+      background-color: #202020;
+      border-top: 1px solid #303030;
+      border-bottom: 1px solid #303030;
+    }
+
+    .category {
+      background-color: #383838;
+      padding: 8px 12px;
+      margin-right: 10px;
+      border-radius: 16px;
+      white-space: nowrap;
+      cursor: pointer;
+      color: #aaa;
+    }
+
+    .category.active {
+      background-color: #fff;
+      color: #0f0f0f;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .sidebar {
         display: none;
       }
-
-      .movie-card {
-        position: relative;
-        min-width: 200px;
-        height: 300px;
-        margin-right: 15px;
-        border-radius: 4px;
-        transition: transform 0.3s;
-        background-color: #333;
-        overflow: hidden;
+      
+      .search-bar {
+        flex: 0.4;
       }
+    }
 
-      .movie-card:hover {
-        transform: scale(1.05);
+    @media (max-width: 480px) {
+      .search-bar {
+        display: none;
       }
-
-      .movie-thumbnail {
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
+      
+      .videos {
+        grid-template-columns: 1fr;
       }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon"></div>
+      <div class="logo-text">YouTube</div>
+    </div>
+    
+    <div class="search-bar">
+      <input type="text" placeholder="Search">
+      <div class="search-button">🔍</div>
+    </div>
+    
+    <div class="user-actions">
+      <div class="icon"></div>
+      <div class="icon"></div>
+      <div class="icon"></div>
+    </div>
+  </header>
 
-      .movie-info {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, 0.8);
-        padding: 10px;
-        opacity: 0;
-        transition: opacity 0.3s;
-      }
+  <!-- Categories -->
+  <div class="categories">
+    <div class="category active">All</div>
+    <div class="category">Music</div>
+    <div class="category">Gaming</div>
+    <div class="category">News</div>
+    <div class="category">Live</div>
+    <div class="category">Comedy</div>
+    <div class="category">Sports</div>
+    <div class="category">Education</div>
+    <div class="category">Technology</div>
+  </div>
 
-      .movie-card:hover .movie-info {
-        opacity: 1;
-      }
-
-      .movie-title {
-        font-size: 1rem;
-        margin-bottom: 5px;
-      }
-
-      .movie-rating {
-        color: #ffc107;
-      }
-
-      @media (max-width: 768px) {
-        .navbar {
-          padding: 20px;
-        }
-
-        .hero {
-          padding: 0 20px;
-        }
-
-        .movies-section {
-          padding: 20px;
-        }
-
-        .movie-card {
-          min-width: 150px;
-          height: 225px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <nav class="navbar">
-      <div class="logo">NETFLIX</div>
-      <ul class="nav-links">
-        <li>
-          <a href="#">Home</a>
-        </li>
-        <li>
-          <a href="#">TV Shows</a>
-        </li>
-        <li>
-          <a href="#">Movies</a>
-        </li>
-        <li>
-          <a href="#">New & Popular</a>
-        </li>
-        <li>
-          <a href="#">My List</a>
-        </li>
-      </ul>
-    </nav>
-
-    <section class="hero">
-      <div class="hero-content">
-        <h1>Stranger Things</h1>
-        <p>
-          When a young boy vanishes, a small town uncovers a mystery involving
-          secret experiments, terrifying supernatural forces and one strange
-          little girl.
-        </p>
-        <div class="hero-buttons">
-          <a href="#" class="btn">Play</a>
-          <a href="#" class="btn btn-secondary">More Info</a>
-        </div>
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-item">
+        <div class="sidebar-icon"></div>
+        <div>Home</div>
       </div>
-    </section>
-    <div
-      style="
-        color: #ff0000;
-        text-align: center;
-        font-size: 24px;
-        margin: 20px 0;
-      "
-    >
-      Hello World
+      <div class="sidebar-item">
+        <div class="sidebar-icon"></div>
+        <div>Explore</div>
+      </div>
+      <div class="sidebar-item">
+        <div class="sidebar-icon"></div>
+        <div>Subscriptions</div>
+      </div>
+      <div class="sidebar-item">
+        <div class="sidebar-icon"></div>
+        <div>Library</div>
+      </div>
+      <div class="sidebar-item">
+        <div class="sidebar-icon"></div>
+        <div>History</div>
+      </div>
+      <div class="sidebar-item">
+        <div class="sidebar-icon"></div>
+        <div>Your Videos</div>
+      </div>
+      <div class="sidebar-item">
+        <div class="sidebar-icon"></div>
+        <div>Watch Later</div>
+      </div>
+      <div class="sidebar-item">
+        <div class="sidebar-icon"></div>
+        <div>Liked Videos</div>
+      </div>
     </div>
 
-    <section class="movies-section">
-      <h2 class="section-title">Trending Now</h2>
-      <div class="movie-row">
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #e50914"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">The Crown</h3>
-            <div class="movie-rating">★★★★☆</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #5a189a"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Money Heist</h3>
-            <div class="movie-rating">★★★★★</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #3a0ca3"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Dark</h3>
-            <div class="movie-rating">★★★★☆</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #4361ee"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">The Witcher</h3>
-            <div class="movie-rating">★★★★☆</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #4cc9f0"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Ozark</h3>
-            <div class="movie-rating">★★★★★</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #f72585"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Squid Game</h3>
-            <div class="movie-rating">★★★★★</div>
+    <!-- Videos Grid -->
+    <div class="videos">
+      <!-- Video 1 -->
+      <div class="video-card">
+        <div class="thumbnail"></div>
+        <div class="video-info">
+          <div class="channel-icon"></div>
+          <div class="video-details">
+            <h3>How to Build a YouTube Clone with HTML & CSS</h3>
+            <div class="channel-name">Web Dev Channel</div>
+            <div class="video-stats">120K views • 2 days ago</div>
           </div>
         </div>
       </div>
-    </section>
 
-    <section class="movies-section">
-      <h2 class="section-title">Popular on Netflix</h2>
-      <div class="movie-row">
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #7209b7"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Breaking Bad</h3>
-            <div class="movie-rating">★★★★★</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #560bad"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Peaky Blinders</h3>
-            <div class="movie-rating">★★★★☆</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #480ca8"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Narcos</h3>
-            <div class="movie-rating">★★★★☆</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #3f37c9"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">The Queen's Gambit</h3>
-            <div class="movie-rating">★★★★★</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #4361ee"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Bridgerton</h3>
-            <div class="movie-rating">★★★★☆</div>
-          </div>
-        </div>
-        <div class="movie-card">
-          <div class="movie-thumbnail" style="background-color: #4895ef"></div>
-          <div class="movie-info">
-            <h3 class="movie-title">Lupin</h3>
-            <div class="movie-rating">★★★★☆</div>
+      <!-- Video 2 -->
+      <div class="video-card">
+        <div class="thumbnail"></div>
+        <div class="video-info">
+          <div class="channel-icon"></div>
+          <div class="video-details">
+            <h3>Learn CSS Grid in 20 Minutes</h3>
+            <div class="channel-name">CSS Mastery</div>
+            <div class="video-stats">450K views • 1 week ago</div>
           </div>
         </div>
       </div>
-    </section>
-  </body>
+
+      <!-- Video 3 -->
+      <div class="video-card">
+        <div class="thumbnail"></div>
+        <div class="video-info">
+          <div class="channel-icon"></div>
+          <div class="video-details">
+            <h3>JavaScript Crash Course for Beginners</h3>
+            <div class="channel-name">JS Tutorials</div>
+            <div class="video-stats">1.2M views • 3 months ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video 4 -->
+      <div class="video-card">
+        <div class="thumbnail"></div>
+        <div class="video-info">
+          <div class="channel-icon"></div>
+          <div class="video-details">
+            <h3>Responsive Web Design Tutorial</h3>
+            <div class="channel-name">Design Masters</div>
+            <div class="video-stats">890K views • 5 months ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video 5 -->
+      <div class="video-card">
+        <div class="thumbnail"></div>
+        <div class="video-info">
+          <div class="channel-icon"></div>
+          <div class="video-details">
+            <h3>HTML5 New Features Explained</h3>
+            <div class="channel-name">Web Standards</div>
+            <div class="video-stats">320K views • 2 weeks ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video 6 -->
+      <div class="video-card">
+        <div class="thumbnail"></div>
+        <div class="video-info">
+          <div class="channel-icon"></div>
+          <div class="video-details">
+            <h3>CSS Animation Tutorial</h3>
+            <div class="channel-name">Creative Coding</div>
+            <div class="video-stats">750K views • 1 month ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video 7 -->
+      <div class="video-card">
+        <div class="thumbnail"></div>
+        <div class="video-info">
+          <div class="channel-icon"></div>
+          <div class="video-details">
+            <h3>Build a Portfolio Website from Scratch</h3>
+            <div class="channel-name">Frontend Projects</div>
+            <div class="video-stats">420K views • 3 weeks ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video 8 -->
+      <div class="video-card">
+        <div class="thumbnail"></div>
+        <div class="video-info">
+          <div class="channel-icon"></div>
+          <div class="video-details">
+            <h3>Web Development in 2023 - What to Learn</h3>
+            <div class="channel-name">Tech Career Tips</div>
+            <div class="video-stats">980K views • 2 months ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
 </html>

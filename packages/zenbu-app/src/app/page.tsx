@@ -23,17 +23,31 @@ import {
   Search,
   FileText,
   Command,
+  Pencil,
+  Airplay,
 } from "lucide-react";
 import ChatInterface from "~/components/chat-interface";
 import { useState, useEffect } from "react";
 import { scan, useScan } from "react-scan";
 import DevTools from "../components/devtools";
-import { ChatInstanceContext } from "~/components/chat-instance-context";
+import {
+  ChatInstanceContext,
+  useChatStore,
+} from "~/components/chat-instance-context";
 import { IFrameWrapper } from "./iframe-wrapper";
 import { Chat } from "~/components/chat/chat";
 import { motion, AnimatePresence } from "framer-motion";
 import { CommandPalette } from "~/components/command-palette";
-import { useCommandPalette, createCommandItem } from "~/hooks/use-command-palette";
+import {
+  useCommandPalette,
+  createCommandItem,
+} from "~/hooks/use-command-palette";
+import { BetterToolbar } from "~/components/slices/better-toolbar";
+import { DevtoolsOverlay } from "~/components/devtools-overlay";
+import { ScreenshotTool } from "./screenshot-tool";
+import { BetterDrawing } from "./better-drawing";
+// import { CommandPalette } from "~/components/command-palette";
+// import { useCommandPalette, createCommandItem } from "~/hooks/use-command-palette";
 
 // scan();
 
@@ -80,7 +94,6 @@ export default function Home() {
 
   const toggleDevtools = () => {
     if (isAnimating) return;
-
     setIsAnimating(true);
     setDevtoolsVisible(!devtoolsVisible);
     setTimeout(() => setIsAnimating(false), 300);
@@ -92,7 +105,14 @@ export default function Home() {
         initialValue={{
           toolbar: {
             state: {
-              kind: "idle",
+              activeRoute: "off",
+              drawing: {
+                active: false,
+                listeners: [],
+              },
+              screenshotting: {
+                active: false,
+              },
             },
           },
           context: {
@@ -115,8 +135,6 @@ export default function Home() {
           },
         }}
       >
-        <CommandPaletteProvider />
-        
         <div className="flex h-full w-full overflow-hidden">
           <AnimatePresence mode="wait">
             {chatVisible && (
@@ -168,7 +186,12 @@ export default function Home() {
                 className="h-full"
               >
                 <div className="flex h-full flex-col">
-                  <IFrameWrapper />
+                  <IFrameWrapper>
+                    <ScreenshotTool />
+                    <BetterToolbar />
+                    <DevtoolsOverlay />
+                    <BetterDrawing />
+                  </IFrameWrapper>
                 </div>
               </ResizablePanel>
 
@@ -198,79 +221,60 @@ export default function Home() {
             </ResizablePanelGroup>
           </div>
         </div>
-        
+
+        <CommandPaletteProvider />
         <CommandPalette />
       </ChatInstanceContext.Provider>
-
-      <Dialog open={showProjectsDialog} onOpenChange={setShowProjectsDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Projects</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Your projects will appear here.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Settings will appear here.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }
 
-// Separate component to register default command palette items
 function CommandPaletteProvider() {
   const toggleChat = () => {
     window.dispatchEvent(new Event("toggle-chat"));
   };
-  
+
+  const { actions, state } = useChatStore((state) => state.toolbar);
+
   useCommandPalette({
     items: [
-      createCommandItem('toggle-chat', 'Toggle Chat', {
-        category: 'View',
+      createCommandItem("toggle-chat", "Chat", {
+        category: "View",
         icon: <MessageSquare size={16} />,
-        shortcut: '⌘K',
+        shortcut: "⌘K",
         onSelect: toggleChat,
       }),
-      createCommandItem('settings', 'Settings', {
-        category: 'App',
-        icon: <Settings size={16} />,
-        shortcut: '⌘,',
-        onSelect: () => console.log('Open settings'),
+      createCommandItem("draw", "Draw", {
+        category: "View",
+        icon: <Pencil />,
+        shortcut: "⌘,",
+        onSelect: () => {
+          actions.setIsDrawing(!state.drawing.active);
+        },
+        // onSelect: () => console.log("Open settings"),
       }),
-      createCommandItem('search', 'Search', {
-        category: 'App',
-        icon: <Search size={16} />,
-        shortcut: '⌘F',
-        onSelect: () => console.log('Open search'),
+      createCommandItem("screenshot", "Screenshot", {
+        category: "View",
+        icon: <Airplay />,
+        shortcut: "⌘F",
+        onSelect: () => {
+          actions.setIsScreenshotting(!state.screenshotting.active);
+        },
       }),
-      createCommandItem('new-file', 'New File', {
-        category: 'Files',
+      createCommandItem("new-file", "New File", {
+        category: "Files",
         icon: <FileText size={16} />,
-        shortcut: '⌘N',
-        onSelect: () => console.log('New file'),
+        shortcut: "⌘N",
+        onSelect: () => console.log("New file"),
       }),
-      createCommandItem('command-palette', 'Command Palette', {
-        category: 'App',
+      createCommandItem("command-palette", "Command Palette", {
+        category: "App",
         icon: <Command size={16} />,
-        shortcut: '⌘P',
+        shortcut: "⌘P",
         onSelect: () => {}, // Already open when selected
       }),
     ],
   });
-  
+
   return null;
 }

@@ -24,10 +24,8 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const commandRef = useRef<HTMLDivElement>(null);
 
-  // Close with escape
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      // Don't trigger if modifiers are pressed to allow for Cmd+P (Ctrl+P)
       if (e.key === "Escape" && isOpen) {
         e.preventDefault();
         e.stopPropagation();
@@ -39,53 +37,46 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", down);
   }, [isOpen, actions]);
 
-  // Handle CMD+P / CTRL+P to open the palette
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+P / Ctrl+P to open
-      if ((e.metaKey || e.ctrlKey) && e.key === "p") {
-        e.preventDefault(); // Prevent default printing behavior
-        actions.setOpen(true);
+      if (e.metaKey && !e.ctrlKey && e.key === "k") {
+        e.preventDefault();
+        actions.setOpen(!isOpen);
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [actions]);
+  }, [actions, isOpen]);
 
-  // Handle Vim-style navigation
   useEffect(() => {
     if (!isOpen) return;
     
     const handleVimNavigation = (e: KeyboardEvent) => {
-      if (e.ctrlKey) {
+      if (e.ctrlKey && !e.metaKey) {
         if (e.key === "n") {
-          // Ctrl+N - next item (down)
           e.preventDefault();
+          e.stopPropagation();
           
-          // Simulate ArrowDown key press to move to next item
           const downEvent = new KeyboardEvent('keydown', {
             key: 'ArrowDown',
             code: 'ArrowDown',
             bubbles: true
           });
           
-          // Dispatch the event directly on the command element
           if (commandRef.current) {
             commandRef.current.dispatchEvent(downEvent);
           }
         } else if (e.key === "p") {
-          // Ctrl+P - previous item (up)
           e.preventDefault();
+          e.stopPropagation();
           
-          // Simulate ArrowUp key press to move to previous item
           const upEvent = new KeyboardEvent('keydown', {
             key: 'ArrowUp',
             code: 'ArrowUp',
             bubbles: true
           });
           
-          // Dispatch the event directly on the command element
           if (commandRef.current) {
             commandRef.current.dispatchEvent(upEvent);
           }
@@ -97,7 +88,6 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", handleVimNavigation, { capture: true });
   }, [isOpen]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       setInputValue("");
@@ -107,7 +97,6 @@ export function CommandPalette() {
     }
   }, [isOpen]);
 
-  // Group items by category
   const groupedItems = items.reduce<Record<string, CommandItem[]>>((acc, item) => {
     const category = item.category || "General";
     if (!acc[category]) {
@@ -128,21 +117,19 @@ export function CommandPalette() {
             duration: 0.15,
             ease: [0.16, 1, 0.3, 1]
           }}
-          className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
-          style={{ backdropFilter: "blur(2px)" }}
+
+          className="fixed inset-0 flex items-start justify-center pt-[20vh]"
+          style={{ backdropFilter: "blur(2px)" , zIndex: 300}}
         >
           <div className="relative w-full max-w-[640px] overflow-hidden rounded-lg border border-border/40 bg-background/80 shadow-md backdrop-blur" onClick={(e) => e.stopPropagation()}>
             <Command ref={commandRef} shouldFilter={true} className="[&_[cmdk-input-wrapper]]:border-b [&_[cmdk-input-wrapper]]:border-border/30">
-              <div className="flex items-center border-b border-border/30 px-3">
-                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                <CommandInput
-                  ref={inputRef}
-                  value={inputValue}
-                  onValueChange={setInputValue}
-                  placeholder="Search commands..." 
-                  className="flex h-12 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
-                />
-              </div>
+              <CommandInput
+                ref={inputRef}
+                value={inputValue}
+                onValueChange={setInputValue}
+                placeholder="Search commands..." 
+                className="h-12"
+              />
               <CommandList className="max-h-[60vh] overflow-y-auto px-1 py-2">
                 <CommandEmpty>No results found.</CommandEmpty>
                 {Object.entries(groupedItems).map(([category, categoryItems]) => (
