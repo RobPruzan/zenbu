@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useChatStore } from "./chat-instance-context";
 
 type ToolbarAction = {
   id: string;
@@ -23,7 +24,22 @@ type RecordingState =
   | "recorded"
   | "error"
   | "viewing";
+
 export const Recording = () => {
+  const isRecordingActive = useChatStore(
+    (state) => state.toolbar.state.recording.active,
+  );
+
+  if (!isRecordingActive) {
+    // kills recordings if only stored locally (should move up to store)
+    // this patter of early returning from the wrapper is nice since the component auto
+    // implements cleanup via effect return cb's
+    return;
+  }
+
+  return <RecordingImpl />;
+};
+export const RecordingImpl = () => {
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [recordings, setRecordings] = useState<Recording[]>([]);
@@ -229,7 +245,7 @@ export const Recording = () => {
         URL.revokeObjectURL(currentVideoUrl);
       }
     };
-  }, [cleanupActiveRecording, recordings]); 
+  }, [cleanupActiveRecording, recordings]);
 
   const isRecorderActive =
     recordingState === "recording" &&

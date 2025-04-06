@@ -23,23 +23,13 @@ import {
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "~/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Tldraw,
-  track,
-  useEditor,
-  TLEditorComponents,
-  createTLStore,
-  TldrawEditor,
-  exportAs,
-} from "tldraw";
+import { Tldraw, TLEditorComponents } from "tldraw";
 import "tldraw/tldraw.css";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "~/components/ui/resizable";
-import layout from "./layout";
-import CustomUiExample from "./custom-ui";
 
 type ToolSection =
   | "select"
@@ -1508,7 +1498,6 @@ export const Toolbar = () => {
                 const shapes = editor.getCurrentPageShapes();
 
                 if (shapes.length) {
-
                   const imageBlob = await editor.toImage(
                     shapes.map((s) => s.id),
                     {
@@ -1516,7 +1505,7 @@ export const Toolbar = () => {
                       background: false,
                       padding: 0,
                       format: "png",
-                      darkMode: true
+                      darkMode: true,
                     },
                   );
 

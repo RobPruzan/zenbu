@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Airplay,
   Camera,
+  CircleX,
   DownloadCloudIcon,
   Gauge,
   Logs,
@@ -30,7 +31,7 @@ import { BetterDrawing } from "./better-drawing";
 import { IFrameWrapper } from "./iframe-wrapper";
 import { ScreenshotTool } from "./screenshot-tool";
 import { Recorder } from "~/components/screen-sharing";
-import { Recording } from "~/components/recording";
+import { Recording, RecordingImpl } from "~/components/recording";
 // import { CommandPalette } from "~/components/command-palette";
 // import { useCommandPalette, createCommandItem } from "~/hooks/use-command-palette";
 
@@ -216,6 +217,7 @@ export default function Home() {
 
 const CommandWrapper = () => {
   const { actions, state } = useChatStore((state) => state.toolbar);
+
   return (
     <CommandPalette
       items={[
@@ -251,17 +253,36 @@ const CommandWrapper = () => {
         {
           shortcut: "Console",
           icon: <Logs size={16} />,
-          onSelect: () => {},
+          onSelect: () => {
+            actions.setRoute(
+              state.activeRoute === "console" ? "off" : "console",
+            );
+          },
         },
         {
           shortcut: "Network",
           icon: <DownloadCloudIcon size={16} />,
-          onSelect: () => {},
+          onSelect: () => {
+            actions.setRoute(
+              state.activeRoute === "network" ? "off" : "network",
+            );
+          },
         },
         {
           shortcut: "Performance",
           icon: <Gauge size={16} />,
-          onSelect: () => {},
+          onSelect: () => {
+            actions.setRoute(
+              state.activeRoute === "performance" ? "off" : "performance",
+            );
+          },
+        },
+        {
+          shortcut: "Close Devtools",
+          icon: <CircleX size={16} />,
+          onSelect: () => {
+            actions.setRoute("off");
+          },
         },
       ]}
     />

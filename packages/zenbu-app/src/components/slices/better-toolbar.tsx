@@ -52,8 +52,9 @@ export const BetterToolbar = () => {
           case "console": {
             return (
               <div className="h-[350px] w-[600px] bg-background rounded-md flex items-end justify-start">
+                console
                 <Button
-                variant={'outline'}
+                  variant={"outline"}
                   onClick={() => {
                     actions.setRoute("off");
                   }}
@@ -64,10 +65,34 @@ export const BetterToolbar = () => {
             );
           }
           case "network": {
-            return;
+            return (
+              <div className="h-[350px] w-[600px] bg-background rounded-md flex items-end justify-start">
+                network
+                <Button
+                  variant={"outline"}
+                  onClick={() => {
+                    actions.setRoute("off");
+                  }}
+                >
+                  off
+                </Button>
+              </div>
+            );
           }
           case "performance": {
-            return;
+            return (
+              <div className="h-[350px] w-[600px] bg-background rounded-md flex items-end justify-start">
+                performance
+                <Button
+                  variant={"outline"}
+                  onClick={() => {
+                    actions.setRoute("off");
+                  }}
+                >
+                  off
+                </Button>
+              </div>
+            );
           }
         }
       })}

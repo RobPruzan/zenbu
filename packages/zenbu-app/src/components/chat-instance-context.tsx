@@ -26,11 +26,6 @@ import {
   ToolbarSlice,
   ToolbarSliceInitialState,
 } from "./slices/toolbar-slice";
-import {
-  CommandPaletteSlice,
-  CommandPaletteSliceInitialState,
-  createCommandPaletteSlice,
-} from "./slices/command-palette-slice";
 
 export type ChatInstanceInitialState = {
   eventLog: EventLogSliceInitialState;
