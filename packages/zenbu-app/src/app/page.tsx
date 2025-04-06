@@ -108,7 +108,7 @@ export default function Home() {
               activeRoute: "off",
               drawing: {
                 active: false,
-                listeners: [],
+                getEditor: () => null
               },
               screenshotting: {
                 active: false,
@@ -222,59 +222,41 @@ export default function Home() {
           </div>
         </div>
 
-        <CommandPaletteProvider />
-        <CommandPalette />
+        <CommandWrapper />
+        {/* <CommandPaletteProvider /> */}
       </ChatInstanceContext.Provider>
     </main>
   );
 }
 
-function CommandPaletteProvider() {
-  const toggleChat = () => {
-    window.dispatchEvent(new Event("toggle-chat"));
-  };
-
+const CommandWrapper = () => {
   const { actions, state } = useChatStore((state) => state.toolbar);
-
-  useCommandPalette({
-    items: [
-      createCommandItem("toggle-chat", "Chat", {
-        category: "View",
-        icon: <MessageSquare size={16} />,
-        shortcut: "⌘K",
-        onSelect: toggleChat,
-      }),
-      createCommandItem("draw", "Draw", {
-        category: "View",
-        icon: <Pencil />,
-        shortcut: "⌘,",
-        onSelect: () => {
-          actions.setIsDrawing(!state.drawing.active);
+  return (
+    <CommandPalette
+      items={[
+        {
+          shortcut: "Chat",
+          icon: <MessageSquare size={16} />,
+          onSelect: () => {
+            // bro what are we doing
+            window.dispatchEvent(new Event("toggle-chat"));
+          },
         },
-        // onSelect: () => console.log("Open settings"),
-      }),
-      createCommandItem("screenshot", "Screenshot", {
-        category: "View",
-        icon: <Airplay />,
-        shortcut: "⌘F",
-        onSelect: () => {
-          actions.setIsScreenshotting(!state.screenshotting.active);
+        {
+          shortcut: "Draw",
+          icon: <Pencil size={16} />,
+          onSelect: () => {
+            actions.setIsDrawing(!state.drawing.active);
+          },
         },
-      }),
-      createCommandItem("new-file", "New File", {
-        category: "Files",
-        icon: <FileText size={16} />,
-        shortcut: "⌘N",
-        onSelect: () => console.log("New file"),
-      }),
-      createCommandItem("command-palette", "Command Palette", {
-        category: "App",
-        icon: <Command size={16} />,
-        shortcut: "⌘P",
-        onSelect: () => {}, // Already open when selected
-      }),
-    ],
-  });
-
-  return null;
-}
+        {
+          shortcut: "Screenshot",
+          icon: <Airplay size={16} />,
+          onSelect: () => {
+            actions.setIsScreenshotting(!state.screenshotting.active);
+          },
+        },
+      ]}
+    />
+  );
+};

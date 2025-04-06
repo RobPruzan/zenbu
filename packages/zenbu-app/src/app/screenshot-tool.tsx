@@ -6,6 +6,8 @@ import { useMakeRequest } from "~/components/devtools-overlay";
 import { iife } from "~/lib/utils";
 import { captureViewport } from "./better-drawing";
 import { IFRAME_ID } from "./iframe-wrapper";
+import { Button } from "~/components/ui/button";
+import { X } from "lucide-react";
 // import { inputTest } from "./input";
 
 const pivotMap = {
@@ -63,14 +65,25 @@ const getPosRelativeToPivot = ({
  *
  * assumes it will be placed under a relative container
  */
+
+type MinimalDOMRect = {
+  bottom: number;
+  top: number;
+  left: number;
+  right: number;
+};
 export const ScreenshotTool = () => {
   const [isDragging, setIsDragging] = useState(false);
   const { active } = useChatStore(
     (state) => state.toolbar.state.screenshotting,
   );
+  const actions = useChatStore((state) => state.toolbar.actions);
   const getEditor = useChatStore(
     (state) => state.toolbar.state.drawing.getEditor,
   );
+  const [isSuccessMessageShown, setIsSuccessMessageShown] = useState(false);
+  const [successMessageLocation, setSuccessMessageLocation] =
+    useState<null | Partial<MinimalDOMRect>>(null);
 
   const screenshotElRef = useRef<HTMLDivElement | null>(null);
 
@@ -80,17 +93,14 @@ export const ScreenshotTool = () => {
 
   const [isGloballyMouseDown, setIsGloballyMouseDown] = useState(false);
 
-  const [screenshotElBoundingRect, setScreenshotElBoundingRect] = useState<{
-    bottom: number;
-    top: number;
-    left: number;
-    right: number;
-  }>();
+  const [screenshotElBoundingRect, setScreenshotElBoundingRect] =
+    useState<MinimalDOMRect>();
 
   useEffect(() => {
     if (!active) {
       return;
     }
+
     const handleMouseDown = () => {
       setIsGloballyMouseDown(true);
     };
@@ -108,6 +118,7 @@ export const ScreenshotTool = () => {
     }
     const handleMouseUp = () => {
       setIsDragging(false);
+
       setIsGloballyMouseDown(false);
     };
     document.addEventListener("mouseup", handleMouseUp);
@@ -116,6 +127,31 @@ export const ScreenshotTool = () => {
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [active]);
+
+  const cancelScreenshot = () => {
+    setIsDragging(false);
+    setIsGloballyMouseDown(false);
+    setPivot(null);
+    setScreenshotElBoundingRect(undefined);
+  };
+  useEffect(() => {
+    if (!active) {
+      return;
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        cancelScreenshot();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [active, actions]);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const containerRefLazy = () => containerRef.current!;
 
@@ -161,10 +197,10 @@ export const ScreenshotTool = () => {
             // just manipulating the top/bottom/left/right
 
             setScreenshotElBoundingRect({
-              bottom: e.currentTarget.getBoundingClientRect().height - pivot.y,
+              bottom: rect.height - pivot.y,
               left: pivot.x,
               top: current.y,
-              right: e.currentTarget.getBoundingClientRect().width - current.x,
+              right: rect.width - current.x,
             });
 
             return;
@@ -172,31 +208,29 @@ export const ScreenshotTool = () => {
 
           case "top-left": {
             setScreenshotElBoundingRect({
-              bottom:
-                e.currentTarget.getBoundingClientRect().height - current.y,
+              bottom: rect.height - current.y,
               left: pivot.x,
-              right: e.currentTarget.getBoundingClientRect().width - current.x,
+              right: rect.width - current.x,
               top: pivot.y,
             });
             return;
           }
           case "top-right": {
             setScreenshotElBoundingRect({
-              bottom:
-                e.currentTarget.getBoundingClientRect().height - current.y,
+              bottom: rect.height - current.y,
               left: current.x,
               top: pivot.y,
-              right: e.currentTarget.getBoundingClientRect().width - pivot.x,
+              right: rect.width - pivot.x,
             });
             return;
           }
           // dis kinda works
           case "bottom-right": {
             setScreenshotElBoundingRect({
-              bottom: e.currentTarget.getBoundingClientRect().height - pivot.y,
+              bottom: rect.height - pivot.y,
               left: current.x,
               top: current.y,
-              right: e.currentTarget.getBoundingClientRect().width - pivot.x,
+              right: rect.width - pivot.x,
             });
             return;
           }
@@ -228,10 +262,20 @@ export const ScreenshotTool = () => {
         setPivot(pivot);
         setIsDragging(true);
       }}
-      onMouseUp={async () => {
+      onMouseUp={async (e) => {
         if (!screenshotElBoundingRect) {
           return;
         }
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const current = {
+          y: e.clientY - rect.top,
+          x: e.clientX - rect.left,
+        };
+        setSuccessMessageLocation({
+          top: current.y,
+          left: current.x,
+        });
         setScreenshotElBoundingRect(undefined);
         setIsDragging(false);
         setPivot(null);
@@ -296,6 +340,14 @@ export const ScreenshotTool = () => {
           await navigator.clipboard.writeText(newImg.cropped);
         }
 
+        setIsSuccessMessageShown(true);
+
+        // no reason it has to fade away, i think?
+        // setTimeout(() => {
+        //   setIsSuccessMessageShown(false);
+        //   setSuccessMessageLocation(null);
+        // }, 2000);
+
         // console.log("params", {
         //   baseImageDataUrl: response.dataUrl,
         //   cropCoordinates: coordinates,
@@ -310,6 +362,22 @@ export const ScreenshotTool = () => {
       }}
       className="absolute h-full w-full top-0 left-0"
     >
+      {isSuccessMessageShown && (
+        <div
+          style={{
+            zIndex: 1000002,
+            ...successMessageLocation,
+          }}
+          className="absolute"
+        >
+          <SuccessfulScreenshot
+            onDismiss={() => {
+              setIsSuccessMessageShown(false);
+              setSuccessMessageLocation(null);
+            }}
+          />
+        </div>
+      )}
       {isDragging && (
         <div
           className="border-2 absolute "
@@ -317,6 +385,78 @@ export const ScreenshotTool = () => {
           ref={screenshotElRef}
         ></div>
       )}
+
+      {/* makes sense */}
+      <div
+        style={{
+          zIndex: 1000001,
+        }}
+        className="absolute top-2 select-none left-1/2 transform -translate-x-1/2 border rounded-md bg-background"
+      >
+        <Button
+          variant={"ghost"}
+          className="rounded-none"
+          onClick={() => {
+            // actions.setIsScreenshotting(false);
+          }}
+        >
+          Screenshot Fullscreen
+        </Button>
+        <Button
+          className="rounded-none"
+          variant={"ghost"}
+          onClick={() => {
+            // todo
+            actions.setIsScreenshotting(false);
+          }}
+        >
+          Cancel Screenshot
+        </Button>
+      </div>
+
+      <div
+        style={{
+          zIndex: 100000,
+          clipPath: screenshotElBoundingRect
+            ? `polygon(
+              0% 0%, 
+              100% 0%, 
+              100% 100%, 
+              0% 100%, 
+              0% 0%, 
+              ${screenshotElBoundingRect.left}px ${screenshotElBoundingRect.top}px, 
+              ${screenshotElBoundingRect.left}px calc(100% - ${screenshotElBoundingRect.bottom}px), 
+              calc(100% - ${screenshotElBoundingRect.right}px) calc(100% - ${screenshotElBoundingRect.bottom}px), 
+              calc(100% - ${screenshotElBoundingRect.right}px) ${screenshotElBoundingRect.top}px, 
+              ${screenshotElBoundingRect.left}px ${screenshotElBoundingRect.top}px
+            )`
+            : "none",
+        }}
+        className="absolute h-full w-full bg-black/40"
+      ></div>
+    </div>
+  );
+};
+
+const SuccessfulScreenshot = ({ onDismiss }: { onDismiss: () => void }) => {
+  return (
+    <div className="bg-background rounded-md flex flex-col items-center w-fit p-3 gap-y-3">
+      <div className="w-full flex justify-between items-center">
+        <span>Copied to clipboard!</span>
+        <Button
+          className="px-2 py-0"
+          variant={"ghost"}
+          onClick={() => {
+            onDismiss();
+          }}
+        >
+          <X size={5} />
+        </Button>
+      </div>
+      <div className="flex gap-x-2">
+        <Button variant={"outline"}>Add to chat</Button>
+        <Button variant={"outline"}>View screenshot</Button>
+      </div>
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { ChatProvider } from "~/components/chat-interface";
+import { CommandPalette } from "~/components/command-palette";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
