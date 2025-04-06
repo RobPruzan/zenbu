@@ -54,7 +54,6 @@ type SettingsMenuProps = {
 };
 
 type RecorderProps = {
-  children: ReactNode;
   visibleToolbarActions?: string[];
 };
 

@@ -25,6 +25,17 @@ export type ToolbarState = {
     | {
         active: true;
       };
+  /**
+   * if we have too many conflicting ui's that can run at the same time
+   * then we can just make a composite ui for them
+   */
+  recording:
+    | {
+        active: false;
+      }
+    | {
+        active: true;
+      };
 };
 
 export type ToolbarSlice = {
@@ -35,6 +46,7 @@ export type ToolbarSlice = {
     setIsScreenshotting: (isScreenshotting: boolean) => void;
     setRoute: (route: Route) => void;
     setGetEditor: (getEditor: () => Editor) => void;
+    setIsRecording: (isRecording: boolean) => void;
   };
 };
 
@@ -43,6 +55,10 @@ export const createToolbarSLice =
   (set) => ({
     state: initialState.state,
     actions: {
+      setIsRecording: (isRecording) =>
+        set((state) => {
+          state.toolbar.state.recording.active = isRecording;
+        }),
       setGetEditor: (getEditor) =>
         set((state) => {
           state.toolbar.state.drawing.getEditor = getEditor;

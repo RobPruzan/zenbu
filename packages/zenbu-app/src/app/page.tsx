@@ -1,51 +1,36 @@
 "use client";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "~/components/ui/resizable";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
-import { Button } from "~/components/ui/button";
-import {
-  MessageSquare,
-  Terminal,
-  ArrowUp,
-  ArrowDown,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  Settings,
-  Search,
-  FileText,
-  Command,
-  Pencil,
   Airplay,
+  Camera,
+  DownloadCloudIcon,
+  Gauge,
+  Logs,
+  MessageSquare,
+  Pencil,
+  X,
 } from "lucide-react";
-import ChatInterface from "~/components/chat-interface";
-import { useState, useEffect } from "react";
-import { scan, useScan } from "react-scan";
-import DevTools from "../components/devtools";
+import { useEffect, useState } from "react";
 import {
   ChatInstanceContext,
   useChatStore,
 } from "~/components/chat-instance-context";
-import { IFrameWrapper } from "./iframe-wrapper";
 import { Chat } from "~/components/chat/chat";
-import { motion, AnimatePresence } from "framer-motion";
 import { CommandPalette } from "~/components/command-palette";
-import {
-  useCommandPalette,
-  createCommandItem,
-} from "~/hooks/use-command-palette";
-import { BetterToolbar } from "~/components/slices/better-toolbar";
 import { DevtoolsOverlay } from "~/components/devtools-overlay";
-import { ScreenshotTool } from "./screenshot-tool";
+import { BetterToolbar } from "~/components/slices/better-toolbar";
+import { Button } from "~/components/ui/button";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "~/components/ui/resizable";
+import DevTools from "../components/devtools";
 import { BetterDrawing } from "./better-drawing";
+import { IFrameWrapper } from "./iframe-wrapper";
+import { ScreenshotTool } from "./screenshot-tool";
+import { Recorder } from "~/components/screen-sharing";
+import { Recording } from "~/components/recording";
 // import { CommandPalette } from "~/components/command-palette";
 // import { useCommandPalette, createCommandItem } from "~/hooks/use-command-palette";
 
@@ -108,9 +93,12 @@ export default function Home() {
               activeRoute: "off",
               drawing: {
                 active: false,
-                getEditor: () => null
+                getEditor: () => null,
               },
               screenshotting: {
+                active: false,
+              },
+              recording: {
                 active: false,
               },
             },
@@ -191,6 +179,7 @@ export default function Home() {
                     <BetterToolbar />
                     <DevtoolsOverlay />
                     <BetterDrawing />
+                  <Recording/>
                   </IFrameWrapper>
                 </div>
               </ResizablePanel>
@@ -255,6 +244,28 @@ const CommandWrapper = () => {
           onSelect: () => {
             actions.setIsScreenshotting(!state.screenshotting.active);
           },
+        },
+        {
+          shortcut: "Record",
+          icon: <Camera size={16} />,
+          onSelect: () => {
+            actions.setIsRecording(!state.recording.active);
+          },
+        },
+        {
+          shortcut: "Console",
+          icon: <Logs size={16} />,
+          onSelect: () => {},
+        },
+        {
+          shortcut: "Network",
+          icon: <DownloadCloudIcon size={16} />,
+          onSelect: () => {},
+        },
+        {
+          shortcut: "Performance",
+          icon: <Gauge size={16} />,
+          onSelect: () => {},
         },
       ]}
     />
