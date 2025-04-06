@@ -9,9 +9,11 @@ import type { InputToDataByTarget } from "hono/types";
 import { shim } from "./validator-shim.js";
 import { cors } from "hono/cors";
 import { getZenbuPrompt, makeEdit } from "./ai.js";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { injectWebSocket } from "./ws/ws.js";
 import { ChatMessage } from "./ws/utils.js";
+import { exists } from "node:fs";
+import { nanoid } from "nanoid";
 
 const operateOnPath =
   "/Users/robby/zenbu/packages/examples/iframe-website/index.ts";
@@ -30,33 +32,83 @@ export const getTemplatedZenbuPrompt = async () => {
 export const removeComments = (text: string): string => {
   return text.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, "");
 };
+
+const VERSION = "0.0.0";
+
+const createStore = async () => {
+  // todo: check for version file too and if it matches
+  const exists = await stat(".zenbu")
+    .catch(() => null)
+    .then((data) => !!data);
+  if (exists) {
+    return;
+  }
+  await mkdir(".zenbu");
+  await mkdir(".zenbu/screenshots");
+};
+
 export const createServer = async () => {
+  await createStore();
   const app = new Hono();
   app.use("*", cors());
 
-  const route = app.post(
-    "/edit",
-    shim<{
-      messages: Array<ChatMessage>;
-      focusedInfo: FocusedInfo;
-    }>(),
-    async (opts) => {
-      const body = await opts.req.valid("json");
+  const route = app
+    .post(
+      "/edit",
+      shim<{
+        messages: Array<ChatMessage>;
+        focusedInfo: FocusedInfo;
+      }>(),
+      async (opts) => {
+        const body = await opts.req.valid("json");
 
-      const { res, input } = await makeEdit({
-        file: await readFile(operateOnPath, "utf-8"),
-        messages: body.messages,
-      });
+        const { res, input } = await makeEdit({
+          file: await readFile(operateOnPath, "utf-8"),
+          messages: body.messages,
+        });
 
-      await writeFile(operateOnPath, res.object.newFile);
+        await writeFile(operateOnPath, res.object.newFile);
+
+        return opts.json({
+          success: true,
+          input,
+          res,
+        });
+      }
+    )
+    .post("/upload", async (opts) => {
+      // this may be fire hold up??
+      // i guess we want form shit
+      // yeah cause that chunks or whatever i should review the form data impl I had
+      const formData = await opts.req.formData();
+
+      const image = formData.get("image");
+      if (!image) {
+        throw new Error("validation error needs image in form data womp womp");
+      }
+
+      if (!(image instanceof File)) {
+        throw new Error("validation error should be file womp womp");
+      }
+
+      /**oh i guess i can just write the bytes directly the dir?
+       * should setup some auto creation on the dirs so i know they are there by the time the server starts and then just assert it
+       *
+       */
+      const imageBytes = await image.bytes();
+
+      const now = Date.now();
+
+      const fileName = `ss-${now}-${nanoid()}`;
+      const path = `.zenbu/screenshots/${fileName}`;
+
+      await writeFile(path, imageBytes);
 
       return opts.json({
         success: true,
-        input,
-        res,
+        fileName,
       });
-    }
-  );
+    });
   const port = 5001;
   const host = "localhost";
   const $server = serve(

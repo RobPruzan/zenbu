@@ -322,6 +322,13 @@ window.console.log = (...data: any[]) => {
  * we can also do some simple parsing (like we do in react scan) to give some info for dead objects that will not be expensive
  * does not have to be all or nothing, would also be nice to configure this at runtime how much you want to tweak this for hard cases
  * 
+ * 
+ * we could actually do a smart strategy for this with time budgets/pressure on the console to determine
+ * how much we should parse ahead of time
+ * 
+ * the general case this is actually quite ideal
+ * 
+ * 
  */
   sendMessage({
     kind: "console",
@@ -336,3 +343,29 @@ setInterval(() => {
   x.y = x as any;
   console.log("yolos", x);
 }, 500);
+
+
+
+const patchNetwork = () => {
+
+  /**
+   * we luckily don't need to do lazy things for patching network requests
+   * since the input must be serialized/sent to another process already
+   * 
+   * the response is more tricky
+   * 
+   * we can clone the request every time to read the json, this might be expensive
+   * and you may not want to always do it
+   * 
+   * we can keep a reference to the response object? And lazily read it if still alive?
+   * 
+   * im not super worried about memory, we can have some gc strategy that can be tweaked
+   * 
+   * can internally manage this based on time/ how much data we have collected
+   * 
+   * we can also just read heap size in some browsers which would be nice but kind of a 
+   * wack heuristic, but this is pretty hard to build a cache for
+   * 
+   * 
+   */
+}

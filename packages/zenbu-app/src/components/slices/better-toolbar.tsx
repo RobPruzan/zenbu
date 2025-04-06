@@ -125,6 +125,7 @@ const Console = () => {
       >
         off
       </Button>
+      {/* needs circular indicator */}
       <div className="w-full h-full overflow-auto p-2 flex flex-col-reverse">
         {/* temp just to be able to render circular structures */}
         {logs.map((log, i) => (
