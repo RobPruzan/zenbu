@@ -6,6 +6,7 @@ import {
   CircleX,
   DownloadCloudIcon,
   Gauge,
+  Inspect,
   Logs,
   MessageSquare,
   Pencil,
@@ -218,6 +219,8 @@ export default function Home() {
 const CommandWrapper = () => {
   const { actions, state } = useChatStore((state) => state.toolbar);
 
+  const inspector = useChatStore((state) => state.inspector);
+
   return (
     <CommandPalette
       items={[
@@ -284,7 +287,18 @@ const CommandWrapper = () => {
             actions.setRoute("off");
           },
         },
+        {
+          shortcut: "Inspect Element",
+          icon: <Inspect size={16} />,
+          onSelect: () => {
+            inspector.actions.setInspectorState({
+              kind:
+                inspector.state.kind === "inspecting" ? "off" : "inspecting",
+            });
+          },
+        },
       ]}
     />
   );
 };
+

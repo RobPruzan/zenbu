@@ -51,7 +51,9 @@ export type ChildToParentMessage =
     }
   // im stupid id isn't needed can't figure out type
   | { kind: "get-state-request"; id?: string; responsePossible: true }
-  | { kind: "screenshot-response"; dataUrl: string; id: string };
+  | { kind: "screenshot-response"; dataUrl: string; id: string }
+  // when the child iframe is focused it swallows all events, which breaks our command menu impl
+  | { kind: "keydown"; key: string, metaKey: boolean, ctrlKey: boolean };
 
 export type ParentToChildMessage =
   | {
@@ -91,6 +93,14 @@ export type FocusedInfo = {
 const sendMessage = (message: ChildToParentMessage) => {
   window.parent.postMessage(message, TARGET_ORIGIN);
 };
+document.addEventListener("keydown", (e) =>
+  sendMessage({
+    kind: "keydown",
+    key: e.key,
+    metaKey: e.metaKey,
+    ctrlKey: e.ctrlKey
+  })
+);
 
 const iife = <T>(f: () => T): T => f();
 
@@ -288,7 +298,7 @@ async function screenshot() {
   //   await new Promise((resolve) => setTimeout(resolve, 1000));
   // }
 }
-console.log('confirmation');
+console.log("confirmation");
 
 // @ts-expect-error
 window.sps = screenshot;

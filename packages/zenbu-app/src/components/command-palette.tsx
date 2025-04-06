@@ -15,6 +15,7 @@ import {
   CommandSeparator,
 } from "./ui/command";
 import { DialogContent } from "./ui/dialog";
+import { ChildToParentMessage } from "zenbu-devtools";
 
 type Command = {
   shortcut: string;
@@ -26,7 +27,7 @@ type Command = {
 export function CommandPalette({ items }: { items: Array<Command> }) {
   const [open, setOpen] = React.useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -36,8 +37,30 @@ export function CommandPalette({ items }: { items: Array<Command> }) {
         setOpen(false);
       }
     };
+
+    const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
+      if (event.origin !== "http://localhost:4200") {
+        return;
+      }
+      const data = event.data;
+
+      switch (data.kind) {
+        case "keydown": {
+          if (data.key === "k" && (data.metaKey || data.ctrlKey)) {
+            setOpen((open) => !open);
+          } else if (data.key === "Enter" && open) {
+            setOpen(false);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      document.removeEventListener("keydown", down);
+    };
   }, [open]);
 
   return (
