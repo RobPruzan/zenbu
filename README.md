@@ -85,3 +85,12 @@ Zenbu can communicate with your project by running a server directly next to you
   - Semantic mutex is more optimal
 - [ ] auto detect runtime error modals, fix in chat and provide context automatically
 - [ ] "why is this slow" mode
+- [ ] neovim in browser
+- [ ] window manager for debugging multiplayer apps
+- [ ] quick chat in command menu
+- [ ] code exec in command menu with TS + LSP support
+- [ ] cookie viewier using local server that reads cookies
+- [ ] http client
+- [ ] WS client
+- [ ] open page in editor
+- [ ] open component in editor
