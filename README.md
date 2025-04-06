@@ -83,3 +83,5 @@ Zenbu can communicate with your project by running a server directly next to you
 - [ ] Expose MCP's for all data so accessible in cursor
 - [ ] Implement file mutexes when multithreading models
   - Semantic mutex is more optimal
+- [ ] auto detect runtime error modals, fix in chat and provide context automatically
+- [ ] "why is this slow" mode
