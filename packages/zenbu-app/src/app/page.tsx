@@ -117,10 +117,6 @@ export default function Home() {
           chatControls: {
             input: "",
           },
-          commandPalette: {
-            isOpen: false,
-            items: [],
-          },
         }}
       >
         <div className="flex h-full w-full overflow-hidden">
@@ -179,7 +175,7 @@ export default function Home() {
                     <BetterToolbar />
                     <DevtoolsOverlay />
                     <BetterDrawing />
-                  <Recording/>
+                    <Recording />
                   </IFrameWrapper>
                 </div>
               </ResizablePanel>
