@@ -27,6 +27,12 @@ type Command = {
 export function CommandPalette({ items }: { items: Array<Command> }) {
   const [open, setOpen] = React.useState(false);
 
+
+  const [shortcutLastOpened, setShortcutLastOpened]  = useState<Array<{id:string, lastOpened: number}>>([])
+
+
+
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -49,6 +55,7 @@ export function CommandPalette({ items }: { items: Array<Command> }) {
           if (data.key === "k" && (data.metaKey || data.ctrlKey)) {
             setOpen((open) => !open);
           } else if (data.key === "Enter" && open) {
+            
             setOpen(false);
           }
         }

@@ -330,6 +330,7 @@ export const ScreenshotTool = () => {
         try {
           const response = await fetch(newImg.cropped);
           const blob = await response.blob();
+          // this errors on safari without permissions it appears?
           await navigator.clipboard.write([
             new ClipboardItem({
               [blob.type]: blob,

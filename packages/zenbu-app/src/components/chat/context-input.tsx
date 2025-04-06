@@ -71,7 +71,7 @@ const MentionMenu = ({
   );
 };
 
-const ChatComponent = () => {
+const ChatTextArea = () => {
   const items = ["react-scan", "console", "network", "localstorage"];
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
@@ -313,4 +313,4 @@ const ChatComponent = () => {
   );
 };
 
-export default ChatComponent;
+export default ChatTextArea;

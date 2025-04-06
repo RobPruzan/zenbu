@@ -30,6 +30,10 @@ document.addEventListener("mousemove", (e) => {
 
 export type ChildToParentMessage =
   | {
+      kind: "console";
+      data: any[];
+    }
+  | {
       kind: "notification";
       event: any;
     }
@@ -53,7 +57,7 @@ export type ChildToParentMessage =
   | { kind: "get-state-request"; id?: string; responsePossible: true }
   | { kind: "screenshot-response"; dataUrl: string; id: string }
   // when the child iframe is focused it swallows all events, which breaks our command menu impl
-  | { kind: "keydown"; key: string, metaKey: boolean, ctrlKey: boolean };
+  | { kind: "keydown"; key: string; metaKey: boolean; ctrlKey: boolean };
 
 export type ParentToChildMessage =
   | {
@@ -93,14 +97,16 @@ export type FocusedInfo = {
 const sendMessage = (message: ChildToParentMessage) => {
   window.parent.postMessage(message, TARGET_ORIGIN);
 };
-document.addEventListener("keydown", (e) =>
+document.addEventListener("keydown", (e) => {
+  console.log("hola");
+
   sendMessage({
     kind: "keydown",
     key: e.key,
     metaKey: e.metaKey,
-    ctrlKey: e.ctrlKey
-  })
-);
+    ctrlKey: e.ctrlKey,
+  });
+});
 
 const iife = <T>(f: () => T): T => f();
 
@@ -302,3 +308,31 @@ console.log("confirmation");
 
 // @ts-expect-error
 window.sps = screenshot;
+
+const originalConsoleLog = window.console.log;
+window.console.log = (...data: any[]) => {
+  // this does not work, since ownership of this data is now lost and sent to the parent 
+/**
+ * we have a few options:
+ * - serialize it, avoid circular structures, this will be very expensive to do all the time, very very expensive
+ * = do what chrome does, maintain a mapping back to the object in some store, make it a weak map with the object id, send the object
+ * id back to the parent process, when requested, if still alive we provide the object, otherwise we tell the user this
+ * object no longer exists (vs the dog shit chrome implementation)
+ * 
+ * we can also do some simple parsing (like we do in react scan) to give some info for dead objects that will not be expensive
+ * does not have to be all or nothing, would also be nice to configure this at runtime how much you want to tweak this for hard cases
+ * 
+ */
+  sendMessage({
+    kind: "console",
+    data,
+  });
+
+  originalConsoleLog(...data);
+};
+
+setInterval(() => {
+  const x = { y: null };
+  x.y = x as any;
+  console.log("yolos", x);
+}, 500);

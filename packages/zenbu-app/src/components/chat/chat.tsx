@@ -33,7 +33,7 @@ import { ChatMessage, toGroupedChatMessages } from "zenbu-plugin/src/ws/utils";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
-import ChatComponent from "./context-input";
+import ChatTextArea from "./context-input";
 import TokenStreamingWrapper from "./wrapper";
 import { ThinkingUITester } from "./thinking";
 import { Socket } from "socket.io-client";
@@ -380,7 +380,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
 
             <div className="flex flex-col text-xs">
               <div className="relative min-h-[50px] w-full bg-[rgba(20,20,22,0.4)] backdrop-filter backdrop-blur-md">
-                <ChatComponent />
+                <ChatTextArea />
                 {/* <textarea
                 ref={textareaRef}
                 value={chatControls.state.input}

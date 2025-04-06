@@ -118,6 +118,7 @@ export function DevtoolsOverlay() {
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
       // this acts as validation and why we can assert the event is the above type
+      // we need to switch to runtime validation, we can't do this generally
       if (event.origin !== "http://localhost:4200") {
         // console.log("wrong origin");
 

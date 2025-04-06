@@ -2,7 +2,8 @@ import { iife } from "~/lib/utils";
 import { useChatStore } from "../chat-instance-context";
 import { Leaf } from "lucide-react";
 import { Button } from "../ui/button";
-import { act } from "react";
+import { act, useEffect, useState } from "react";
+import { ChildToParentMessage } from "zenbu-devtools";
 
 /**
  *
@@ -50,19 +51,7 @@ export const BetterToolbar = () => {
             );
           }
           case "console": {
-            return (
-              <div className="h-[350px] w-[600px] bg-background rounded-md flex items-end justify-start">
-                console
-                <Button
-                  variant={"outline"}
-                  onClick={() => {
-                    actions.setRoute("off");
-                  }}
-                >
-                  off
-                </Button>
-              </div>
-            );
+            return <Console />;
           }
           case "network": {
             return (
@@ -99,4 +88,75 @@ export const BetterToolbar = () => {
     </div>
   );
   // return ;
+};
+
+const Console = () => {
+  const { actions, state } = useChatStore((state) => state.toolbar);
+  const [logs, setLogs] = useState<Array<any[]>>([]);
+
+  useEffect(() => {
+    window.addEventListener(
+      "message",
+      (event: MessageEvent<ChildToParentMessage>) => {
+        if (event.origin !== "http://localhost:4200") {
+          return;
+        }
+
+        const eventData = event.data;
+
+        switch (eventData.kind) {
+          case "console": {
+            setLogs((prev) => [...prev, eventData.data]);
+          }
+        }
+      },
+    );
+  }, []);
+
+  useEffect(() => {}, []);
+  return (
+    <div className="h-[350px] w-[600px] bg-background rounded-md flex items-end justify-start">
+      console
+      <Button
+        variant={"outline"}
+        onClick={() => {
+          actions.setRoute("off");
+        }}
+      >
+        off
+      </Button>
+      <div className="w-full h-full overflow-auto p-2 flex flex-col-reverse">
+        {/* temp just to be able to render circular structures */}
+        {logs.map((log, i) => (
+          <div key={i} className="mb-1 font-mono text-sm">
+            {log.map((item, j) => (
+              <span key={j} className="mr-2">
+                {typeof item === 'object' && item !== null ? (
+                  <details>
+                    <summary className="cursor-pointer">Object</summary>
+                    <div className="pl-4 text-xs">
+                      {Object.entries(item).map(([key, value], idx) => (
+                        <div key={idx} className="mt-1">
+                          <span className="text-blue-500">{key}:</span>{" "}
+                          {typeof value === 'object' && value !== null ? (
+                            <details>
+                              <summary className="cursor-pointer inline-block">Object</summary>
+                            </details>
+                          ) : (
+                            <span>{String(value)}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ) : (
+                  String(item)
+                )}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
