@@ -94,3 +94,7 @@ Zenbu can communicate with your project by running a server directly next to you
 - [ ] WS client
 - [ ] open page in editor
 - [ ] open component in editor
+- [ ] record area
+- [ ] remix area
+- [ ] explain area
+- [ ] find area
