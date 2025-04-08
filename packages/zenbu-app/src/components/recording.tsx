@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useChatStore } from "./chat-instance-context";
+import { ListIcon, XIcon } from "lucide-react";
+import { Button } from "./ui/button";
+import { cn } from "~/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 
 type ToolbarAction = {
   id: string;
@@ -43,19 +54,22 @@ export const RecordingImpl = () => {
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [recordings, setRecordings] = useState<Recording[]>([]);
-  const [isListVisible, setIsListVisible] = useState(false);
-  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  // const [isListVisible, setIsListVisible] = useState(false);
+  // const [isSettingsVisible, setIsSettingsVisible] = useState(false);
 
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  // our blobby boy
   const recordedChunksRef = useRef<Blob[]>([]);
 
-  const [visibleToolbarActions, setVisibleToolbarActions] = useState<string[]>(
-    [],
-  );
+  // const [visibleToolbarActions, setVisibleToolbarActions] = useState<string[]>(
+  //   [],
+  // );
 
-  const cleanupActiveRecording = useCallback(() => {
+  const { toolbar } = useChatStore();
+
+  const cleanupActiveRecording = () => {
     mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
     mediaStreamRef.current = null;
 
@@ -73,28 +87,28 @@ export const RecordingImpl = () => {
       mediaRecorderRef.current = null;
     }
     recordedChunksRef.current = [];
-  }, []);
+  };
 
-  const handleClosePlayer = useCallback(() => {
-    setCurrentVideoUrl(null);
-    setRecordingState((prev) => (prev === "recorded" ? "idle" : prev));
-  }, []);
+  // const handleClosePlayer = useCallback(() => {
+  //   setCurrentVideoUrl(null);
+  //   setRecordingState((prev) => (prev === "recorded" ? "idle" : prev));
+  // }, []);
 
-  const handleSelectRecording = useCallback((recording: Recording) => {
-    setCurrentVideoUrl(recording.url);
-    setRecordingState("viewing");
-    setIsListVisible(false);
-  }, []);
-  const toggleListView = useCallback(() => {
-    setIsListVisible((prev) => !prev);
-  }, []);
+  // const handleSelectRecording = useCallback((recording: Recording) => {
+  //   setCurrentVideoUrl(recording.url);
+  //   setRecordingState("viewing");
+  //   setIsListVisible(false);
+  // }, []);
+  // const toggleListView = useCallback(() => {
+  //   setIsListVisible((prev) => !prev);
+  // }, []);
 
-  const toggleSettingsView = useCallback(() => {
-    setIsSettingsVisible((prev) => !prev);
-    if (isListVisible) setIsListVisible(false);
-  }, [isListVisible]);
+  // const toggleSettingsView = useCallback(() => {
+  //   setIsSettingsVisible((prev) => !prev);
+  //   if (isListVisible) setIsListVisible(false);
+  // }, [isListVisible]);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = async () => {
     if (
       recordingState !== "idle" &&
       recordingState !== "error" &&
@@ -104,14 +118,22 @@ export const RecordingImpl = () => {
       return;
     }
     cleanupActiveRecording();
-    setError(null);
-    setIsListVisible(false);
+    // setError(null);
+    // setIsListVisible(false);
     setRecordingState("starting");
 
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { mediaSource: "screen" } as any,
+        video: {
+          mediaSource: "screen",
+          // lets the share type we actually want to display first https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/displaySurface#browser_compatibility
+          displaySurface: "window",
+        } as any,
         audio: true,
+
+        // video: {
+        //   displaySurface: "browser", // Prefer browser/tab
+        // } as any,
       });
       mediaStreamRef.current = stream;
       recordedChunksRef.current = [];
@@ -177,6 +199,8 @@ export const RecordingImpl = () => {
           name: `Recording ${recordings.length + 1}`,
           timestamp: Date.now(),
         };
+        console.log("setting new recording", newRecording);
+
         setRecordings((prev) => [...prev, newRecording]);
 
         setCurrentVideoUrl(url);
@@ -187,9 +211,9 @@ export const RecordingImpl = () => {
 
       recorder.onerror = (event) => {
         console.error("MediaRecorder error:", event);
-        const errorMessage =
-          (event as any)?.error?.message || "Unknown recording error";
-        setError(`Recording error: ${errorMessage}`);
+        // const errorMessage =
+        //   (event as any)?.error?.message || "Unknown recording error";
+        // setError(`Recording error: ${errorMessage}`);
         cleanupActiveRecording();
         setRecordingState("error");
       };
@@ -208,18 +232,20 @@ export const RecordingImpl = () => {
           message = `Failed to start recording: ${err.message}`;
         }
       }
-      setError(message);
+      // setError(message);
       cleanupActiveRecording();
       setRecordingState("error");
     }
-  }, [cleanupActiveRecording, recordings.length, recordingState]);
+  };
 
-  const stopRecording = useCallback(() => {
+  const stopRecording = () => {
     if (
       mediaRecorderRef.current &&
       mediaRecorderRef.current.state === "recording"
     ) {
       setRecordingState("stopping");
+      // console.log('record');
+
       mediaRecorderRef.current.stop();
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
@@ -230,331 +256,190 @@ export const RecordingImpl = () => {
       cleanupActiveRecording();
       setRecordingState("idle");
     }
-  }, [cleanupActiveRecording]);
+  };
 
   useEffect(() => {
     return () => {
-      console.log("Cleaning up recorder component, revoking URLs...");
-      cleanupActiveRecording();
-      recordings.forEach((rec) => URL.revokeObjectURL(rec.url));
-      if (
-        currentVideoUrl &&
-        !recordings.some((r) => r.url === currentVideoUrl)
-      ) {
-        console.log("Revoking dangling currentVideoUrl");
-        URL.revokeObjectURL(currentVideoUrl);
-      }
+      // console.log("Cleaning up recorder component, revoking URLs...");
+      // cleanupActiveRecording();
+      // recordings.forEach((rec) => URL.revokeObjectURL(rec.url));
+      // if (
+      //   currentVideoUrl &&
+      //   !recordings.some((r) => r.url === currentVideoUrl)
+      // ) {
+      //   console.log("Revoking dangling currentVideoUrl");
+      //   URL.revokeObjectURL(currentVideoUrl);
+      // }
     };
   }, [cleanupActiveRecording, recordings]);
 
-  const isRecorderActive =
-    recordingState === "recording" &&
-    mediaRecorderRef.current?.state === "recording";
+  // const isRecorderActive =
+  //   recordingState === "recording" &&
+  //   mediaRecorderRef.current?.state === "recording";
   const isRecordingProcessActive =
-    recordingState === "starting" ||
-    recordingState === "recording" ||
-    recordingState === "stopping";
+    // recordingState === "starting" ||
+    recordingState === "recording" || recordingState === "stopping";
 
-  const toolbarActions: ToolbarAction[] = [
-    {
-      id: "record",
-      label: isRecordingProcessActive ? "Stop Recording" : "Record Screen",
-      icon: (
-        <span
-          style={{
-            width: "10px",
-            height: "10px",
-            borderRadius: isRecordingProcessActive ? "2px" : "50%",
-            backgroundColor: "white",
-            display: "inline-block",
-            animation:
-              isRecordingProcessActive && isRecorderActive
-                ? "pulse 1.5s infinite ease-in-out"
-                : "none",
-          }}
-        ></span>
-      ),
-      onClick: isRecordingProcessActive ? stopRecording : startRecording,
-      disabled: isRecordingProcessActive && !isRecorderActive,
-      primary: true,
-    },
-    {
-      id: "recordings",
-      label: `Recordings (${recordings.length})`,
-      onClick: toggleListView,
-      disabled: isRecordingProcessActive,
-    },
-  ];
+  // const toolbarActions: ToolbarAction[] = [
+  //   {
+  //     id: "record",
+  //     label: isRecordingProcessActive ? "Stop Recording" : "Record Screen",
+  //     icon: (
+  //       <span
+  //         style={{
+  //           width: "10px",
+  //           height: "10px",
+  //           borderRadius: isRecordingProcessActive ? "2px" : "50%",
+  //           backgroundColor: "white",
+  //           display: "inline-block",
+  //           animation:
+  //             isRecordingProcessActive && isRecorderActive
+  //               ? "pulse 1.5s infinite ease-in-out"
+  //               : "none",
+  //         }}
+  //       ></span>
+  //     ),
+  //     onClick: isRecordingProcessActive ? stopRecording : startRecording,
+  //     disabled: isRecordingProcessActive && !isRecorderActive,
+  //     primary: true,
+  //   },
+  //   {
+  //     id: "recordings",
+  //     label: `Recordings (${recordings.length})`,
+  //     onClick: toggleListView,
+  //     disabled: isRecordingProcessActive,
+  //   },
+  // ];
 
   return (
     <>
       <Toolbar
-        actions={toolbarActions}
-        visibleActionIds={[]}
+        recordings={recordings}
+        startRecording={startRecording}
+        stopRecording={stopRecording}
+        closeToolbar={() => {
+          toolbar.actions.setIsRecording(false);
+        }}
         isRecording={isRecordingProcessActive}
-        isRecorderActive={isRecorderActive}
-        onOpenSettings={toggleSettingsView}
       />
     </>
   );
 };
 
-type ToolbarProps = {
-  actions: ToolbarAction[];
-  visibleActionIds?: string[];
-  isRecording: boolean;
-  isRecorderActive: boolean;
-  onOpenSettings?: () => void;
-};
-
 const Toolbar = ({
-  actions,
-  visibleActionIds = [],
+  closeToolbar,
+  startRecording,
+  stopRecording,
   isRecording,
-  isRecorderActive,
-  onOpenSettings,
-}: ToolbarProps) => {
-  const [isOverflowOpen, setIsOverflowOpen] = useState(false);
-  const overflowButtonRef = useRef<HTMLDivElement>(null);
-  const overflowMenuRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<"right" | "left">("right");
-
-  const visibleActions = actions.filter((action) =>
-    visibleActionIds.includes(action.id),
+  recordings,
+}: {
+  isRecording: boolean;
+  startRecording: () => void;
+  stopRecording: () => void;
+  closeToolbar: () => void;
+  recordings: Array<Recording>;
+}) => {
+  const [showRecordingsList, setShowRecordingsList] = useState(false);
+  const [currentRecordingSrc, setCurrentRecordingSrc] = useState<null | string>(
+    null,
   );
 
-  const overflowActions = actions.filter(
-    (action) => !visibleActionIds.includes(action.id),
-  );
-
-  useEffect(() => {
-    if (
-      isOverflowOpen &&
-      overflowButtonRef.current &&
-      overflowMenuRef.current
-    ) {
-      const buttonRect = overflowButtonRef.current.getBoundingClientRect();
-      const menuWidth = overflowMenuRef.current.offsetWidth;
-      const windowWidth = window.innerWidth;
-
-      if (buttonRect.right + menuWidth > windowWidth - 20) {
-        setMenuPosition("left");
-      } else {
-        setMenuPosition("right");
-      }
-    }
-  }, [isOverflowOpen]);
-
-  useEffect(() => {
-    if (!isOverflowOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        overflowMenuRef.current &&
-        overflowButtonRef.current &&
-        !overflowMenuRef.current.contains(event.target as Node) &&
-        !overflowButtonRef.current.contains(event.target as Node)
-      ) {
-        setIsOverflowOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOverflowOpen]);
+  console.log("our recordings yippy", recordings);
 
   return (
+    // left of box is at 50% mark, so move 50% of div width left to make center at 50%
     <div
       style={{
-        position: "absolute",
-        top: "20px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 50,
-        backgroundColor: "rgba(30, 30, 30, 0.7)",
-        backdropFilter: "blur(8px)",
-        padding: "10px 15px",
-        borderRadius: "10px",
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
+        // rah i need the zIndex manager this is bad
+        zIndex: 1000000000000,
       }}
+      className="absolute flex-col top-2 left-1/2 gap-y-2 transform -translate-x-1/2 rounded-md bg-background px-2 py-1 flex gap-x-2 items-center"
     >
-      {visibleActions.map((action) => (
-        <button
-          key={action.id}
-          onClick={action.onClick}
-          disabled={action.disabled}
-          style={{
-            padding: action.primary ? "8px 16px" : "8px 12px",
-            cursor: action.disabled ? "not-allowed" : "pointer",
-            backgroundColor: action.primary
-              ? isRecording
-                ? "rgba(239, 68, 68, 0.8)"
-                : "rgba(59, 130, 246, 0.8)"
-              : "rgba(255, 255, 255, 0.1)",
-            color: "white",
-            border: action.primary
-              ? "none"
-              : "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "8px",
-            fontSize: "14px",
-            fontWeight: 500,
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            transition:
-              "background-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease",
-            whiteSpace: "nowrap",
-            opacity: action.disabled ? 0.5 : 1,
+      <div className="flex gap-x-4 items-center justify-center w-full">
+        <Button
+          onClick={() => {
+            closeToolbar();
           }}
-          onMouseDown={(e) =>
-            !action.disabled &&
-            (e.currentTarget.style.transform = "scale(0.98)")
-          }
-          onMouseUp={(e) =>
-            !action.disabled && (e.currentTarget.style.transform = "scale(1)")
-          }
-          onMouseLeave={(e) =>
-            !action.disabled && (e.currentTarget.style.transform = "scale(1)")
-          }
+          variant={"ghost"}
+          className="px-3 py-1"
         >
-          {action.icon}
-          {action.label}
-        </button>
-      ))}
+          <XIcon />
+        </Button>
 
-      {onOpenSettings && (
-        <button
-          onClick={onOpenSettings}
-          disabled={isRecording}
-          style={{
-            width: "32px",
-            height: "32px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "rgba(255, 255, 255, 0.1)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "8px",
-            cursor: isRecording ? "not-allowed" : "pointer",
-            transition: "background-color 0.2s ease",
-            opacity: isRecording ? 0.5 : 1,
+        <Button
+          onClick={() => {
+            if (isRecording) {
+              stopRecording();
+              return;
+            }
+
+            startRecording();
           }}
-          onMouseOver={(e) =>
-            !isRecording &&
-            (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)")
-          }
-          onMouseOut={(e) =>
-            !isRecording &&
-            (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")
-          }
-          title="Toolbar Settings"
+          variant={"ghost"}
+          className={cn([
+            "rounded-full bg-white h-10 w-10 relative hover:bg-white group",
+            isRecording && "animate-pulse",
+          ])}
         >
-          <span style={{ color: "white", fontSize: "14px" }}>⚙️</span>
-        </button>
-      )}
+          <div
+            className={cn([
+              "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full w-4 h-4 bg-red-500 group-hover:bg-red-600 transition",
+              isRecording && "rounded-[1px]",
+            ])}
+          ></div>
+        </Button>
+        <Button
+          variant={"ghost"}
+          onClick={() => {
+            setShowRecordingsList((prev) => !prev);
+          }}
+        >
+          <ListIcon />
+        </Button>
+      </div>
 
-      {overflowActions.length > 0 && (
-        <div style={{ position: "relative" }} ref={overflowButtonRef}>
-          <button
-            onClick={() => setIsOverflowOpen((prev) => !prev)}
-            style={{
-              width: "32px",
-              height: "32px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: "8px",
-              cursor: "pointer",
-              transition: "background-color 0.2s ease",
-            }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.2)")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.1)")
-            }
-          >
-            <span style={{ color: "white", fontSize: "16px" }}>⋯</span>
-          </button>
-
-          {isOverflowOpen && (
+      {showRecordingsList && (
+        <div className="flex flex-col">
+          {recordings.map((recording) => (
             <div
-              ref={overflowMenuRef}
-              style={{
-                position: "absolute",
-                top: "40px",
-                [menuPosition]: "0",
-                backgroundColor: "rgba(40, 40, 40, 0.9)",
-                backdropFilter: "blur(10px)",
-                borderRadius: "8px",
-                padding: "6px",
-                minWidth: "180px",
-                maxWidth: "240px",
-                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                zIndex: 51,
-              }}
+              // variant={'ghost'}
+              // onClick={() => {}}
+              className="flex flex-col px-2 text-xs gap-y-2"
             >
-              {overflowActions.map((action) => (
-                <button
-                  key={action.id}
-                  onClick={() => {
-                    action.onClick();
-                    setIsOverflowOpen(false);
-                  }}
-                  disabled={action.disabled}
+              <Dialog>
+                <DialogTrigger>View {recording.name}</DialogTrigger>
+                <DialogContent
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    width: "100%",
-                    padding: "8px 10px",
-                    backgroundColor: "transparent",
-                    border: "none",
-                    borderRadius: "4px",
-                    color: "white",
-                    fontSize: "14px",
-                    textAlign: "left",
-                    cursor: action.disabled ? "not-allowed" : "pointer",
-                    opacity: action.disabled ? 0.5 : 1,
-                    transition: "background-color 0.2s ease",
-                  }}
-                  onMouseOver={(e) =>
-                    !action.disabled &&
-                    (e.currentTarget.style.backgroundColor =
-                      "rgba(255, 255, 255, 0.1)")
-                  }
-                  onMouseOut={(e) =>
-                    !action.disabled &&
-                    (e.currentTarget.style.backgroundColor = "transparent")
-                  }
+                    zIndex: 2147483647,
+                    minWidth: '90vw',
+                    height: '90vh'
+               }} 
                 >
-                  {action.icon}
-                  {action.label}
-                </button>
-              ))}
+                  <DialogHeader>
+                    <video
+                    // className="h-[90vh] min-w-[90vw]"
+                      src={recording.url} controls />
+                    {/* <DialogTitle>Are you absolutely sure?</DialogTitle> */}
+                    {/* <DialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      your account and remove your data from our servers.
+                    </DialogDescription> */}
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+              {/* <Button
+                onClick={() => {
+                  setCurrentRecordingSrc(recording.url);
+                }}
+                variant={"outline"}
+              >
+                View {recording.name}
+              </Button> */}
+              <video className="h-32 " src={recording.url} />
             </div>
-          )}
+          ))}
         </div>
       )}
-
-      <style>{`
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };

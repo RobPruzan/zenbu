@@ -101,7 +101,6 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
   // it would resolve the data only after a tick? It would return a promise? Why wouldn't the type show that though?
   // omg its cause it would push it async, so then i wouldn't have the data every render no matter what, every time it regenerated it would have it one tick too late
   useEffect(() => {
-    // flushSync(async () => {
     iife(async () => {
       // this should resolve as a microtask since its just a promise, so it should be complete before rendering, but unfortunately react will not flush it in time, whatever we pay a tick this is a dog shit abstraction i just need a sync vs async i don't know if there's a way around this aifjasdkl;fjhdsaklfjdas;lkjfdsa;kljfkl;adskjfj;dlaksfjk
       // i will need to fix this i just will not rn

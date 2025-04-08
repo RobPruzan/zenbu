@@ -5,11 +5,14 @@ import {
   Camera,
   CircleX,
   DownloadCloudIcon,
+  FlaskConical,
+  Folder,
   Gauge,
   Inspect,
   Logs,
   MessageSquare,
   Pencil,
+  TerminalSquare,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -297,8 +300,22 @@ const CommandWrapper = () => {
             });
           },
         },
+        {
+          shortcut: "Code",
+          icon: <Folder />,
+          onSelect: () => {},
+        },
+        {
+          shortcut: "Experiment",
+          icon: <FlaskConical />,
+          onSelect: () => {},
+        },
+        {
+          shortcut: "Terminal",
+          icon: <TerminalSquare />,
+          onSelect: () => {},
+        },
       ]}
     />
   );
 };
-

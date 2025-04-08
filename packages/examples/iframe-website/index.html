@@ -50,7 +50,7 @@
         width: 32px;
         height: 32px;
         background: linear-gradient(135deg, #ff0000, #ff5e5e);
-        border-radius: 8px;
+        border-radius: 0;
         margin-right: 12px;
         transition: transform 0.2s ease;
         box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
@@ -81,7 +81,7 @@
         border: 1px solid rgba(255, 165, 0, 0.3);
         background-color: rgba(15, 15, 15, 0.8);
         color: #fff;
-        border-radius: 24px;
+        border-radius: 4px;
         padding: 12px 45px 12px 20px;
         font-size: 14px;
         transition: all 0.3s ease;
@@ -108,7 +108,7 @@
         left: -2px;
         right: -2px;
         bottom: -2px;
-        border-radius: 26px;
+        border-radius: 6px;
         background: linear-gradient(
           45deg,
           transparent,
@@ -143,7 +143,7 @@
         background-color: transparent;
         border: none;
         padding: 8px;
-        border-radius: 50%;
+        border-radius: 4px;
         cursor: pointer;
         color: rgba(255, 255, 255, 0.7);
         font-size: 16px;
@@ -171,7 +171,7 @@
         width: 36px;
         height: 36px;
         background-color: rgba(255, 0, 0, 0.1);
-        border-radius: 50%;
+        border-radius: 4px;
         cursor: pointer;
         transition: all 0.2s ease;
         border: 1px solid rgba(255, 0, 0, 0.05);
@@ -228,6 +228,25 @@
         box-shadow: 0 0 8px rgba(255, 165, 0, 0.3);
       }
 
+      /* Square icon in thumbnails */
+      .thumbnail::after {
+        content: "";
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        background-color: rgba(255, 165, 0, 0.2);
+        z-index: 2;
+        box-shadow:
+          -10px -10px 0 2px rgba(255, 165, 0, 0.5),
+          10px -10px 0 2px rgba(255, 165, 0, 0.5),
+          0 5px 0 2px rgba(255, 165, 0, 0.5);
+        opacity: 0.7;
+        transition: all 0.3s ease;
+      }
+
       .thumbnail::before {
         content: "▶";
         position: absolute;
@@ -241,15 +260,34 @@
         background-color: rgba(255, 165, 0, 0.4);
         width: 60px;
         height: 60px;
-        border-radius: 50%;
+        border-radius: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 0 8px rgba(255, 165, 0, 0.5);
+        z-index: 3;
       }
 
       .video-card:hover .thumbnail::before {
         opacity: 1;
+      }
+
+      .video-card:hover .thumbnail::after {
+        background-color: rgba(255, 165, 0, 0.4);
+        animation: wiggle 1s ease-in-out;
+      }
+
+      @keyframes wiggle {
+        0%,
+        100% {
+          transform: rotate(0);
+        }
+        25% {
+          transform: rotate(-5deg);
+        }
+        75% {
+          transform: rotate(5deg);
+        }
       }
 
       .video-info {
@@ -261,7 +299,7 @@
         width: 40px;
         height: 40px;
         background: linear-gradient(135deg, #ffa500, #ffcc00);
-        border-radius: 50%;
+        border-radius: 4px;
         margin-right: 12px;
         flex-shrink: 0;
         transition: all 0.2s ease;
@@ -319,7 +357,7 @@
         background-color: rgba(255, 0, 0, 0.05);
         padding: 8px 16px;
         margin-right: 12px;
-        border-radius: 20px;
+        border-radius: 4px;
         white-space: nowrap;
         cursor: pointer;
         color: rgba(255, 255, 255, 0.8);
