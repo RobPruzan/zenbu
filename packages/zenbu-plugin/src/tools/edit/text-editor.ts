@@ -107,8 +107,8 @@ export const textEditor = async ({
   const withLineNumbers = addLineNumbers(fileContent);
 
   const { textStream } = streamText({
-    // model: anthropic("claude-3-7-sonnet-20250219"),
-    model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
+    model: anthropic("claude-3-7-sonnet-20250219"),
+    // model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
     // model: openai("gpt-4o"),
     maxTokens: 8000,
     onFinish: (reason) => {

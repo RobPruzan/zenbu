@@ -255,7 +255,6 @@ import {} from "modern-screenshot/worker";
 
 // const workerCode = `var B=Object.defineProperty;var b=Object.getOwnPropertySymbols;var y=Object.prototype.hasOwnProperty,F=Object.prototype.propertyIsEnumerable;var g=(r,t,e)=>t in r?B(r,t,{enumerable:!0,configurable:!0,writable:!0,value:e}):r[t]=e,U=(r,t)=>{for(var e in t||(t={}))y.call(t,e)&&g(r,e,t[e]);if(b)for(var e of b(t))F.call(t,e)&&g(r,e,t[e]);return r};var p=(r,t)=>{var e={};for(var o in r)y.call(r,o)&&t.indexOf(o)<0&&(e[o]=r[o]);if(r!=null&&b)for(var o of b(r))t.indexOf(o)<0&&F.call(r,o)&&(e[o]=r[o]);return e};var x=(r,t,e)=>new Promise((o,w)=>{var h=n=>{try{d(e.next(n))}catch(u){w(u)}},R=n=>{try{d(e.throw(n))}catch(u){w(u)}},d=n=>n.done?o(n.value):Promise.resolve(n.value).then(h,R);d((e=e.apply(r,t)).next())});(function(){"use strict";var u;const r="[modern-screenshot]",e=typeof window!="undefined"?(u=window.navigator)==null?void 0:u.userAgent:"",o=e.includes("Chrome");e.includes("AppleWebKit"),e.includes("Firefox");const w=(...a)=>console.warn(r,...a);function h(a,l){return new Promise((i,s)=>{const c=new FileReader;c.onload=()=>i(c.result),c.onerror=()=>s(c.error),c.onabort=()=>s(new Error(`Failed read blob to ${l}`)),c.readAsDataURL(a)})}const R=a=>h(a,"dataUrl");function d(a){const E=a,{url:l,timeout:i,responseType:s}=E,c=p(E,["url","timeout","responseType"]),m=new AbortController,A=i?setTimeout(()=>m.abort(),i):void 0;return fetch(l,U({signal:m.signal},c)).then(f=>{if(!f.ok)throw new Error("Failed fetch, not 2xx response",{cause:f});switch(s){case"arrayBuffer":return f.arrayBuffer();case"dataUrl":return f.blob().then(R);case"text":default:return f.text()}}).finally(()=>clearTimeout(A))}const n=self;n.onmessage=a=>x(this,null,function*(){const l=a.data,i=l.rawUrl||l.url;try{const s=yield d(l);n.postMessage({url:i,result:s})}catch(s){w(s),n.postMessage({url:i})}})})();`
 var __WORKER_CODE__ = "";
-console.log("oy", __WORKER_CODE__);
 
 const screenshotNice = () => {
   domToPng(document.documentElement).then((dataUrl) => {
@@ -268,12 +267,6 @@ window.ss = () => {
   console.log("screenshotting");
   screenshotNice();
 };
-
-// async function screenshotsPerSecond() {
-
-// }
-
-console.log("hai");
 
 const createWorkerContext = () => {
   const blob = new Blob([__WORKER_CODE__], { type: "application/javascript" });
@@ -304,32 +297,31 @@ async function screenshot() {
   //   await new Promise((resolve) => setTimeout(resolve, 1000));
   // }
 }
-console.log("confirmation");
 
 // @ts-expect-error
 window.sps = screenshot;
 
 const originalConsoleLog = window.console.log;
 window.console.log = (...data: any[]) => {
-  // this does not work, since ownership of this data is now lost and sent to the parent 
-/**
- * we have a few options:
- * - serialize it, avoid circular structures, this will be very expensive to do all the time, very very expensive
- * = do what chrome does, maintain a mapping back to the object in some store, make it a weak map with the object id, send the object
- * id back to the parent process, when requested, if still alive we provide the object, otherwise we tell the user this
- * object no longer exists (vs the dog shit chrome implementation)
- * 
- * we can also do some simple parsing (like we do in react scan) to give some info for dead objects that will not be expensive
- * does not have to be all or nothing, would also be nice to configure this at runtime how much you want to tweak this for hard cases
- * 
- * 
- * we could actually do a smart strategy for this with time budgets/pressure on the console to determine
- * how much we should parse ahead of time
- * 
- * the general case this is actually quite ideal
- * 
- * 
- */
+  // this does not work, since ownership of this data is now lost and sent to the parent
+  /**
+   * we have a few options:
+   * - serialize it, avoid circular structures, this will be very expensive to do all the time, very very expensive
+   * = do what chrome does, maintain a mapping back to the object in some store, make it a weak map with the object id, send the object
+   * id back to the parent process, when requested, if still alive we provide the object, otherwise we tell the user this
+   * object no longer exists (vs the dog shit chrome implementation)
+   *
+   * we can also do some simple parsing (like we do in react scan) to give some info for dead objects that will not be expensive
+   * does not have to be all or nothing, would also be nice to configure this at runtime how much you want to tweak this for hard cases
+   *
+   *
+   * we could actually do a smart strategy for this with time budgets/pressure on the console to determine
+   * how much we should parse ahead of time
+   *
+   * the general case this is actually quite ideal
+   *
+   *
+   */
   sendMessage({
     kind: "console",
     data,
@@ -338,34 +330,31 @@ window.console.log = (...data: any[]) => {
   originalConsoleLog(...data);
 };
 
-setInterval(() => {
-  const x = { y: null };
-  x.y = x as any;
-  console.log("yolos", x);
-}, 500);
-
-
+// setInterval(() => {
+//   const x = { y: null };
+//   x.y = x as any;
+//   console.log("yolos", x);
+// }, 500);
 
 const patchNetwork = () => {
-
   /**
    * we luckily don't need to do lazy things for patching network requests
    * since the input must be serialized/sent to another process already
-   * 
+   *
    * the response is more tricky
-   * 
+   *
    * we can clone the request every time to read the json, this might be expensive
    * and you may not want to always do it
-   * 
+   *
    * we can keep a reference to the response object? And lazily read it if still alive?
-   * 
+   *
    * im not super worried about memory, we can have some gc strategy that can be tweaked
-   * 
+   *
    * can internally manage this based on time/ how much data we have collected
-   * 
-   * we can also just read heap size in some browsers which would be nice but kind of a 
+   *
+   * we can also just read heap size in some browsers which would be nice but kind of a
    * wack heuristic, but this is pretty hard to build a cache for
-   * 
-   * 
+   *
+   *
    */
-}
+};

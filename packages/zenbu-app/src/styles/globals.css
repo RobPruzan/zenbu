@@ -127,3 +127,11 @@
 }
 
 
+
+.chat-input:empty:before {
+  content: attr(data-placeholder);
+  color: #7c7c7f;
+  font: 13px/1.5 'Geist Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 300;
+  pointer-events: none;
+}

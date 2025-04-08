@@ -8,7 +8,18 @@ import "./src/env.js";
 const config = {
   experimental: {
     reactCompiler: true
-  }
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5001',
+        pathname: '/image/**',
+      },
+    ],
+  },
+
 };
 
 

@@ -1,401 +1,570 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <script src="http://localhost:42069"></script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Clone</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Roboto', Arial, sans-serif;
-    }
+  <head>
+    <script src="http://localhost:42069"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VideoVibe</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          sans-serif;
+      }
 
-    body {
-      background-color: #0f0f0f;
-      color: #fff;
-    }
+      body {
+        background-color: #0a0505;
+        color: #fff;
+      }
 
-    /* Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      background-color: #202020;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    }
+      /* Header */
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        background-color: rgba(15, 5, 5, 0.9);
+        backdrop-filter: blur(10px);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        border-bottom: 1px solid rgba(255, 0, 0, 0.1);
+      }
 
-    .logo {
-      display: flex;
-      align-items: center;
-    }
+      .logo {
+        display: flex;
+        align-items: center;
+      }
 
-    .logo-icon {
-      width: 30px;
-      height: 20px;
-      background-color: #ff0000;
-      border-radius: 5px;
-      margin-right: 5px;
-    }
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #ff0000, #ff5e5e);
+        border-radius: 8px;
+        margin-right: 12px;
+        transition: transform 0.2s ease;
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+      }
 
-    .logo-text {
-      font-weight: bold;
-      font-size: 20px;
-      color: #fff;
-    }
+      .logo:hover .logo-icon {
+        transform: rotate(5deg) scale(1.05);
+      }
 
-    .search-bar {
-      display: flex;
-      align-items: center;
-      flex: 0.6;
-    }
+      .logo-text {
+        font-weight: 700;
+        font-size: 20px;
+        color: #fff;
+        letter-spacing: -0.5px;
+      }
 
-    .search-bar input {
-      flex: 1;
-      border: 1px solid #303030;
-      background-color: #121212;
-      color: #fff;
-      border-radius: 2px 0 0 2px;
-      padding: 10px;
-      font-size: 16px;
-    }
+      .search-bar {
+        display: flex;
+        align-items: center;
+        flex: 0.5;
+        max-width: 600px;
+      }
 
-    .search-button {
-      background-color: #303030;
-      border: 1px solid #303030;
-      border-left: none;
-      padding: 10px 15px;
-      border-radius: 0 2px 2px 0;
-      cursor: pointer;
-      color: #aaa;
-    }
+      .search-bar input {
+        flex: 1;
+        border: 1px solid rgba(255, 0, 0, 0.1);
+        background-color: rgba(15, 5, 5, 0.4);
+        color: #fff;
+        border-radius: 8px 0 0 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
 
-    .user-actions {
-      display: flex;
-      align-items: center;
-    }
+      .search-bar input:focus {
+        outline: none;
+        background-color: rgba(20, 5, 5, 0.5);
+        border-color: rgba(255, 0, 0, 0.3);
+        box-shadow: 0 0 3px rgba(255, 0, 0, 0.2);
+      }
 
-    .icon {
-      margin-left: 20px;
-      width: 24px;
-      height: 24px;
-      background-color: #aaa;
-      border-radius: 50%;
-    }
+      .search-button {
+        background-color: rgba(255, 0, 0, 0.3);
+        border: 1px solid rgba(255, 0, 0, 0.1);
+        padding: 12px 16px;
+        border-radius: 0 8px 8px 0;
+        cursor: pointer;
+        color: #fff;
+        font-size: 16px;
+        transition: all 0.2s ease;
+      }
 
-    /* Main Content */
-    .container {
-      display: flex;
-      margin-top: 10px;
-    }
+      .search-button:hover {
+        background-color: rgba(255, 0, 0, 0.5);
+        box-shadow: 0 0 4px rgba(255, 0, 0, 0.3);
+      }
 
-    /* Sidebar */
-    .sidebar {
-      width: 240px;
-      background-color: #202020;
-      padding: 10px 0;
-      height: calc(100vh - 60px);
-      position: sticky;
-      top: 60px;
-      overflow-y: auto;
-    }
+      .user-actions {
+        display: flex;
+        align-items: center;
+      }
 
-    .sidebar-item {
-      display: flex;
-      align-items: center;
-      padding: 10px 20px;
-      cursor: pointer;
-      color: #fff;
-    }
+      .icon {
+        margin-left: 16px;
+        width: 36px;
+        height: 36px;
+        background-color: rgba(255, 0, 0, 0.1);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255, 0, 0, 0.05);
+      }
 
-    .sidebar-item:hover {
-      background-color: #383838;
-    }
+      .icon:hover {
+        background-color: rgba(255, 0, 0, 0.2);
+        transform: scale(1.05);
+        box-shadow: 0 0 4px rgba(255, 0, 0, 0.2);
+      }
 
-    .sidebar-icon {
-      width: 24px;
-      height: 24px;
-      background-color: #aaa;
-      margin-right: 20px;
-      border-radius: 50%;
-    }
+      /* Main Content */
+      .container {
+        display: flex;
+        margin-top: 0;
+      }
 
-    /* Videos Grid */
-    .videos {
-      flex: 1;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
-    }
-
-    .video-card {
-      cursor: pointer;
-    }
-
-    .thumbnail {
-      width: 100%;
-      height: 140px;
-      background-color: #383838;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-
-    .video-info {
-      display: flex;
-    }
-
-    .channel-icon {
-      width: 36px;
-      height: 36px;
-      background-color: #aaa;
-      border-radius: 50%;
-      margin-right: 10px;
-      flex-shrink: 0;
-    }
-
-    .video-details h3 {
-      font-size: 16px;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: #fff;
-    }
-
-    .channel-name, .video-stats {
-      font-size: 14px;
-      color: #aaa;
-    }
-
-    /* Categories */
-    .categories {
-      display: flex;
-      padding: 10px 20px;
-      overflow-x: auto;
-      background-color: #202020;
-      border-top: 1px solid #303030;
-      border-bottom: 1px solid #303030;
-    }
-
-    .category {
-      background-color: #383838;
-      padding: 8px 12px;
-      margin-right: 10px;
-      border-radius: 16px;
-      white-space: nowrap;
-      cursor: pointer;
-      color: #aaa;
-    }
-
-    .category.active {
-      background-color: #fff;
-      color: #0f0f0f;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
+      /* Sidebar */
       .sidebar {
-        display: none;
+        width: 240px;
+        background-color: rgba(15, 5, 5, 0.8);
+        padding: 16px 0;
+        height: calc(100vh - 64px);
+        position: sticky;
+        top: 64px;
+        overflow-y: auto;
+        border-right: 1px solid rgba(255, 0, 0, 0.05);
       }
-      
-      .search-bar {
-        flex: 0.4;
-      }
-    }
 
-    @media (max-width: 480px) {
-      .search-bar {
-        display: none;
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 24px;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.2s ease;
+        border-left: 0px solid #ff0000;
+        margin: 4px 0;
       }
-      
+
+      .sidebar-item:hover {
+        background-color: rgba(255, 0, 0, 0.05);
+        color: #fff;
+        border-left: 3px solid rgba(255, 0, 0, 0.7);
+      }
+
+      .sidebar-icon {
+        width: 24px;
+        height: 24px;
+        background: linear-gradient(135deg, #ff3333, #ff7070);
+        margin-right: 16px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .sidebar-item:hover .sidebar-icon {
+        transform: translateX(2px);
+      }
+
+      /* Videos Grid */
       .videos {
-        grid-template-columns: 1fr;
+        flex: 1;
+        padding: 24px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
       }
-    }
-  </style>
-</head>
-<body>
-  <!-- Header -->
-  <header>
-    <div class="logo">
-      <div class="logo-icon"></div>
-      <div class="logo-text">YouTube</div>
+
+      .video-card {
+        cursor: pointer;
+        background-color: rgba(20, 5, 5, 0.15);
+        border-radius: 12px;
+        padding: 0;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255, 0, 0, 0.05);
+        overflow: hidden;
+      }
+
+      .video-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        border-color: rgba(255, 0, 0, 0.15);
+      }
+
+      .thumbnail {
+        width: 100%;
+        height: 180px;
+        background-color: #120505;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .thumbnail::before {
+        content: "▶";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 36px;
+        opacity: 0;
+        transition: all 0.3s ease;
+        color: #fff;
+        background-color: rgba(255, 0, 0, 0.4);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.3);
+      }
+
+      .video-card:hover .thumbnail::before {
+        opacity: 1;
+      }
+
+      .video-info {
+        display: flex;
+        padding: 16px;
+      }
+
+      .channel-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #ff3333, #ff7070);
+        border-radius: 50%;
+        margin-right: 12px;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+      }
+
+      .video-card:hover .channel-icon {
+        transform: scale(1.05);
+      }
+
+      .video-details h3 {
+        font-size: 15px;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #fff;
+        line-height: 1.4;
+      }
+
+      .channel-name,
+      .video-stats {
+        font-size: 13px;
+      }
+
+      .channel-name {
+        color: #ff5555;
+        font-weight: 500;
+      }
+
+      .video-stats {
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 4px;
+      }
+
+      /* Categories */
+      .categories {
+        display: flex;
+        padding: 16px 24px;
+        overflow-x: auto;
+        background-color: rgba(15, 5, 5, 0.8);
+        border-bottom: 1px solid rgba(255, 0, 0, 0.08);
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 0, 0, 0.6) rgba(255, 0, 0, 0.05);
+      }
+
+      .categories::-webkit-scrollbar {
+        height: 4px;
+      }
+
+      .categories::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 0, 0, 0.6);
+        border-radius: 4px;
+      }
+
+      .category {
+        background-color: rgba(255, 0, 0, 0.05);
+        padding: 8px 16px;
+        margin-right: 12px;
+        border-radius: 20px;
+        white-space: nowrap;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255, 0, 0, 0.1);
+        font-size: 14px;
+      }
+
+      .category:hover {
+        background-color: rgba(255, 0, 0, 0.1);
+        color: #fff;
+        border-color: rgba(255, 0, 0, 0.2);
+        box-shadow: 0 0 4px rgba(255, 0, 0, 0.15);
+      }
+
+      .category.active {
+        background-color: rgba(255, 0, 0, 0.6);
+        color: #fff;
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Interactive elements */
+      .video-card .progress-bar {
+        height: 3px;
+        width: 100%;
+        background-color: rgba(255, 0, 0, 0.05);
+        margin-top: 8px;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .video-card .progress {
+        height: 100%;
+        width: 30%;
+        background: linear-gradient(90deg, #ff3333, #ff7070);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .sidebar {
+          display: none;
+        }
+
+        .search-bar {
+          flex: 0.4;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .search-bar {
+          display: none;
+        }
+
+        .videos {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon"></div>
+        <div class="logo-text">VideoVibe</div>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" placeholder="Search videos..." />
+        <div class="search-button">🔍</div>
+      </div>
+
+      <div class="user-actions">
+        <div class="icon"></div>
+        <div class="icon"></div>
+        <div class="icon"></div>
+      </div>
+    </header>
+
+    <!-- Categories -->
+    <div class="categories">
+      <div class="category active">For You</div>
+      <div class="category">Music</div>
+      <div class="category">Gaming</div>
+      <div class="category">News</div>
+      <div class="category">Live</div>
+      <div class="category">Comedy</div>
+      <div class="category">Sports</div>
+      <div class="category">Learning</div>
+      <div class="category">Tech</div>
+      <div class="category">Creative</div>
+      <div class="category">Trending</div>
     </div>
-    
-    <div class="search-bar">
-      <input type="text" placeholder="Search">
-      <div class="search-button">🔍</div>
+
+    <!-- Main Content -->
+    <div class="container">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-item">
+          <div class="sidebar-icon"></div>
+          <div>Home</div>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-icon"></div>
+          <div>Discover</div>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-icon"></div>
+          <div>Following</div>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-icon"></div>
+          <div>Collections</div>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-icon"></div>
+          <div>History</div>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-icon"></div>
+          <div>Your Videos</div>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-icon"></div>
+          <div>Watch Later</div>
+        </div>
+        <div class="sidebar-item">
+          <div class="sidebar-icon"></div>
+          <div>Favorites</div>
+        </div>
+      </div>
+
+      <!-- Videos Grid -->
+      <div class="videos">
+        <!-- Video 1 -->
+        <div class="video-card">
+          <div class="thumbnail"></div>
+          <div class="video-info">
+            <div class="channel-icon"></div>
+            <div class="video-details">
+              <h3>Modern Web Design Principles for Beginners</h3>
+              <div class="channel-name">Design Hub</div>
+              <div class="video-stats">120K views • 2 days ago</div>
+              <div class="progress-bar">
+                <div class="progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 2 -->
+        <div class="video-card">
+          <div class="thumbnail"></div>
+          <div class="video-info">
+            <div class="channel-icon"></div>
+            <div class="video-details">
+              <h3>CSS Grid Layout Mastery Workshop</h3>
+              <div class="channel-name">Code Masters</div>
+              <div class="video-stats">450K views • 1 week ago</div>
+              <div class="progress-bar">
+                <div class="progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 3 -->
+        <div class="video-card">
+          <div class="thumbnail"></div>
+          <div class="video-info">
+            <div class="channel-icon"></div>
+            <div class="video-details">
+              <h3>Interactive JavaScript Animations Tutorial</h3>
+              <div class="channel-name">JS Wizards</div>
+              <div class="video-stats">1.2M views • 3 months ago</div>
+              <div class="progress-bar">
+                <div class="progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 4 -->
+        <div class="video-card">
+          <div class="thumbnail"></div>
+          <div class="video-info">
+            <div class="channel-icon"></div>
+            <div class="video-details">
+              <h3>Responsive Design for Modern Websites</h3>
+              <div class="channel-name">Web Craft</div>
+              <div class="video-stats">890K views • 5 months ago</div>
+              <div class="progress-bar">
+                <div class="progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 5 -->
+        <div class="video-card">
+          <div class="thumbnail"></div>
+          <div class="video-info">
+            <div class="channel-icon"></div>
+            <div class="video-details">
+              <h3>UI/UX Design Trends for 2023</h3>
+              <div class="channel-name">Design Forward</div>
+              <div class="video-stats">320K views • 2 weeks ago</div>
+              <div class="progress-bar">
+                <div class="progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 6 -->
+        <div class="video-card">
+          <div class="thumbnail"></div>
+          <div class="video-info">
+            <div class="channel-icon"></div>
+            <div class="video-details">
+              <h3>Creating Smooth CSS Animations</h3>
+              <div class="channel-name">Animation Pro</div>
+              <div class="video-stats">750K views • 1 month ago</div>
+              <div class="progress-bar">
+                <div class="progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 7 -->
+        <div class="video-card">
+          <div class="thumbnail"></div>
+          <div class="video-info">
+            <div class="channel-icon"></div>
+            <div class="video-details">
+              <h3>Building a Professional Portfolio Website</h3>
+              <div class="channel-name">Career Dev</div>
+              <div class="video-stats">420K views • 3 weeks ago</div>
+              <div class="progress-bar">
+                <div class="progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 8 -->
+        <div class="video-card">
+          <div class="thumbnail"></div>
+          <div class="video-info">
+            <div class="channel-icon"></div>
+            <div class="video-details">
+              <h3>Web Development Skills for 2023</h3>
+              <div class="channel-name">Tech Career</div>
+              <div class="video-stats">980K views • 2 months ago</div>
+              <div class="progress-bar">
+                <div class="progress"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    
-    <div class="user-actions">
-      <div class="icon"></div>
-      <div class="icon"></div>
-      <div class="icon"></div>
-    </div>
-  </header>
-
-  <!-- Categories -->
-  <div class="categories">
-    <div class="category active">All</div>
-    <div class="category">Music</div>
-    <div class="category">Gaming</div>
-    <div class="category">News</div>
-    <div class="category">Live</div>
-    <div class="category">Comedy</div>
-    <div class="category">Sports</div>
-    <div class="category">Education</div>
-    <div class="category">Technology</div>
-  </div>
-
-  <!-- Main Content -->
-  <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="sidebar-item">
-        <div class="sidebar-icon"></div>
-        <div>Home</div>
-      </div>
-      <div class="sidebar-item">
-        <div class="sidebar-icon"></div>
-        <div>Explore</div>
-      </div>
-      <div class="sidebar-item">
-        <div class="sidebar-icon"></div>
-        <div>Subscriptions</div>
-      </div>
-      <div class="sidebar-item">
-        <div class="sidebar-icon"></div>
-        <div>Library</div>
-      </div>
-      <div class="sidebar-item">
-        <div class="sidebar-icon"></div>
-        <div>History</div>
-      </div>
-      <div class="sidebar-item">
-        <div class="sidebar-icon"></div>
-        <div>Your Videos</div>
-      </div>
-      <div class="sidebar-item">
-        <div class="sidebar-icon"></div>
-        <div>Watch Later</div>
-      </div>
-      <div class="sidebar-item">
-        <div class="sidebar-icon"></div>
-        <div>Liked Videos</div>
-      </div>
-    </div>
-
-    <!-- Videos Grid -->
-    <div class="videos">
-      <!-- Video 1 -->
-      <div class="video-card">
-        <div class="thumbnail"></div>
-        <div class="video-info">
-          <div class="channel-icon"></div>
-          <div class="video-details">
-            <h3>How to Build a YouTube Clone with HTML & CSS</h3>
-            <div class="channel-name">Web Dev Channel</div>
-            <div class="video-stats">120K views • 2 days ago</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Video 2 -->
-      <div class="video-card">
-        <div class="thumbnail"></div>
-        <div class="video-info">
-          <div class="channel-icon"></div>
-          <div class="video-details">
-            <h3>Learn CSS Grid in 20 Minutes</h3>
-            <div class="channel-name">CSS Mastery</div>
-            <div class="video-stats">450K views • 1 week ago</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Video 3 -->
-      <div class="video-card">
-        <div class="thumbnail"></div>
-        <div class="video-info">
-          <div class="channel-icon"></div>
-          <div class="video-details">
-            <h3>JavaScript Crash Course for Beginners</h3>
-            <div class="channel-name">JS Tutorials</div>
-            <div class="video-stats">1.2M views • 3 months ago</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Video 4 -->
-      <div class="video-card">
-        <div class="thumbnail"></div>
-        <div class="video-info">
-          <div class="channel-icon"></div>
-          <div class="video-details">
-            <h3>Responsive Web Design Tutorial</h3>
-            <div class="channel-name">Design Masters</div>
-            <div class="video-stats">890K views • 5 months ago</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Video 5 -->
-      <div class="video-card">
-        <div class="thumbnail"></div>
-        <div class="video-info">
-          <div class="channel-icon"></div>
-          <div class="video-details">
-            <h3>HTML5 New Features Explained</h3>
-            <div class="channel-name">Web Standards</div>
-            <div class="video-stats">320K views • 2 weeks ago</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Video 6 -->
-      <div class="video-card">
-        <div class="thumbnail"></div>
-        <div class="video-info">
-          <div class="channel-icon"></div>
-          <div class="video-details">
-            <h3>CSS Animation Tutorial</h3>
-            <div class="channel-name">Creative Coding</div>
-            <div class="video-stats">750K views • 1 month ago</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Video 7 -->
-      <div class="video-card">
-        <div class="thumbnail"></div>
-        <div class="video-info">
-          <div class="channel-icon"></div>
-          <div class="video-details">
-            <h3>Build a Portfolio Website from Scratch</h3>
-            <div class="channel-name">Frontend Projects</div>
-            <div class="video-stats">420K views • 3 weeks ago</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Video 8 -->
-      <div class="video-card">
-        <div class="thumbnail"></div>
-        <div class="video-info">
-          <div class="channel-icon"></div>
-          <div class="video-details">
-            <h3>Web Development in 2023 - What to Learn</h3>
-            <div class="channel-name">Tech Career Tips</div>
-            <div class="video-stats">980K views • 2 months ago</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
+  </body>
 </html>

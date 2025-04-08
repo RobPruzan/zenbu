@@ -1,4 +1,4 @@
-import { CoreMessage, Message } from "ai";
+import { CoreMessage, DataContent, Message } from "ai";
 import { EventLogEvent, PluginServerEvent } from "./ws.js";
 // what if we apply the same processing, but just split the arrays into groups of request ids pairs and order
 // we could just attach a thread id to the event log and call it a day
@@ -32,16 +32,41 @@ const intoGroups = (events: Array<EventLogEvent>) => {
   return groups;
 };
 
-export const toChatMessages = (inEvents: Array<EventLogEvent>) => {
-  const messages: Array<Omit<Message, "id">> = [];
+export const toChatMessages = (
+  inEvents: Array<EventLogEvent>,
+  toImage: (path: string) => Promise<DataContent> | URL = (path) =>
+    new URL(`http://localhost:5001/image/${path}`)
+) => {
+  const messages: Array<CoreMessage> = [];
   const processedIndices = new Set<number>();
-  inEvents.forEach((event, index) => {
+  inEvents.forEach(async (event, index) => {
     if (processedIndices.has(index)) {
       return;
     }
 
     switch (event.kind) {
       case "user-message": {
+        const first = event.context.find((item) => item.kind === "image");
+        if (first) {
+
+          const message: CoreMessage = {
+            role: "user",
+            content: [
+              {
+                type: "image",
+                // image: await readFile(`.zenbu/screenshots/${first.filePath}`),
+                // image: `.zenbu/screenshots/${first.filePath}`,
+                image: await toImage(first.filePath),
+              },
+              {
+                type: "text",
+                text: event.text,
+              },
+            ],
+          };
+          messages.push(message);
+          return;
+        }
         messages.push({
           role: "user",
           content: event.text,
@@ -50,7 +75,7 @@ export const toChatMessages = (inEvents: Array<EventLogEvent>) => {
         return;
       }
       case "assistant-simple-message": {
-        const acc: Omit<Message, "id"> = {
+        const acc: CoreMessage = {
           role: "assistant",
           content: "",
         };
@@ -77,18 +102,22 @@ export const toChatMessages = (inEvents: Array<EventLogEvent>) => {
   });
   return messages;
 };
-export const toGroupedChatMessages = (events: Array<EventLogEvent>) => {
+export const toGroupedChatMessages = (
+  events: Array<EventLogEvent>,
+  toImage: (path: string) => Promise<DataContent> | URL = (path) =>
+    new URL(`http://localhost:5001/image/${path}`)
+) => {
   // console.log("in events", events);
 
   const { mainThread: mainThreadEvents, ...threads } = intoGroups(events);
 
   // console.log("wut", Object.keys(threads));
-  const mainThreadMessages = toChatMessages(mainThreadEvents);
+  const mainThreadMessages = toChatMessages(mainThreadEvents, toImage);
 
   const otherThreadsMessages = Object.keys(threads)
     .map((threadId) => threads[threadId])
 
-    .map(toChatMessages);
+    .map((item) => toChatMessages(item, toImage));
 
   return { mainThreadMessages, otherThreadsMessages };
 };

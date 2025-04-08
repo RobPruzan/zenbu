@@ -1,4 +1,10 @@
-import { generateObject, streamText, tool } from "ai";
+import {
+  AssistantContent,
+  CoreMessage,
+  generateObject,
+  streamText,
+  tool,
+} from "ai";
 import { ChatMessage, toChatMessages } from "../ws/utils.js";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
@@ -6,6 +12,7 @@ import { getTemplatedZenbuPrompt, removeComments } from "../create-server.js";
 import {
   EventLogEvent,
   getCodebaseIndexPrompt,
+  imageToBytes,
   PluginServerEvent,
 } from "../ws/ws.js";
 import { nanoid } from "nanoid";
@@ -41,13 +48,30 @@ export const handleMessage = async ({
   newMessage: string;
 }) => {
   const accumulatedTextDeltas: Array<PluginServerEvent> = [];
-  const previousChatMessages = toChatMessages(previousEvents);
+  const previousChatMessages = toChatMessages(previousEvents, imageToBytes);
   taskSet.add({
     taskId: nanoid(),
     timestamp: Date.now(),
     userMessage: newMessage,
     status: "idle",
   });
+  const messages: Array<CoreMessage> = [
+    {
+      content: await getTemplatedZenbuPrompt(),
+      role: "system",
+      // role: 'system',
+      //   content: 'f'
+    },
+    {
+      content: await getCodebaseIndexPrompt(),
+      role: "system",
+    },
+    ...previousChatMessages,
+    {
+      role: "user",
+      content: getTaskSetAsString(),
+    },
+  ];
   const { fullStream } = streamText({
     temperature: 1,
     providerOptions: {
@@ -59,21 +83,7 @@ export const handleMessage = async ({
     model: google("gemini-2.0-flash-exp"),
     maxSteps: 50,
     maxTokens: 8192,
-    messages: [
-      {
-        content: await getTemplatedZenbuPrompt(),
-        role: "system",
-      },
-      {
-        content: await getCodebaseIndexPrompt(),
-        role: "system",
-      },
-      ...previousChatMessages,
-      {
-        role: "data",
-        content: getTaskSetAsString(),
-      },
-    ],
+    messages,
     tools: {
       edit_file: tool({
         // description: "",
@@ -342,17 +352,17 @@ export const sendIdleMainThreadMessage = async ({
   requestId,
 }: {
   emitEvent: (text: string) => void;
-  message: string;
+  message: CoreMessage;
   previousChatMessages: Array<ChatMessage>;
   requestId: string;
 }) => {
   const accumulatedTextDeltas: Array<PluginServerEvent> = [];
-  taskSet.add({
-    taskId: nanoid(),
-    timestamp: Date.now(),
-    userMessage: message,
-    status: "idle",
-  });
+  // taskSet.add({
+  //   taskId: nanoid(),
+  //   timestamp: Date.now(),
+  //   userMessage: message,
+  //   status: "idle",
+  // });
 
   emitEvent("⚡");
   const abortController = new AbortController();
@@ -379,10 +389,11 @@ export const sendIdleMainThreadMessage = async ({
         role: "system",
       },
       ...previousChatMessages,
-      {
-        role: "user",
-        content: getTaskSetAsString(),
-      },
+      message
+      // {
+      //   role: "user",
+      //   content: getTaskSetAsString(),
+      // },
     ],
     toolCallStreaming: true,
     tools: {
@@ -403,19 +414,28 @@ export const sendIdleMainThreadMessage = async ({
           // batch close scope modification together, but you must select the parent scope in that case
           //
 
+          const assistantAccContent = toChatMessages(
+            accumulatedTextDeltas,
+            imageToBytes
+          )[0].content as AssistantContent;
           const res = await textEditor({
             emit: emitEvent,
             filePath: target_file_path,
             fullChatHistory: [
               ...previousChatMessages,
-              {
-                role: "data",
-                content: getTaskSetAsString(),
-              },
+              // {
+              //   role: "user",
+              //   content: getTaskSetAsString(),
+              // },
               {
                 role: "assistant",
-                content: toChatMessages(accumulatedTextDeltas)[0].content,
+                content: assistantAccContent,
               },
+              // {
+              //   role: "assistant",
+              //   content: what,
+              //   // content: "f"
+              // },
             ],
             writeToPath: target_file_path,
           });

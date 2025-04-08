@@ -3,9 +3,11 @@ import {
   CoreMessage,
   generateObject,
   generateText,
+  ImagePart,
   streamObject,
   streamText,
   tool,
+  UserContent,
 } from "ai";
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
@@ -14,7 +16,7 @@ import { z } from "zod";
 import { ChatMessage, toChatMessages, toGroupedChatMessages } from "./utils.js";
 import { getTemplatedZenbuPrompt, removeComments } from "../create-server.js";
 import { codeBaseSearch, indexCodebase } from "../tools/code-base-search.js";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, stat, writeFile } from "node:fs/promises";
 import { editFile } from "../tools/edit.js";
 import { groq } from "@ai-sdk/groq";
 import { openai } from "@ai-sdk/openai";
@@ -56,7 +58,7 @@ export type EventLogEvent =
 export type ClientMessageEvent = {
   id: string;
   kind: "user-message";
-  context: any;
+  context: Array<{ kind: "image"; filePath: string }>;
   text: string;
   requestId: string;
   timestamp: number;
@@ -212,7 +214,10 @@ export const injectWebSocket = (server: HttpServer) => {
                   await sendActiveMainThreadMessage({
                     emitEvent,
                     message: event.text,
-                    previousChatMessages: toChatMessages(event.previousEvents),
+                    previousChatMessages: toChatMessages(
+                      event.previousEvents,
+                      imageToBytes
+                    ),
                     requestId: event.requestId,
                   });
                 } catch {
@@ -227,11 +232,37 @@ export const injectWebSocket = (server: HttpServer) => {
                 // try {
                 emitEvent("🔥");
 
+                const messages = toChatMessages(
+                  event.previousEvents,
+                  imageToBytes
+                );
+                console.log("the chat messages", messages);
+
+                const content: UserContent = await Promise.all([
+                  ...event.context.map(async (c) => {
+                    const userContent: ImagePart = {
+                      type: "image",
+                      image: await imageToBytes(c.filePath),
+                    };
+                    return userContent;
+                  }),
+                ]);
+
+                // todo: this is broken if the user doesn't send a message
+                // would be nice if we had auto prompt that say just "the user sent an image with no text, infer meaning from that image, it might be referencing that the agent should do something, likely contextual"
+                content.push({
+                  type: "text",
+                  text: event.text,
+                });
                 try {
                   await sendIdleMainThreadMessage({
                     emitEvent,
-                    message: event.text,
-                    previousChatMessages: toChatMessages(event.previousEvents),
+                    message: {
+                      role: "user",
+                      // gonna regret this
+                      content: content,
+                    },
+                    previousChatMessages: messages,
                     requestId: event.requestId,
                   });
                 } catch {
@@ -248,7 +279,7 @@ export const injectWebSocket = (server: HttpServer) => {
           }
           case "user-task": {
             parallelizeTask({
-              chatMessages: toChatMessages(event.previousEvents), // im actually not sure if I want the thread to see the models temporary work... i probably do
+              chatMessages: toChatMessages(event.previousEvents, imageToBytes), // im actually not sure if I want the thread to see the models temporary work... i probably do
               emitEvent,
               message: event.text,
             }).catch(() => {
@@ -290,4 +321,13 @@ const emitAssistantMessage = ({
     id: crypto.randomUUID(),
     threadId,
   } satisfies PluginServerEvent);
+};
+
+export const imageToBytes = async (path: string) => {
+  console.log(
+    "why dear one",
+    process.cwd(),
+    await stat(`.zenbu/screenshots/${path}`).catch(() => null)
+  );
+  return await readFile(`.zenbu/screenshots/${path}`);
 };

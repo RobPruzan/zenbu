@@ -76,6 +76,21 @@ export const createServer = async () => {
         });
       }
     )
+    .get("/image/:path", async (opts) => {
+      const leafPath = opts.req.param("path");
+
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "image/png");
+      const path = `.zenbu/screenshots/${leafPath}`;
+
+      const file = await readFile(path);
+
+      const res = new Response(file, {
+        headers: myHeaders,
+      });
+
+      return res;
+    })
     .post("/upload", async (opts) => {
       // this may be fire hold up??
       // i guess we want form shit
@@ -99,7 +114,12 @@ export const createServer = async () => {
 
       const now = Date.now();
 
-      const fileName = `ss-${now}-${nanoid()}`;
+      const fileName = `ss-${now}-${nanoid()}.png`;
+      // oops we need to upload this somewhere else or detect files correctly
+      // oops this is writing to the wrong dir, needs to be to the actual project lol
+      // wait does it?
+      // no it doesn't :o
+      // you can just scope to the plugin i suppose, and have a hidden dir with stuff? Is this preferred? Idk
       const path = `.zenbu/screenshots/${fileName}`;
 
       await writeFile(path, imageBytes);
@@ -132,7 +152,7 @@ export const createServer = async () => {
   return route;
 };
 
-export type AppType = ReturnType<typeof createServer>;
+export type AppType = Awaited<ReturnType<typeof createServer>>;
 
 /**
  *

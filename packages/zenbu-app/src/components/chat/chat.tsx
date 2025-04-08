@@ -33,7 +33,7 @@ import { ChatMessage, toGroupedChatMessages } from "zenbu-plugin/src/ws/utils";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
-import ChatTextArea from "./context-input";
+import ChatComponent from "./context-input";
 import TokenStreamingWrapper from "./wrapper";
 import { ThinkingUITester } from "./thinking";
 import { Socket } from "socket.io-client";
@@ -85,6 +85,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
     eventLog.events,
   );
 
+  console.log("chat messages", mainThreadMessages);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
@@ -245,7 +246,9 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                             key={msgIndex}
                             className="text-[11px] text-[#A1A1A6] font-light"
                           >
-                            {message.content}
+                            {typeof message.content === "string"
+                              ? message.content
+                              : "not text"}
                           </div>
                         ))}
                       </div>
@@ -257,130 +260,16 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
         )}
 
         <div className="px-4 pb-4 relative z-10 w-full">
-          <div className="rounded-2xl backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden w-full transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.18)]">
-            <div className="flex items-center px-2 py-1.5 border-b border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
-              <div className="flex-1 flex items-center gap-2 justify-between">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`h-7 px-2.5 py-1 rounded-full flex items-center transition-all duration-300 ${
-                          inspector.state.kind === "inspecting"
-                            ? "text-white bg-[rgba(50,50,56,0.7)] border border-[rgba(255,255,255,0.08)] shadow-[0_2px_12px_rgba(0,0,0,0.2)]"
-                            : "text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)]"
-                        }`}
-                        onClick={() => {
-                          inspector.actions.setInspectorState({
-                            kind:
-                              inspector.state.kind === "inspecting"
-                                ? "off"
-                                : "inspecting",
-                          });
-                        }}
-                      >
-                        <Inspect className="h-3 w-3 mr-1" />
-                        <span className="text-[10px] font-light">Select</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="top"
-                      className="text-[10px] py-1.5 px-3 bg-[rgba(24,24,26,0.9)] backdrop-blur-2xl text-white border-[rgba(255,255,255,0.05)] rounded-full font-light shadow-sm"
-                    >
-                      Inspect element
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        onClick={() => {
-                          toolbar.actions.setState(
-                            toolbar.state.kind === "recording"
-                              ? {
-                                  kind: "idle",
-                                }
-                              : {
-                                  kind: "recording",
-                                },
-                          );
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"
-                      >
-                        <Video className="h-3 w-3 mr-1" />
-                        <span className="text-[10px] font-light">Record</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="top"
-                      className="text-[10px] py-1.5 px-3 bg-[rgba(24,24,26,0.9)] backdrop-blur-2xl text-white border-[rgba(255,255,255,0.05)] rounded-full font-light shadow-sm"
-                    >
-                      Record interactions
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"
-                      >
-                        <Camera className="h-3 w-3 mr-1" />
-                        <span className="text-[10px] font-light">
-                          Screenshot
-                        </span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="top"
-                      className="text-[10px] py-1.5 px-3 bg-[rgba(24,24,26,0.9)] backdrop-blur-2xl text-white border-[rgba(255,255,255,0.05)] rounded-full font-light shadow-sm"
-                    >
-                      Take screenshot
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        onClick={() => {
-                          toolbar.actions.setState(
-                            toolbar.state.kind === "drawing"
-                              ? { kind: "idle" }
-                              : { kind: "drawing" },
-                          );
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2.5 py-1 rounded-full flex items-center text-[#A1A1A6] hover:text-white hover:bg-[rgba(40,40,46,0.7)] border border-[rgba(255,255,255,0.05)] transition-all duration-300"
-                      >
-                        <PenTool className="h-3 w-3 mr-1" />
-                        <span className="text-[10px] font-light">Draw</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="top"
-                      className="text-[10px] py-1.5 px-3 bg-[rgba(24,24,26,0.9)] backdrop-blur-2xl text-white border-[rgba(255,255,255,0.05)] rounded-full font-light shadow-sm"
-                    >
-                      Draw on page
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-
+          <div className="rounded-lg rounded-t-lg backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden w-full transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.18)]">
             <div className="flex flex-col text-xs">
               <div className="relative min-h-[50px] w-full bg-[rgba(20,20,22,0.4)] backdrop-filter backdrop-blur-md">
-                <ChatTextArea />
+                {/* <div className="rounded-t-lg bg-[#141414]">
+
+
+                  <div className="h-[8px]"></div>
+
+                </div> */}
+                <ChatComponent />
                 {/* <textarea
                 ref={textareaRef}
                 value={chatControls.state.input}
