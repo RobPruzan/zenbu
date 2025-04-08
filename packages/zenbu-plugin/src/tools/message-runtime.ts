@@ -48,13 +48,17 @@ export const handleMessage = async ({
   newMessage: string;
 }) => {
   const accumulatedTextDeltas: Array<PluginServerEvent> = [];
-  const previousChatMessages = toChatMessages(previousEvents, imageToBytes);
-  taskSet.add({
-    taskId: nanoid(),
-    timestamp: Date.now(),
-    userMessage: newMessage,
-    status: "idle",
-  });
+  const previousChatMessages = await toChatMessages(
+    previousEvents,
+    true,
+    imageToBytes
+  );
+  // taskSet.add({
+  //   taskId: nanoid(),
+  //   timestamp: Date.now(),
+  //   userMessage: newMessage,
+  //   status: "idle",
+  // });
   const messages: Array<CoreMessage> = [
     {
       content: await getTemplatedZenbuPrompt(),
@@ -389,7 +393,7 @@ export const sendIdleMainThreadMessage = async ({
         role: "system",
       },
       ...previousChatMessages,
-      message
+      message,
       // {
       //   role: "user",
       //   content: getTaskSetAsString(),
@@ -414,9 +418,8 @@ export const sendIdleMainThreadMessage = async ({
           // batch close scope modification together, but you must select the parent scope in that case
           //
 
-          const assistantAccContent = toChatMessages(
-            accumulatedTextDeltas,
-            imageToBytes
+          const assistantAccContent = (
+            await toChatMessages(accumulatedTextDeltas, true, imageToBytes)
           )[0].content as AssistantContent;
           const res = await textEditor({
             emit: emitEvent,
