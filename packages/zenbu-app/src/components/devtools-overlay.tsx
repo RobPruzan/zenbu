@@ -109,14 +109,14 @@ export function DevtoolsOverlay() {
   useEffect(() => {
     const getState = store.getState;
     const canvas = canvasRef.current;
-    const iframe = document.getElementById(IFRAME_ID)! as HTMLIFrameElement
+    const iframe = document.getElementById(IFRAME_ID)! as HTMLIFrameElement;
     if (!canvas || !iframe) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
+
       // this acts as validation and why we can assert the event is the above type
       // we need to switch to runtime validation, we can't do this generally
       if (event.origin !== "http://localhost:4200") {
@@ -298,7 +298,7 @@ export function DevtoolsOverlay() {
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [ store]);
+  }, [store]);
 
   return (
     <canvas
@@ -359,7 +359,7 @@ export const InspectorStateContext = createContext<{
   setInspectorState: Dispatch<SetStateAction<InspectorState>>;
 }>(null!);
 
-export const useMakeRequest = ( ) => {
+export const useMakeRequest = () => {
   const sendMessage = useIFrameMessenger();
 
   return async <T extends ParentToChildMessage & { responsePossible: true }>(
@@ -374,25 +374,33 @@ export const useMakeRequest = ( ) => {
     const messageId = nanoid();
 
     // todo remember why this is broken
-    sendMessage({
-      ...message,
-      id: messageId,
-    });
 
-    return new Promise<ChildToParentMessage>((res, rej) => {
+    const hotPromise = new Promise<ChildToParentMessage>((res, rej) => {
       const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-        if (event.origin !== "http://localhost:4200") return;
+        if (event.origin !== "http://localhost:4200") {
+          console.log("wrong orgiin", event);
+
+          return;
+        }
 
         if (event.data.id === messageId) {
+          window.removeEventListener("message", handleMessage);
           res(event.data);
-        }
+        } 
       };
 
-      window.addEventListener("message", handleMessage, { once: true });
+      window.addEventListener("message", handleMessage);
 
       setTimeout(() => {
+        window.removeEventListener("message", handleMessage);
         rej();
-      }, 1000);
+      }, 2000);
+
+      sendMessage({
+        ...message,
+        id: messageId,
+      });
     });
+    return hotPromise;
   };
 };

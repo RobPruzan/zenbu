@@ -10,10 +10,10 @@ import { Button } from "../ui/button";
 export const Header = ({ onCloseChat }: { onCloseChat: () => void }) => {
   return (
     <div className="relative z-10 backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border-b border-[rgba(255,255,255,0.04)]">
-      <div className="flex items-center justify-between h-12 px-3">
+      <div className="flex gap-x-1 items-center justify-between h-12 px-3">
         <div className="flex-1"></div>
         <div className="flex items-center bg-[rgba(30,30,34,0.55)] backdrop-blur-xl border border-[rgba(255,255,255,0.05)] rounded-full h-7 w-[280px] px-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-2.5 shadow-[0_0_6px_rgba(52,211,153,0.6)]"></div>
+          {/* <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-2.5 shadow-[0_0_6px_rgba(52,211,153,0.6)]"></div> */}
           <span className="font-light text-[11px] text-[#F2F2F7]">
             localhost:4200
           </span>

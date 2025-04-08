@@ -193,14 +193,14 @@
         border-radius: 12px;
         padding: 0;
         transition: all 0.2s ease;
-        border: 1px solid rgba(255, 0, 0, 0.05);
+        border: 1px solid rgba(255, 165, 0, 0.15);
         overflow: hidden;
       }
 
       .video-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-        border-color: rgba(255, 0, 0, 0.15);
+        border-color: rgba(255, 165, 0, 0.5);
       }
 
       .thumbnail {
@@ -209,6 +209,8 @@
         background-color: #120505;
         position: relative;
         overflow: hidden;
+        border: 2px solid #ffa500;
+        box-shadow: 0 0 8px rgba(255, 165, 0, 0.5);
       }
 
       .thumbnail::before {
@@ -221,14 +223,14 @@
         opacity: 0;
         transition: all 0.3s ease;
         color: #fff;
-        background-color: rgba(255, 0, 0, 0.4);
+        background-color: rgba(255, 165, 0, 0.4);
         width: 60px;
         height: 60px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 0 8px rgba(255, 0, 0, 0.3);
+        box-shadow: 0 0 8px rgba(255, 165, 0, 0.5);
       }
 
       .video-card:hover .thumbnail::before {

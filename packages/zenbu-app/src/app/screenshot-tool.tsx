@@ -185,7 +185,7 @@ export const ScreenshotTool = () => {
         });
 
         const currentPivot = pivotMap[pos];
-        console.log("curr pivot", currentPivot);
+        // console.log("curr pivot", currentPivot);
 
         // perhaps i can just set the top/left/right/bottom properties to update the square?
 
@@ -263,100 +263,111 @@ export const ScreenshotTool = () => {
         setIsDragging(true);
       }}
       onMouseUp={async (e) => {
-        if (!screenshotElBoundingRect) {
-          return;
-        }
-
-        const rect = e.currentTarget.getBoundingClientRect();
-        const current = {
-          y: e.clientY - rect.top,
-          x: e.clientX - rect.left,
-        };
-        setSuccessMessageLocation({
-          top: current.y,
-          left: current.x,
-        });
-        setScreenshotElBoundingRect(undefined);
-        setIsDragging(false);
-        setPivot(null);
-
-        const boundingRect = containerRefLazy().getBoundingClientRect();
-        const coordinates = {
-          tl: {
-            x: screenshotElBoundingRect.left,
-            y: screenshotElBoundingRect.top,
-          },
-          br: {
-            x: boundingRect.width - screenshotElBoundingRect.right,
-            y: boundingRect.height - screenshotElBoundingRect.bottom,
-          },
-        };
-
-        const response = await makeRequest({
-          kind: "take-screenshot",
-          id: nanoid(),
-          responsePossible: true,
-        });
-        if (response.kind !== "screenshot-response") {
-          throw new Error("invariant");
-        }
-        const editor = getEditor();
-        const shapesURI = editor
-          ? await captureViewport(editor)
-          : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-
-        const iframe = document.getElementById(IFRAME_ID) as HTMLIFrameElement;
-
-        const { height, width } = iframe.getBoundingClientRect();
-
-        // scaleAndCopyImage(response.dataUrl as string,)
-        const input: Parameters<typeof overlayImages>[0] = {
-          baseImageDataUrl: response.dataUrl,
-          cropCoordinates: coordinates,
-          overlayImageDataUrl: shapesURI as string,
-          height,
-          width,
-        };
-
-        console.log("da input", input);
-
-        const newImg = await overlayImages(input).catch(() => null);
-
-        if (!newImg) {
-          console.log("theres nuttin to copy");
-
-          return;
-        }
         try {
-          const response = await fetch(newImg.cropped);
-          const blob = await response.blob();
-          // this errors on safari without permissions it appears?
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              [blob.type]: blob,
-            }),
-          ]);
-        } catch (error) {
-          console.error("Failed to copy image to clipboard:", error);
-          await navigator.clipboard.writeText(newImg.cropped);
+          if (!screenshotElBoundingRect) {
+            return;
+          }
+
+          const rect = e.currentTarget.getBoundingClientRect();
+          const current = {
+            y: e.clientY - rect.top,
+            x: e.clientX - rect.left,
+          };
+          setSuccessMessageLocation({
+            top: current.y,
+            left: current.x,
+          });
+          setScreenshotElBoundingRect(undefined);
+          setIsDragging(false);
+          setPivot(null);
+
+          const boundingRect = containerRefLazy().getBoundingClientRect();
+          const coordinates = {
+            tl: {
+              x: screenshotElBoundingRect.left,
+              y: screenshotElBoundingRect.top,
+            },
+            br: {
+              x: boundingRect.width - screenshotElBoundingRect.right,
+              y: boundingRect.height - screenshotElBoundingRect.bottom,
+            },
+          };
+
+          const id = nanoid();
+          // console.log("looking for", id);
+
+          const response = await makeRequest({
+            kind: "take-screenshot",
+            id,
+            responsePossible: true,
+          });
+          if (response.kind !== "screenshot-response") {
+            throw new Error("invariant");
+          }
+          const editor = getEditor();
+          const shapesURI = editor
+            ? await captureViewport(editor)
+            : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+          const iframe = document.getElementById(
+            IFRAME_ID,
+          ) as HTMLIFrameElement;
+
+          const { height, width } = iframe.getBoundingClientRect();
+
+          // scaleAndCopyImage(response.dataUrl as string,)
+          const input: Parameters<typeof overlayImages>[0] = {
+            baseImageDataUrl: response.dataUrl,
+            cropCoordinates: coordinates,
+            overlayImageDataUrl: shapesURI as string,
+            height,
+            width,
+          };
+
+          console.log("da input", input);
+
+          const newImg = await overlayImages(input).catch(() => null);
+
+          if (!newImg) {
+            console.log("theres nuttin to copy");
+
+            return;
+          }
+          try {
+            const response = await fetch(newImg.cropped);
+            const blob = await response.blob();
+            // this errors on safari without permissions it appears?
+            console.log("blobby boy", blob);
+
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                [blob.type]: blob,
+              }),
+            ]);
+          } catch (error) {
+            console.error("Failed to copy image to clipboard:", error);
+            await navigator.clipboard.writeText(newImg.cropped);
+          }
+
+          setIsSuccessMessageShown(true);
+
+          // no reason it has to fade away, i think?
+          // setTimeout(() => {
+          //   setIsSuccessMessageShown(false);
+          //   setSuccessMessageLocation(null);
+          // }, 2000);
+
+          // console.log("params", {
+          //   baseImageDataUrl: response.dataUrl,
+          //   cropCoordinates: coordinates,
+          //   overlayImageDataUrl: shapesURI,
+          // });
+
+          console.log("we got dat screenshot", newImg);
+          console.log("and the input", input);
+        } catch (e) {
+          console.log("what the shit", e);
         }
-
-        setIsSuccessMessageShown(true);
-
-        // no reason it has to fade away, i think?
-        // setTimeout(() => {
-        //   setIsSuccessMessageShown(false);
-        //   setSuccessMessageLocation(null);
-        // }, 2000);
-
-        // console.log("params", {
-        //   baseImageDataUrl: response.dataUrl,
-        //   cropCoordinates: coordinates,
-        //   overlayImageDataUrl: shapesURI,
-        // });
-
-        console.log("we got dat screenshot", newImg);
-        console.log("and the input", input);
       }}
       style={{
         zIndex: 1000000,
@@ -395,31 +406,28 @@ export const ScreenshotTool = () => {
         className="absolute top-2 select-none left-1/2 transform -translate-x-1/2 border rounded-md bg-background"
       >
         <div className="flex border-b w-full">
-
-        <Button
-          variant={"ghost"}
-          className="rounded-none"
-          onClick={() => {
-            // actions.setIsScreenshotting(false);
-          }}
-        >
-          Screenshot Fullscreen
-        </Button>
-        <Button
-          className="rounded-none"
-          variant={"ghost"}
-          onClick={() => {
-            // todo
-            actions.setIsScreenshotting(false);
-          }}
-        >
-          Cancel Screenshot
-        </Button>
-
+          <Button
+            variant={"ghost"}
+            className="rounded-none"
+            onClick={() => {
+              // actions.setIsScreenshotting(false);
+            }}
+          >
+            Screenshot Fullscreen
+          </Button>
+          <Button
+            className="rounded-none"
+            variant={"ghost"}
+            onClick={() => {
+              // todo
+              actions.setIsScreenshotting(false);
+            }}
+          >
+            Cancel Screenshot
+          </Button>
         </div>
         {/* needs to be a list pookie */}
         <div className="bg-background rounded-md flex items-center p-3 gap-x-3 w-full ">
-
           {/* <div className="w-full flex justify-between items-center">
           </div> */}
 

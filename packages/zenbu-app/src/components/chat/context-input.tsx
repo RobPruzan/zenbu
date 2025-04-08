@@ -94,27 +94,31 @@ const ChatTextArea = () => {
     useChatStore();
   const { socket } = useWSContext();
 
+  // there should be no sync this was dumb design by grok
   const syncSelectedItems = () => {
-    const chatInput = chatInputRef.current;
-    if (!chatInput) return;
+    // if (Math.random() > 0) {
+    //   return;
+    // }
+    // const chatInput = chatInputRef.current;
+    // if (!chatInput) return;
 
-    const mentionSpans = chatInput.querySelectorAll(".mention");
-    const currentMentions: string[] = Array.from(mentionSpans)
-      .map((span) => span.textContent?.replace(/^@/, "") || "")
-      .filter((name) => name);
+    // const mentionSpans = chatInput.querySelectorAll(".mention");
+    // const currentMentions: string[] = Array.from(mentionSpans)
+    //   .map((span) => span.textContent?.replace(/^@/, "") || "")
+    //   .filter((name) => name);
 
-    setContextItems((prev) => {
-      const newItems: ContextItem[] = [];
-      currentMentions.forEach((mentionName) => {
-        const existingItem = prev.find((item) => item.name === mentionName);
-        if (existingItem) {
-          newItems.push(existingItem);
-        } else {
-          newItems.push({ kind: "react-scan", name: mentionName });
-        }
-      });
-      return newItems;
-    });
+    // setContextItems((prev) => {
+    //   const newItems: ContextItem[] = [];
+    //   currentMentions.forEach((mentionName) => {
+    //     const existingItem = prev.find((item) => item.name === mentionName);
+    //     if (existingItem) {
+    //       newItems.push(existingItem);
+    //     } else {
+    //       newItems.push({ kind: "react-scan", name: mentionName });
+    //     }
+    //   });
+    //   return newItems;
+    // });
   };
 
   const handleInput = () => {
