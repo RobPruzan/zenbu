@@ -32,14 +32,19 @@ const intoGroups = (events: Array<EventLogEvent>) => {
   return groups;
 };
 
-export const toChatMessages = (
+export const toChatMessages = async (
   inEvents: Array<EventLogEvent>,
+  sync: boolean,
   toImage: (path: string) => Promise<DataContent> | URL = (path) =>
     new URL(`http://localhost:5001/image/${path}`)
 ) => {
   const messages: Array<CoreMessage> = [];
   const processedIndices = new Set<number>();
-  inEvents.forEach(async (event, index) => {
+  // gahh we need ordering or else this gets all fucked
+  // timestamp needs to be sent on the message that's bare minimum
+  // why
+
+  const inner = async (event: EventLogEvent, index: number) => {
     if (processedIndices.has(index)) {
       return;
     }
@@ -48,7 +53,6 @@ export const toChatMessages = (
       case "user-message": {
         const first = event.context.find((item) => item.kind === "image");
         if (first) {
-
           const message: CoreMessage = {
             role: "user",
             content: [
@@ -99,11 +103,23 @@ export const toChatMessages = (
         return;
       }
     }
-  });
+  };
+
+  if (sync) {
+    for (let index = 0; index < inEvents.length; index++) {
+      const event = inEvents[index];
+      await inner(event, index);
+    }
+  } else {
+    await Promise.all(inEvents.map(inner));
+  }
+
   return messages;
 };
-export const toGroupedChatMessages = (
+
+export const toGroupedChatMessages = async (
   events: Array<EventLogEvent>,
+  sync: boolean,
   toImage: (path: string) => Promise<DataContent> | URL = (path) =>
     new URL(`http://localhost:5001/image/${path}`)
 ) => {
@@ -111,19 +127,26 @@ export const toGroupedChatMessages = (
 
   const { mainThread: mainThreadEvents, ...threads } = intoGroups(events);
 
-  // console.log("wut", Object.keys(threads));
-  const mainThreadMessages = toChatMessages(mainThreadEvents, toImage);
+  const mainThreadMessages = await toChatMessages(
+    mainThreadEvents,
+    sync,
+    toImage
+  );
 
-  const otherThreadsMessages = Object.keys(threads)
-    .map((threadId) => threads[threadId])
+  // console.log("wut", mainThreadMessages, mainThreadMessages.length, mainThreadMessages.slice());
 
-    .map((item) => toChatMessages(item, toImage));
+  const otherThreadsMessages = await Promise.all(
+    Object.keys(threads)
+      .map((threadId) => threads[threadId])
+
+      .map((item) => toChatMessages(item, sync, toImage))
+  );
 
   return { mainThreadMessages, otherThreadsMessages };
 };
 
-export type ChatMessage = ReturnType<
-  typeof toGroupedChatMessages
+export type ChatMessage = Awaited<
+  ReturnType<typeof toGroupedChatMessages>
 >["mainThreadMessages"][number];
 
 export const removeMarkdownComments = (content: string): string => {

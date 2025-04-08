@@ -132,59 +132,20 @@
 
       /* Main Content */
       .container {
-        display: flex;
         margin-top: 0;
       }
 
-      /* Sidebar */
-      .sidebar {
-        width: 240px;
-        background-color: rgba(15, 5, 5, 0.8);
-        padding: 16px 0;
-        height: calc(100vh - 64px);
-        position: sticky;
-        top: 64px;
-        overflow-y: auto;
-        border-right: 1px solid rgba(255, 0, 0, 0.05);
-      }
-
-      .sidebar-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 24px;
-        cursor: pointer;
-        color: rgba(255, 255, 255, 0.8);
-        transition: all 0.2s ease;
-        border-left: 0px solid #ff0000;
-        margin: 4px 0;
-      }
-
-      .sidebar-item:hover {
-        background-color: rgba(255, 0, 0, 0.05);
-        color: #fff;
-        border-left: 3px solid rgba(255, 0, 0, 0.7);
-      }
-
-      .sidebar-icon {
-        width: 24px;
-        height: 24px;
-        background: linear-gradient(135deg, #ff3333, #ff7070);
-        margin-right: 16px;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-      }
-
-      .sidebar-item:hover .sidebar-icon {
-        transform: translateX(2px);
-      }
+      /* Sidebar styles removed */
 
       /* Videos Grid */
       .videos {
-        flex: 1;
         padding: 24px;
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 24px;
+        width: 100%;
+        max-width: 1600px;
+        margin: 0 auto;
       }
 
       .video-card {
@@ -193,14 +154,15 @@
         border-radius: 12px;
         padding: 0;
         transition: all 0.2s ease;
-        border: 1px solid rgba(255, 165, 0, 0.15);
+        border: 1px solid rgba(255, 165, 0, 0.3);
         overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
 
       .video-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-        border-color: rgba(255, 165, 0, 0.5);
+        border-color: #ffa500;
       }
 
       .thumbnail {
@@ -209,8 +171,8 @@
         background-color: #120505;
         position: relative;
         overflow: hidden;
-        border: 2px solid #ffa500;
-        box-shadow: 0 0 8px rgba(255, 165, 0, 0.5);
+        border-bottom: 2px solid #ffa500;
+        box-shadow: 0 0 8px rgba(255, 165, 0, 0.3);
       }
 
       .thumbnail::before {
@@ -245,11 +207,12 @@
       .channel-icon {
         width: 40px;
         height: 40px;
-        background: linear-gradient(135deg, #ff3333, #ff7070);
+        background: linear-gradient(135deg, #ffa500, #ffcc00);
         border-radius: 50%;
         margin-right: 12px;
         flex-shrink: 0;
         transition: all 0.2s ease;
+        border: 1px solid rgba(255, 165, 0, 0.3);
       }
 
       .video-card:hover .channel-icon {
@@ -270,7 +233,7 @@
       }
 
       .channel-name {
-        color: #ff5555;
+        color: #ffa500;
         font-weight: 500;
       }
 
@@ -339,15 +302,11 @@
       .video-card .progress {
         height: 100%;
         width: 30%;
-        background: linear-gradient(90deg, #ff3333, #ff7070);
+        background: linear-gradient(90deg, #ffa500, #ffcc00);
       }
 
       /* Responsive Design */
       @media (max-width: 768px) {
-        .sidebar {
-          display: none;
-        }
-
         .search-bar {
           flex: 0.4;
         }
@@ -401,42 +360,6 @@
 
     <!-- Main Content -->
     <div class="container">
-      <!-- Sidebar -->
-      <div class="sidebar">
-        <div class="sidebar-item">
-          <div class="sidebar-icon"></div>
-          <div>Home</div>
-        </div>
-        <div class="sidebar-item">
-          <div class="sidebar-icon"></div>
-          <div>Discover</div>
-        </div>
-        <div class="sidebar-item">
-          <div class="sidebar-icon"></div>
-          <div>Following</div>
-        </div>
-        <div class="sidebar-item">
-          <div class="sidebar-icon"></div>
-          <div>Collections</div>
-        </div>
-        <div class="sidebar-item">
-          <div class="sidebar-icon"></div>
-          <div>History</div>
-        </div>
-        <div class="sidebar-item">
-          <div class="sidebar-icon"></div>
-          <div>Your Videos</div>
-        </div>
-        <div class="sidebar-item">
-          <div class="sidebar-icon"></div>
-          <div>Watch Later</div>
-        </div>
-        <div class="sidebar-item">
-          <div class="sidebar-icon"></div>
-          <div>Favorites</div>
-        </div>
-      </div>
-
       <!-- Videos Grid -->
       <div class="videos">
         <!-- Video 1 -->

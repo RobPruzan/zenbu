@@ -95,7 +95,7 @@ export type FocusedInfo = {
 };
 
 const sendMessage = (message: ChildToParentMessage) => {
-  console.log("posting to", TARGET_ORIGIN, message);
+  // console.log("posting to", TARGET_ORIGIN, message);
 
   window.parent.postMessage(message, TARGET_ORIGIN);
 };

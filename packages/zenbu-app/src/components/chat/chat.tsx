@@ -1,5 +1,12 @@
 "use client";
-import { useState, useRef, useEffect, createContext, useContext } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  createContext,
+  useContext,
+  useLayoutEffect,
+} from "react";
 import { useChatStore } from "../chat-instance-context";
 import { iife } from "~/lib/utils";
 import { useEventWS } from "~/app/ws";
@@ -37,6 +44,7 @@ import ChatComponent from "./context-input";
 import TokenStreamingWrapper from "./wrapper";
 import { ThinkingUITester } from "./thinking";
 import { Socket } from "socket.io-client";
+import { flushSync } from "react-dom";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -81,11 +89,36 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
     },
   });
 
-  const { mainThreadMessages, otherThreadsMessages } = toGroupedChatMessages(
-    eventLog.events,
-  );
+  const [mainThreadMessages, setMainThreadMessages] = useState<
+    Array<ChatMessage>
+  >([]);
 
-  console.log("chat messages", mainThreadMessages);
+  const [otherThreadMessages, setOtherThreadMessages] = useState<
+    Array<Array<ChatMessage>>
+  >([]);
+
+  // i need a post mortem here
+  // it would resolve the data only after a tick? It would return a promise? Why wouldn't the type show that though?
+  // omg its cause it would push it async, so then i wouldn't have the data every render no matter what, every time it regenerated it would have it one tick too late
+  useEffect(() => {
+    // flushSync(async () => {
+    iife(async () => {
+      // this should resolve as a microtask since its just a promise, so it should be complete before rendering, but unfortunately react will not flush it in time, whatever we pay a tick this is a dog shit abstraction i just need a sync vs async i don't know if there's a way around this aifjasdkl;fjhdsaklfjdas;lkjfdsa;kljfkl;adskjfj;dlaksfjk
+      // i will need to fix this i just will not rn
+      const { mainThreadMessages, otherThreadsMessages } =
+        await toGroupedChatMessages(eventLog.events, true);
+
+      setMainThreadMessages(mainThreadMessages);
+      setOtherThreadMessages(otherThreadsMessages);
+    });
+    // });
+  }, [eventLog.events]);
+  // const { mainThreadMessages, otherThreadsMessages } =
+  //
+
+  // const mainThreadMessages = Object.freeze([...mainThreadMessages_]);
+
+  // console.log("chat messages", mainThreadMessages.slice());
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
@@ -188,9 +221,21 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
           onScroll={handleScroll}
         >
           <div className="space-y-4 pt-3 pb-2 w-full">
+            {/* {`bro what len: ${mainThreadMessages.length}`} */}
+
             {mainThreadMessages.map((message, index) => (
               <div key={index}>
                 {iife(() => {
+                  console.log(
+                    "whats the roke",
+                    message.role,
+                    index,
+                    mainThreadMessages,
+                    mainThreadMessages.length,
+                    // otherThreadsMessages,
+                    eventLog,
+                  );
+
                   switch (message.role) {
                     case "assistant": {
                       return (
@@ -211,7 +256,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
           {/* <ThinkingUITester/> */}
         </ScrollArea>
 
-        {otherThreadsMessages.length > 0 && (
+        {/* {otherThreadsMessages.length > 0 && (
           <div className="px-4 py-2 relative z-10 w-full">
             {otherThreadsMessages.map(
               (thread, index) =>
@@ -257,7 +302,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                 ),
             )}
           </div>
-        )}
+        )} */}
 
         <div className="px-4 pb-4 relative z-10 w-full">
           <div className="rounded-lg rounded-t-lg backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden w-full transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.18)]">

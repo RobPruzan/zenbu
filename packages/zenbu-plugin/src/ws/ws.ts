@@ -214,8 +214,9 @@ export const injectWebSocket = (server: HttpServer) => {
                   await sendActiveMainThreadMessage({
                     emitEvent,
                     message: event.text,
-                    previousChatMessages: toChatMessages(
+                    previousChatMessages: await toChatMessages(
                       event.previousEvents,
+                      false,
                       imageToBytes
                     ),
                     requestId: event.requestId,
@@ -232,8 +233,9 @@ export const injectWebSocket = (server: HttpServer) => {
                 // try {
                 emitEvent("🔥");
 
-                const messages = toChatMessages(
+                const messages = await toChatMessages(
                   event.previousEvents,
+                  false,
                   imageToBytes
                 );
                 console.log("the chat messages", messages);
@@ -279,7 +281,7 @@ export const injectWebSocket = (server: HttpServer) => {
           }
           case "user-task": {
             parallelizeTask({
-              chatMessages: toChatMessages(event.previousEvents, imageToBytes), // im actually not sure if I want the thread to see the models temporary work... i probably do
+              chatMessages:await  toChatMessages(event.previousEvents,false, imageToBytes), // im actually not sure if I want the thread to see the models temporary work... i probably do
               emitEvent,
               message: event.text,
             }).catch(() => {

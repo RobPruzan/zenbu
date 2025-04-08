@@ -447,6 +447,7 @@ const ChatTextArea = () => {
             e.stopPropagation();
             const clientEvent: ClientMessageEvent = {
               requestId: nanoid(),
+              // context: [],
               context: contextItems
                 .map((item) => {
                   switch (item.kind) {
