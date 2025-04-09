@@ -17,7 +17,6 @@ import {
   useMakeRequest,
 } from "~/components/devtools-overlay";
 import { useChatStore } from "~/components/chat-instance-context";
-import { Draw } from "~/components/drawing";
 import { Recorder } from "~/components/screen-sharing";
 import { iife } from "~/lib/utils";
 import { Toolbar } from "./toolbar";

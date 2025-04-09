@@ -26,7 +26,9 @@ export const UserMessage = ({ message }: { message: ChatMessage }) => {
                         }
                         case "file": {
                           return (
-                            <video src={(content.data as URL).toString()} />
+                            <video
+                             controls 
+                              src={(content.data as URL).toString()} />
                           );
                         }
 
@@ -43,11 +45,11 @@ export const UserMessage = ({ message }: { message: ChatMessage }) => {
         </div>
 
         <div className="flex items-center justify-between text-[10px] px-4 py-2 text-[#A1A1A6] bg-[#1a1a1c]">
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <ChevronDown className="h-2.5 w-2.5 mr-1.5" />
             <span className="font-light">gpt-4o</span>
-          </div>
-          <div className="flex items-center">
+          </div> */}
+          <div className="flex items-center ml-auto">
             <button className="hover:text-white transition-colors">
               <span className="flex items-center gap-1.5">
                 <RefreshCw className="h-2.5 w-2.5" />

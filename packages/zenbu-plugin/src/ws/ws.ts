@@ -387,7 +387,13 @@ export const imageToBytes = async (path: string) => {
   return await readFile(`.zenbu/screenshots/${path}`);
 };
 
+const videoCache = new Map<string, { data: string; mimeType: string }>();
+
 export const videoToBytes = async (path: string) => {
+  const existing = videoCache.get(path);
+  if (existing) {
+    return existing;
+  }
   // return await readFile(`.zenbu/video/${path}`);
 
   const fileManager = new GoogleAIFileManager(
@@ -415,9 +421,10 @@ export const videoToBytes = async (path: string) => {
     break;
   }
   console.log("our gemini file", geminiFile);
-
-  return {
+  const data = {
     data: geminiFile.file.uri,
     mimeType: geminiFile.file.mimeType,
   };
+  videoCache.set(path, data);
+  return data;
 };

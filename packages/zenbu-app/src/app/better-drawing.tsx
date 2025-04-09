@@ -28,7 +28,7 @@ export const BetterDrawing = () => {
   return (
     <div
       style={{
-        position: "fixed",
+        position: "absolute",
         // inset: 0,
 
         pointerEvents: "auto",
