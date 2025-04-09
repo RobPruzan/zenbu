@@ -383,7 +383,8 @@ export const sendIdleMainThreadMessage = async ({
         cacheControl: { type: "ephemeral" },
       },
     },
-    model: anthropic("claude-3-5-sonnet-latest"),
+    // model: anthropic("claude-3-5-sonnet-latest"),
+    model: google("gemini-2.5-pro-exp-03-25"),
     maxSteps: 50,
     maxTokens: 8192,
     messages: [
@@ -422,7 +423,12 @@ export const sendIdleMainThreadMessage = async ({
           //
 
           const assistantAccContent = (
-            await toChatMessages(accumulatedTextDeltas, true, imageToBytes, videoToBytes)
+            await toChatMessages(
+              accumulatedTextDeltas,
+              true,
+              imageToBytes,
+              videoToBytes
+            )
           )[0].content as AssistantContent;
           const res = await textEditor({
             emit: emitEvent,

@@ -24,6 +24,11 @@ export const UserMessage = ({ message }: { message: ChatMessage }) => {
                         case "image": {
                           return <img src={(content.image as URL).href} />;
                         }
+                        case "file": {
+                          return (
+                            <video src={(content.data as URL).toString()} />
+                          );
+                        }
 
                         case "text": {
                           return <span>{content.text}</span>;

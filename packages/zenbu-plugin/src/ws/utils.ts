@@ -1,5 +1,5 @@
 import { CoreMessage, DataContent, Message } from "ai";
-import { EventLogEvent, PluginServerEvent  } from "./ws.js";
+import { EventLogEvent, PluginServerEvent } from "./ws.js";
 // what if we apply the same processing, but just split the arrays into groups of request ids pairs and order
 // we could just attach a thread id to the event log and call it a day
 
@@ -82,15 +82,6 @@ export const toChatMessages = async (
           return;
         }
         if (firstVideo) {
-          const fileManager = new GoogleAIFileManager(
-            process.env.GOOGLE_GENERATIVE_AI_API_KEY!
-          );
-
-          const filePath = `.zenbu/video/${firstVideo.filePath}`;
-          const geminiFile = await fileManager.uploadFile(filePath, {
-            name: firstVideo.filePath,
-            mimeType: "video/webm",
-          });
           const { data, mimeType } = await toVideo(firstVideo.filePath);
           const message: CoreMessage = {
             role: "user",

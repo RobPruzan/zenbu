@@ -495,6 +495,13 @@ export const ChatTextArea = () => {
                         filePath: item.filePath,
                       };
                     }
+
+                    case "video": {
+                      return {
+                        kind: "video" as const,
+                        filePath: item.filePath,
+                      };
+                    }
                   }
                 })
                 .filter((item) => typeof item !== "undefined"),

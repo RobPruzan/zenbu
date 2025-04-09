@@ -1,6 +1,7 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import {
   CoreMessage,
+  FilePart,
   generateObject,
   generateText,
   ImagePart,
@@ -32,7 +33,7 @@ import {
 } from "../tools/message-runtime.js";
 import { nanoid } from "nanoid";
 import { planner } from "./planner.js";
-import { GoogleAIFileManager } from "@google/generative-ai/server";
+import { FileState, GoogleAIFileManager } from "@google/generative-ai/server";
 /**
  *
  *
@@ -276,11 +277,29 @@ export const injectWebSocket = (server: HttpServer) => {
 
                 const content: UserContent = await Promise.all([
                   ...event.context.map(async (c) => {
-                    const userContent: ImagePart = {
-                      type: "image",
-                      image: await imageToBytes(c.filePath),
-                    };
-                    return userContent;
+                    switch (c.kind) {
+                      case "image": {
+                        const userContent: ImagePart = {
+                          type: "image",
+                          image: await imageToBytes(c.filePath),
+                        };
+                        return userContent;
+                      }
+                      case "video": {
+                        const { data, mimeType } = await videoToBytes(
+                          c.filePath
+                        );
+                        const userContent: FilePart = {
+                          // type: "image",
+                          type: "file",
+                          data,
+                          mimeType,
+
+                          // image: await imageToBytes(c.filePath),
+                        };
+                        return userContent;
+                      }
+                    }
                   }),
                 ]);
 
@@ -376,10 +395,26 @@ export const videoToBytes = async (path: string) => {
   );
 
   const filePath = `.zenbu/video/${path}`;
-  const geminiFile = await fileManager.uploadFile(filePath, {
-    name: path,
+  let geminiFile = await fileManager.uploadFile(filePath, {
+    name: `ai-${Math.random().toString(36).substring(7)}`,
     mimeType: "video/webm",
   });
+
+  while (true) {
+    if (geminiFile.file.state !== FileState.ACTIVE) {
+      console.log("File state:", geminiFile.file.state);
+
+      geminiFile = { file: await fileManager.getFile(geminiFile.file.name) };
+      await new Promise((res) => {
+        setTimeout(() => {
+          res(null);
+        }, 1000);
+      });
+      continue;
+    }
+    break;
+  }
+  console.log("our gemini file", geminiFile);
 
   return {
     data: geminiFile.file.uri,
