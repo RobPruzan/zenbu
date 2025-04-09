@@ -552,6 +552,14 @@ const loadImage = (dataUrl: string): Promise<HTMLImageElement> => {
  * last we crop over the region the user was screenshotting when using the screenshot tool
  */
 
+/**
+ * FIXME
+ * 
+ * THE CROP SHOULD TAKE IN THE SCROLL POSITION OTHERWISE IT WILL BE WRONG
+ * 
+ * WE ASSUME WINDOW.SCROLLTOP IS ALWAYS == 0 BY CROPPING HOW WE DO 
+ * 
+ */
 export const overlayImages = async ({
   baseImageDataUrl,
   overlayImageDataUrl,

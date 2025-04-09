@@ -1,5 +1,5 @@
 import { CoreMessage, DataContent, Message } from "ai";
-import { EventLogEvent, PluginServerEvent } from "./ws.js";
+import { EventLogEvent, PluginServerEvent  } from "./ws.js";
 // what if we apply the same processing, but just split the arrays into groups of request ids pairs and order
 // we could just attach a thread id to the event log and call it a day
 
@@ -36,7 +36,15 @@ export const toChatMessages = async (
   inEvents: Array<EventLogEvent>,
   sync: boolean,
   toImage: (path: string) => Promise<DataContent> | URL = (path) =>
-    new URL(`http://localhost:5001/image/${path}`)
+    new URL(`http://localhost:5001/image/${path}`),
+  toVideo: (
+    path: string
+  ) => Promise<{ data: DataContent | URL; mimeType: string }> = async (
+    path: string
+  ) => ({
+    data: new URL(`http://localhost:5001/video/${path}`),
+    mimeType: "video/webm",
+  })
 ) => {
   const messages: Array<CoreMessage> = [];
   const processedIndices = new Set<number>();
@@ -51,7 +59,9 @@ export const toChatMessages = async (
 
     switch (event.kind) {
       case "user-message": {
+        // todo generalize to multiple inputs
         const first = event.context.find((item) => item.kind === "image");
+        const firstVideo = event.context.find((item) => item.kind === "video");
         if (first) {
           const message: CoreMessage = {
             role: "user",
@@ -61,6 +71,39 @@ export const toChatMessages = async (
                 // image: await readFile(`.zenbu/screenshots/${first.filePath}`),
                 // image: `.zenbu/screenshots/${first.filePath}`,
                 image: await toImage(first.filePath),
+              },
+              {
+                type: "text",
+                text: event.text,
+              },
+            ],
+          };
+          messages.push(message);
+          return;
+        }
+        if (firstVideo) {
+          const fileManager = new GoogleAIFileManager(
+            process.env.GOOGLE_GENERATIVE_AI_API_KEY!
+          );
+
+          const filePath = `.zenbu/video/${firstVideo.filePath}`;
+          const geminiFile = await fileManager.uploadFile(filePath, {
+            name: firstVideo.filePath,
+            mimeType: "video/webm",
+          });
+          const { data, mimeType } = await toVideo(firstVideo.filePath);
+          const message: CoreMessage = {
+            role: "user",
+            content: [
+              {
+                type: "file",
+                data,
+                mimeType,
+                // image: await readFile(`.zenbu/screenshots/${first.filePath}`),
+                // image: `.zenbu/screenshots/${first.filePath}`,
+                // image: await toImage(first.filePath),
+                // data: geminiFile.file.uri,
+                // mimeType: geminiFile.file.mimeType,
               },
               {
                 type: "text",
@@ -121,7 +164,16 @@ export const toGroupedChatMessages = async (
   events: Array<EventLogEvent>,
   sync: boolean,
   toImage: (path: string) => Promise<DataContent> | URL = (path) =>
-    new URL(`http://localhost:5001/image/${path}`)
+    new URL(`http://localhost:5001/image/${path}`),
+
+  toVideo: (
+    path: string
+  ) => Promise<{ data: DataContent | URL; mimeType: string }> = async (
+    path: string
+  ) => ({
+    data: new URL(`http://localhost:5001/video/${path}`),
+    mimeType: "video/webm",
+  })
 ) => {
   // console.log("in events", events);
 
@@ -130,7 +182,8 @@ export const toGroupedChatMessages = async (
   const mainThreadMessages = await toChatMessages(
     mainThreadEvents,
     sync,
-    toImage
+    toImage,
+    toVideo
   );
 
   // console.log("wut", mainThreadMessages, mainThreadMessages.length, mainThreadMessages.slice());
@@ -139,7 +192,7 @@ export const toGroupedChatMessages = async (
     Object.keys(threads)
       .map((threadId) => threads[threadId])
 
-      .map((item) => toChatMessages(item, sync, toImage))
+      .map((item) => toChatMessages(item, sync, toImage, toVideo))
   );
 
   return { mainThreadMessages, otherThreadsMessages };

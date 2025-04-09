@@ -32,6 +32,7 @@ import {
 } from "../tools/message-runtime.js";
 import { nanoid } from "nanoid";
 import { planner } from "./planner.js";
+import { GoogleAIFileManager } from "@google/generative-ai/server";
 /**
  *
  *
@@ -58,7 +59,9 @@ export type EventLogEvent =
 export type ClientMessageEvent = {
   id: string;
   kind: "user-message";
-  context: Array<{ kind: "image"; filePath: string }>;
+  context: Array<
+    { kind: "image"; filePath: string } | { kind: "video"; filePath: string }
+  >;
   text: string;
   requestId: string;
   timestamp: number;
@@ -217,7 +220,8 @@ export const injectWebSocket = (server: HttpServer) => {
                     previousChatMessages: await toChatMessages(
                       event.previousEvents,
                       true,
-                      imageToBytes
+                      imageToBytes,
+                      videoToBytes
                     ),
                     requestId: event.requestId,
                   });
@@ -233,10 +237,40 @@ export const injectWebSocket = (server: HttpServer) => {
                 // try {
                 emitEvent("🔥");
 
+                // yippy we can just send da file
+                //   interface FilePart {
+                //     type: 'file';
+                //     /**
+                //   File data. Can either be:
+
+                //   - data: a base64-encoded string, a Uint8Array, an ArrayBuffer, or a Buffer
+                //   - URL: a URL that points to the image
+                //      */
+                //     data: DataContent | URL;
+                //     /**
+                //   Optional filename of the file.
+                //      */
+                //     filename?: string;
+                //     /**
+                //   Mime type of the file.
+                //      */
+                //     mimeType: string;
+                //     /**
+                //   Additional provider-specific metadata. They are passed through
+                //   to the provider from the AI SDK and enable provider-specific
+                //   functionality that can be fully encapsulated in the provider.
+                //    */
+                //     providerOptions?: ProviderOptions;
+                //     /**
+                //   @deprecated Use `providerOptions` instead.
+                //    */
+                //     experimental_providerMetadata?: ProviderMetadata;
+                // }
                 const messages = await toChatMessages(
                   event.previousEvents,
                   true,
-                  imageToBytes
+                  imageToBytes,
+                  videoToBytes
                 );
                 console.log("the chat messages", messages);
 
@@ -281,7 +315,12 @@ export const injectWebSocket = (server: HttpServer) => {
           }
           case "user-task": {
             parallelizeTask({
-              chatMessages:await  toChatMessages(event.previousEvents,true, imageToBytes), // im actually not sure if I want the thread to see the models temporary work... i probably do
+              chatMessages: await toChatMessages(
+                event.previousEvents,
+                true,
+                imageToBytes,
+                videoToBytes
+              ), // im actually not sure if I want the thread to see the models temporary work... i probably do
               emitEvent,
               message: event.text,
             }).catch(() => {
@@ -326,10 +365,24 @@ const emitAssistantMessage = ({
 };
 
 export const imageToBytes = async (path: string) => {
-  console.log(
-    "why dear one",
-    process.cwd(),
-    await stat(`.zenbu/screenshots/${path}`).catch(() => null)
-  );
   return await readFile(`.zenbu/screenshots/${path}`);
+};
+
+export const videoToBytes = async (path: string) => {
+  // return await readFile(`.zenbu/video/${path}`);
+
+  const fileManager = new GoogleAIFileManager(
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY!
+  );
+
+  const filePath = `.zenbu/video/${path}`;
+  const geminiFile = await fileManager.uploadFile(filePath, {
+    name: path,
+    mimeType: "video/webm",
+  });
+
+  return {
+    data: geminiFile.file.uri,
+    mimeType: geminiFile.file.mimeType,
+  };
 };

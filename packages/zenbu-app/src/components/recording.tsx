@@ -11,6 +11,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Label } from "./ui/label";
+import { z } from "zod";
 
 type ToolbarAction = {
   id: string;
@@ -180,22 +183,42 @@ export const RecordingImpl = () => {
         }
       };
 
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         if (recordedChunksRef.current.length === 0) {
           console.warn("Recording stopped with no data chunks.");
           setRecordingState("idle");
           cleanupActiveRecording();
           return;
         }
+        const blobs = recordedChunksRef.current;
 
-        const blob = new Blob(recordedChunksRef.current, {
+        const blob = new Blob(blobs, {
           type: recorder.mimeType || "video/webm",
         });
-        const url = URL.createObjectURL(blob);
+
+        const formData = new FormData();
+        formData.set("video", blob);
+
+        const res = await fetch("http://localhost:5001/video/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const json = await res.json();
+
+        const schema = z.object({
+          success: z.literal(true),
+          path: z.string(),
+        });
+
+        const data = schema.parse(json);
+
+        // const url = URL.createObjectURL(blob);
+        const url = `http://localhost:5001/video/${data.path}`;
 
         const newRecording: Recording = {
           id: `rec_${Date.now()}`,
-          url: url,
+          url,
           name: `Recording ${recordings.length + 1}`,
           timestamp: Date.now(),
         };
@@ -340,6 +363,7 @@ const Toolbar = ({
   recordings: Array<Recording>;
 }) => {
   const [showRecordingsList, setShowRecordingsList] = useState(false);
+  const context = useChatStore((state) => state.context);
   const [currentRecordingSrc, setCurrentRecordingSrc] = useState<null | string>(
     null,
   );
@@ -355,7 +379,17 @@ const Toolbar = ({
       }}
       className="absolute flex-col top-2 left-1/2 gap-y-2 transform -translate-x-1/2 rounded-md bg-background px-2 py-1 flex gap-x-2 items-center"
     >
-      <div className="flex gap-x-4 items-center justify-center w-full">
+      <div className="flex gap-x-2 items-center justify-center w-full">
+        <RadioGroup defaultValue="comfortable" className="flex">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="default" id="r1" />
+            <Label htmlFor="r1">Record Screen</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="comfortable" id="r2" />
+            <Label htmlFor="r2">Record Area</Label>
+          </div>
+        </RadioGroup>
         <Button
           onClick={() => {
             closeToolbar();
@@ -365,7 +399,14 @@ const Toolbar = ({
         >
           <XIcon />
         </Button>
-
+        <Button
+          variant={"ghost"}
+          onClick={() => {
+            setShowRecordingsList((prev) => !prev);
+          }}
+        >
+          <ListIcon />
+        </Button>
         <Button
           onClick={() => {
             if (isRecording) {
@@ -388,14 +429,6 @@ const Toolbar = ({
             ])}
           ></div>
         </Button>
-        <Button
-          variant={"ghost"}
-          onClick={() => {
-            setShowRecordingsList((prev) => !prev);
-          }}
-        >
-          <ListIcon />
-        </Button>
       </div>
 
       {showRecordingsList && (
@@ -406,19 +439,38 @@ const Toolbar = ({
               // onClick={() => {}}
               className="flex flex-col px-2 text-xs gap-y-2"
             >
+              <Button
+                onClick={() => {
+                  const filePath = recording.url.split("/").at(-1);
+                  if (!filePath) {
+                    throw new Error(
+                      "dev invariant needs valid url + path at end",
+                    );
+                  }
+                  context.actions.pushItem({
+                    kind: "video",
+                    filePath,
+                    name: "Goo goo ga ga" + Math.random(),
+                  });
+                }}
+              >
+                Add To Context
+              </Button>
               <Dialog>
                 <DialogTrigger>View {recording.name}</DialogTrigger>
                 <DialogContent
                   style={{
                     zIndex: 2147483647,
-                    minWidth: '90vw',
-                    height: '90vh'
-               }} 
+                    minWidth: "90vw",
+                    height: "90vh",
+                  }}
                 >
                   <DialogHeader>
                     <video
-                    // className="h-[90vh] min-w-[90vw]"
-                      src={recording.url} controls />
+                      // className="h-[90vh] min-w-[90vw]"
+                      src={recording.url}
+                      controls
+                    />
                     {/* <DialogTitle>Are you absolutely sure?</DialogTitle> */}
                     {/* <DialogDescription>
                       This action cannot be undone. This will permanently delete

@@ -76,6 +76,38 @@ export const createServer = async () => {
         });
       }
     )
+    .get("/video/:path", async (opts) => {
+      const path = opts.req.param("path");
+      const bytes = await readFile(`.zenbu/video/${path}`);
+      return new Response(bytes, {
+        headers: {
+          ["Content-type"]: "video/webm",
+        },
+      });
+    })
+    .post("/video/upload", async (opts) => {
+      // uh is it any different from image upload? form data get the bytes write? I suppose..
+
+      const formData = await opts.req.formData();
+
+      const video = formData.get("video");
+
+      if (!(video instanceof File)) {
+        throw new Error("womp womp need a video in form data");
+      }
+
+      const videoBytes = await video.bytes();
+
+      // again, should auto detect file extension
+      const path = `vid-${Date.now()}-${nanoid()}.webm`;
+
+      await writeFile(`.zenbu/video/${path}`, videoBytes, );
+
+      return opts.json({
+        success: true,
+        path,
+      });
+    })
     .get("/image/:path", async (opts) => {
       const leafPath = opts.req.param("path");
 

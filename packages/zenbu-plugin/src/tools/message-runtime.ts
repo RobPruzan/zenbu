@@ -14,6 +14,8 @@ import {
   getCodebaseIndexPrompt,
   imageToBytes,
   PluginServerEvent,
+  videoToBytes,
+  videoToBytes as videoToData,
 } from "../ws/ws.js";
 import { nanoid } from "nanoid";
 import { smartEdit } from "./good-edit-impl.js";
@@ -51,7 +53,8 @@ export const handleMessage = async ({
   const previousChatMessages = await toChatMessages(
     previousEvents,
     true,
-    imageToBytes
+    imageToBytes,
+    videoToData
   );
   // taskSet.add({
   //   taskId: nanoid(),
@@ -419,7 +422,7 @@ export const sendIdleMainThreadMessage = async ({
           //
 
           const assistantAccContent = (
-            await toChatMessages(accumulatedTextDeltas, true, imageToBytes)
+            await toChatMessages(accumulatedTextDeltas, true, imageToBytes, videoToBytes)
           )[0].content as AssistantContent;
           const res = await textEditor({
             emit: emitEvent,

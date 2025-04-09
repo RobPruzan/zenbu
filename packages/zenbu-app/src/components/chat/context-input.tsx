@@ -14,6 +14,7 @@ import { nanoid } from "nanoid";
 import { ClientMessageEvent, ClientTaskEvent } from "zenbu-plugin/src/ws/ws";
 import { z } from "zod";
 import { iife } from "~/lib/utils";
+import { ContextItem } from "../slices/context-slice";
 
 // Props for the MentionMenu component
 interface MentionMenuProps {
@@ -22,18 +23,6 @@ interface MentionMenuProps {
   setSelectedIndex: Dispatch<SetStateAction<number>>;
   filteredItems: string[];
 }
-
-type ContextItem =
-  | {
-      kind: "react-scan";
-      // probably should be an id instead of name
-      name: string;
-    }
-  | {
-      kind: "image";
-      name: string;
-      filePath: string;
-    };
 
 // MentionMenu component with keyboard navigation (Arrow keys + Ctrl+N/P)
 const MentionMenu = ({
@@ -81,10 +70,15 @@ const MentionMenu = ({
   );
 };
 
-const ChatTextArea = () => {
+export const ChatTextArea = () => {
   const items = ["react-scan", "console", "network", "localstorage"];
   const [showMenu, setShowMenu] = useState<boolean>(false);
-  const [contextItems, setContextItems] = useState<ContextItem[]>([]);
+  // const [contextItems, setContextItems] = useState<ContextItem[]>([]);
+  const {
+    state: { items: contextItems },
+    actions,
+  } = useChatStore((state) => state.context);
+  // im so stupid
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [query, setQuery] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<string[]>(items);
@@ -101,12 +95,10 @@ const ChatTextArea = () => {
     // }
     // const chatInput = chatInputRef.current;
     // if (!chatInput) return;
-
     // const mentionSpans = chatInput.querySelectorAll(".mention");
     // const currentMentions: string[] = Array.from(mentionSpans)
     //   .map((span) => span.textContent?.replace(/^@/, "") || "")
     //   .filter((name) => name);
-
     // setContextItems((prev) => {
     //   const newItems: ContextItem[] = [];
     //   currentMentions.forEach((mentionName) => {
@@ -189,7 +181,12 @@ const ChatTextArea = () => {
       }
     }
 
-    setContextItems((prev) => [...prev, { kind: "react-scan", name: mention }]);
+    // setContextItems((prev) => [...prev, { kind: "react-scan", name: mention }]);
+    // what? Why are we hard coding react scan
+    actions.pushItem({
+      kind: "react-scan",
+      name: mention,
+    });
 
     const mentionSpan = document.createElement("span");
     mentionSpan.className =
@@ -222,14 +219,26 @@ const ChatTextArea = () => {
   };
 
   const removeItem = (index: number) => {
-    setContextItems((prev) => {
-      const newItems = prev.filter((_, i) => i !== index);
-      const mentionSpans = chatInputRef.current?.querySelectorAll(".mention");
-      if (mentionSpans && index < mentionSpans.length) {
-        mentionSpans[index].remove();
-      }
-      return newItems;
-    });
+    const newItems = contextItems.filter((_, i) => i !== index);
+
+    const mentionSpans = chatInputRef.current?.querySelectorAll(".mention");
+
+    if (mentionSpans && index < mentionSpans.length) {
+      // actions.removeItem(mentionSpans[index])
+      // mentionSpans[index].remove();
+      mentionSpans[index].remove();
+    }
+
+    actions.setItems(newItems);
+    // setContextItems((prev) => {
+    //   const newItems = prev.filter((_, i) => i !== index);
+    //   const mentionSpans = chatInputRef.current?.querySelectorAll(".mention");
+    //   if (mentionSpans && index < mentionSpans.length) {
+    //     mentionSpans[index].remove();
+    //   }
+    //   return newItems;
+    // });
+    // wut
     syncSelectedItems();
   };
 
@@ -271,6 +280,30 @@ const ChatTextArea = () => {
             {contextItems.map((item, index) =>
               iife(() => {
                 switch (item.kind) {
+                  case "video": {
+                    return (
+                      <div
+                        key={index}
+                        className="flex flex-col relative items-center gap-1 text-[#A1A1A6] text-xs font-light border px-1 py-0.5 rounded-sm"
+                      >
+                        <div className="flex gap-x-1 absolute top-0 right-0">
+                          <button
+                            onClick={() => removeItem(index)}
+                            className="text-white hover:text-white"
+                          >
+                            <X size={15} />
+                          </button>
+                        </div>
+                        <video
+                          src={`http://localhost:5001/video/${item.filePath}`}
+                          className="h-[100px] min-w-[100px] object-cover"
+                          width={100}
+                          height={100}
+                          controls
+                        />
+                      </div>
+                    );
+                  }
                   case "image": {
                     return (
                       <div
@@ -424,14 +457,19 @@ const ChatTextArea = () => {
            * alr u just set the state
            *
            */
-          setContextItems((prev) => [
-            ...prev,
-            {
-              kind: "image",
-              filePath: data.fileName,
-              name: nanoid(),
-            },
-          ]);
+          actions.pushItem({
+            kind: "image",
+            filePath: data.fileName,
+            name: nanoid(),
+          });
+          // setContextItems((prev) => [
+          //   ...prev,
+          //   {
+          //     kind: "image",
+          //     filePath: data.fileName,
+          //     name: nanoid(),
+          //   },
+          // ]);
 
           // i guess we want to upload the image, and paste the result? i wonder how fast this is, do we even need an optimistic preview? If this is backed by a service it might be nice but i don't want to build an abstraction for a feature that doesn't exist yet
 
@@ -468,7 +506,7 @@ const ChatTextArea = () => {
             };
             console.log("sending dis");
 
-            setContextItems([]);
+            actions.setItems([]);
             eventLog.actions.pushEvent(clientEvent);
             socket.emit("message", clientEvent);
             target.textContent = "";
@@ -478,5 +516,3 @@ const ChatTextArea = () => {
     </div>
   );
 };
-
-export default ChatTextArea;

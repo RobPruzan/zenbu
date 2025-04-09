@@ -40,11 +40,11 @@ import { ChatMessage, toGroupedChatMessages } from "zenbu-plugin/src/ws/utils";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
-import ChatComponent from "./context-input";
 import TokenStreamingWrapper from "./wrapper";
 import { ThinkingUITester } from "./thinking";
 import { Socket } from "socket.io-client";
 import { flushSync } from "react-dom";
+import { ChatTextArea } from "./context-input";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -313,7 +313,7 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                   <div className="h-[8px]"></div>
 
                 </div> */}
-                <ChatComponent />
+                <ChatTextArea />
                 {/* <textarea
                 ref={textareaRef}
                 value={chatControls.state.input}

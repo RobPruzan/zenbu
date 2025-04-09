@@ -1,22 +1,34 @@
 import { FocusedInfo } from "zenbu-devtools";
-import { SliceCreator  } from "../chat-instance-context";
+import { SliceCreator } from "../chat-instance-context";
 
-
-type ReactScanContextItem = { kind: "react-scan"; data: any };
-type ContextItems = (
-  | ReactScanContextItem
-  | { kind: "inspector"; data: FocusedInfo }
-) & { id: string };
+export type ContextItem =
+  | {
+      kind: "react-scan";
+      // probably should be an id instead of name
+      name: string;
+    }
+  | {
+      kind: "image";
+      name: string;
+      filePath: string;
+    }
+  | {
+      kind: "video";
+      name: string;
+      filePath: string;
+    };
 export type ContextSliceInitialState = {
-  items: Array<ContextItems>;
+  items: Array<ContextItem>;
 };
 export type ContextSlice = {
   state: {
-    items: Array<ContextItems>;
+    items: Array<ContextItem>;
   };
   actions: {
-    pushItem: (item: ContextItems) => void;
-    removeItem: (itemId: string) => void;
+    pushItem: (item: ContextItem) => void;
+    // CHANGE THIS TO ID WHAT ARE U DOING
+    removeItem: (name: string) => void;
+    setItems: (items: Array<ContextItem>) => void;
   };
 };
 export const createContextSlice =
@@ -30,11 +42,15 @@ export const createContextSlice =
         set((state) => {
           state.context.state.items.push(event);
         }),
-      removeItem: (itemId) =>
+      removeItem: (name) =>
         set((state) => {
           state.context.state.items = state.context.state.items.filter(
-            (item) => item.id !== itemId,
+            (item) => item.name !== name,
           );
+        }),
+      setItems: (items) =>
+        set((state) => {
+          state.context.state.items = items;
         }),
     },
   });
