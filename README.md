@@ -3,7 +3,7 @@
 
 Obsidian, but for making websites
 
-<img width="1491" alt="image" src="https://github.com/user-attachments/assets/3c15cb25-7e56-41f2-83c4-214faa94fb79" />
+<img width="1512" alt="image" src="https://github.com/user-attachments/assets/c06c9e73-2915-4b39-b0b6-1e1196e02f1a" />
 
 
 Zenbu's goal is to remove the friction a developer has when making a website.
