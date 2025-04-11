@@ -275,7 +275,7 @@ export const ChatTextArea = () => {
   return (
     <div className="w-full">
       {contextItems.length > 0 && (
-        <div className="px-1 py-2 border-b border-[rgba(255,255,255,0.04)] overflow-x-auto">
+        <div className="px-2 py-2 border-b border-border/40 overflow-x-auto">
           <div className="flex items-center gap-2">
             {contextItems.map((item, index) =>
               iife(() => {
@@ -284,19 +284,19 @@ export const ChatTextArea = () => {
                     return (
                       <div
                         key={index}
-                        className="flex flex-col relative items-center gap-1 text-[#A1A1A6] text-xs font-light border px-1 py-0.5 rounded-sm"
+                        className="flex flex-col relative items-center gap-1 text-muted-foreground text-xs font-light border border-border/40 px-1.5 py-1 rounded-md bg-accent/5"
                       >
-                        <div className="flex gap-x-1 absolute top-0 right-0">
+                        <div className="flex gap-x-1 absolute -top-1 -right-1">
                           <button
                             onClick={() => removeItem(index)}
-                            className="text-white hover:text-white"
+                            className="h-4 w-4 rounded-full bg-background/80 border border-border/40 hover:bg-accent/20 text-foreground"
                           >
-                            <X size={15} />
+                            <X className="h-3 w-3" />
                           </button>
                         </div>
                         <video
                           src={`http://localhost:5001/video/${item.filePath}`}
-                          className="h-[100px] min-w-[100px] object-cover"
+                          className="h-[100px] min-w-[100px] object-cover rounded-sm"
                           width={100}
                           height={100}
                           controls
@@ -308,21 +308,20 @@ export const ChatTextArea = () => {
                     return (
                       <div
                         key={index}
-                        className="flex flex-col relative items-center gap-1 text-[#A1A1A6] text-xs font-light border px-1 py-0.5 rounded-sm"
+                        className="flex flex-col relative items-center gap-1 text-muted-foreground text-xs font-light border border-border/40 px-1.5 py-1 rounded-md bg-accent/5"
                       >
-                        <div className="flex gap-x-1 absolute top-0 right-0">
-                          {/* <span>{item.name}</span> */}
+                        <div className="flex gap-x-1 absolute -top-1 -right-1">
                           <button
                             onClick={() => removeItem(index)}
-                            className="text-white hover:text-white "
+                            className="h-4 w-4 rounded-full bg-background/80 border border-border/40 hover:bg-accent/20 text-foreground"
                           >
-                            <X size={15} />
+                            <X className="h-3 w-3" />
                           </button>
                         </div>
                         <img
                           alt="Screenshot"
                           src={`http://localhost:5001/image/${item.filePath}`}
-                          className="h-[100px] min-w-[100px] object-cover"
+                          className="h-[100px] min-w-[100px] object-cover rounded-sm"
                           width={100}
                           height={100}
                         />
@@ -333,12 +332,12 @@ export const ChatTextArea = () => {
                     return (
                       <div
                         key={index}
-                        className="flex items-center gap-1 text-[#A1A1A6] text-xs font-light border px-1 py-0.5 rounded-sm"
+                        className="flex items-center gap-1.5 text-muted-foreground text-xs font-light border border-border/40 px-2 py-1 rounded-md bg-accent/5"
                       >
                         <span>{item.name}</span>
                         <button
                           onClick={() => removeItem(index)}
-                          className="text-[#A1A1A6] hover:text-white"
+                          className="text-muted-foreground hover:text-foreground transition-colors"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -476,7 +475,7 @@ export const ChatTextArea = () => {
           // console.log("Clipboard Text Data:", text);
           console.log("Clipboard Files:", fileDataArray);
         }}
-        className="w-full text-[13px] chat-input text-white caret-white font-light leading-relaxed min-h-[50px] pt-1.5 pl-2 pr-4 pb-1.5 focus:outline-none"
+        className="w-full text-[13px] chat-input text-foreground caret-foreground font-light leading-relaxed min-h-[50px] pt-2.5 pl-3 pr-4 pb-2 focus:outline-none"
         onInput={handleInput}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.metaKey && !showMenu) {

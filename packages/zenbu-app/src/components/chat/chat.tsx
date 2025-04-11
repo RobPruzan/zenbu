@@ -45,6 +45,7 @@ import { ThinkingUITester } from "./thinking";
 import { Socket } from "socket.io-client";
 import { flushSync } from "react-dom";
 import { ChatTextArea } from "./context-input";
+import { cn } from "~/lib/utils";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -52,7 +53,7 @@ export const WSContext = createContext<{
 
 export const useWSContext = () => useContext(WSContext);
 
-export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
+export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const { eventLog, inspector, chatControls, context, toolbar } =
     useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(
@@ -206,11 +207,9 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
         socket,
       }}
     >
-      <div className="flex flex-col h-full relative overflow-hidden">
+      <div className="flex h-full flex-col relative overflow-hidden">
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute inset-0 bg-[#080809]"></div>
-
-          <div className="absolute inset-0 backdrop-filter backdrop-blur-lg"></div>
+          <div className="absolute inset-0 bg-background/95 backdrop-blur-xl" />
         </div>
 
         <Header onCloseChat={onCloseChat} />
@@ -304,45 +303,23 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
         )} */}
 
         <div className="px-4 pb-4 relative z-10 w-full">
-          <div className="rounded-lg rounded-t-lg backdrop-blur-xl bg-[rgba(24,24,26,0.6)] border border-[rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden w-full transition-all duration-300 hover:shadow-[0_12px_36px_rgba(0,0,0,0.18)]">
+          <div className="rounded-lg backdrop-blur-xl bg-accent/5 border border-border/40 shadow-lg overflow-hidden w-full transition-all duration-300 hover:shadow-xl">
             <div className="flex flex-col text-xs">
-              <div className="relative min-h-[50px] w-full bg-[rgba(20,20,22,0.4)] backdrop-filter backdrop-blur-md">
-                {/* <div className="rounded-t-lg bg-[#141414]">
-
-
-                  <div className="h-[8px]"></div>
-
-                </div> */}
+              <div className="relative min-h-[50px] w-full bg-background/5">
                 <ChatTextArea />
-                {/* <textarea
-                ref={textareaRef}
-                value={chatControls.state.input}
-                onChange={(e) => chatControls.actions.setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-                placeholder="Ask me anything..."
-                className="absolute top-0 left-0 w-full h-full pt-3.5 pl-4 pr-4 pb-1.5 bg-transparent border-0 focus:ring-0 focus:outline-none resize-none text-xs text-transparent caret-white placeholder:text-[rgba(161,161,166,0.8)] overflow-auto leading-relaxed font-light"
-                style={{
-                  minHeight: "50px",
-                  maxHeight: "100px",
-                }}
-              /> */}
               </div>
 
-              <div className="flex items-center justify-end px-4 py-2 border-t border-[rgba(255,255,255,0.04)] bg-[rgba(30,30,34,0.55)]">
+              <div className="flex items-center justify-end px-4 py-2 border-t border-border/40 bg-accent/5">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
-                      // TODO: Implement schedule functionality
-                      console.log("Schedule task clicked");
-                      scheduleTask();
-                    }}
+                    onClick={scheduleTask}
                     disabled={!chatControls.state.input.trim()}
-                    className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300 ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className={cn(
+                      "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
+                      "bg-accent/10 border border-border/40 hover:bg-accent/20 text-foreground",
+                      "transition-all duration-300",
+                      !chatControls.state.input.trim() && "opacity-50 cursor-not-allowed"
+                    )}
                   >
                     <Clock className="h-3 w-3 mr-1.5" />
                     <span>Task</span>
@@ -350,7 +327,12 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
                   <button
                     onClick={sendMessage}
                     disabled={!chatControls.state.input.trim()}
-                    className={`inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light backdrop-blur-xl bg-[rgba(40,40,46,0.8)] border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(48,48,54,0.85)] hover:shadow-[0_2px_12px_rgba(0,0,0,0.25)] text-white transition-all duration-300 ${!chatControls.state.input.trim() ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className={cn(
+                      "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
+                      "bg-accent/10 border border-border/40 hover:bg-accent/20 text-foreground",
+                      "transition-all duration-300",
+                      !chatControls.state.input.trim() && "opacity-50 cursor-not-allowed"
+                    )}
                   >
                     <span>Send</span>
                     <SendIcon className="ml-1.5 h-3 w-3" />
@@ -363,4 +345,4 @@ export const Chat = ({ onCloseChat }: { onCloseChat: () => void }) => {
       </div>
     </WSContext.Provider>
   );
-};
+}
