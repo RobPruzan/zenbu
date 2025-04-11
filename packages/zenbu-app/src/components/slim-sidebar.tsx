@@ -25,6 +25,8 @@ import {
   DownloadCloud,
   Component,
   Globe,
+  Store,
+  Zap,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -88,9 +90,40 @@ export function SlimSidebar({ className }: SlimSidebarProps) {
     window.dispatchEvent(new CustomEvent("toggle-http-client"));
   };
 
+  const handlePluginStore = () => {
+    window.dispatchEvent(new CustomEvent("toggle-plugin-store"));
+  };
+
   return (
     <TooltipProvider>
       <div className={cn("flex w-12 flex-col gap-1 border-r border-border/40 bg-background p-2", className)}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={() => window.dispatchEvent(new CustomEvent("toggle-next-lint"))}
+            >
+              <Zap className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Next.js Performance</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePluginStore}>
+              <Store className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Plugin Store</p>
+          </TooltipContent>
+        </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleWebsiteTree}>

@@ -3,11 +3,17 @@ import { act, useEffect, useRef, useState } from "react";
 import { set } from "zod";
 import { useChatStore } from "~/components/chat-instance-context";
 import { useMakeRequest } from "~/components/devtools-overlay";
-import { iife } from "~/lib/utils";
+import { iife, cn } from "~/lib/utils";
 import { captureViewport } from "./better-drawing";
 import { IFRAME_ID } from "./iframe-wrapper";
 import { Button } from "~/components/ui/button";
-import { X } from "lucide-react";
+import { Camera, X, ImagePlus, Eye, MessageSquare, Check } from "lucide-react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "~/components/ui/hover-card";
+import { Separator } from "~/components/ui/separator";
 // import { inputTest } from "./input";
 
 const pivotMap = {
@@ -81,20 +87,18 @@ export const ScreenshotTool = () => {
   const getEditor = useChatStore(
     (state) => state.toolbar.state.drawing.getEditor,
   );
-  const [isSuccessMessageShown, setIsSuccessMessageShown] = useState(false);
-  const [successMessageLocation, setSuccessMessageLocation] =
-    useState<null | Partial<MinimalDOMRect>>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [screenshotElBoundingRect, setScreenshotElBoundingRect] =
+    useState<MinimalDOMRect>();
 
   const screenshotElRef = useRef<HTMLDivElement | null>(null);
-
-  // const screenshotElRefLazy = () => screenshotElRef.current!;
 
   const [pivot, setPivot] = useState<null | Pivot>(null);
 
   const [isGloballyMouseDown, setIsGloballyMouseDown] = useState(false);
 
-  const [screenshotElBoundingRect, setScreenshotElBoundingRect] =
-    useState<MinimalDOMRect>();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRefLazy = () => containerRef.current!;
 
   useEffect(() => {
     if (!active) {
@@ -152,8 +156,14 @@ export const ScreenshotTool = () => {
     };
   }, [active, actions]);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const containerRefLazy = () => containerRef.current!;
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessMessage]);
 
   if (!active) {
     return;
@@ -273,10 +283,6 @@ export const ScreenshotTool = () => {
             y: e.clientY - rect.top,
             x: e.clientX - rect.left,
           };
-          setSuccessMessageLocation({
-            top: current.y,
-            left: current.x,
-          });
           setScreenshotElBoundingRect(undefined);
           setIsDragging(false);
           setPivot(null);
@@ -349,19 +355,7 @@ export const ScreenshotTool = () => {
             await navigator.clipboard.writeText(newImg.cropped);
           }
 
-          setIsSuccessMessageShown(true);
-
-          // no reason it has to fade away, i think?
-          // setTimeout(() => {
-          //   setIsSuccessMessageShown(false);
-          //   setSuccessMessageLocation(null);
-          // }, 2000);
-
-          // console.log("params", {
-          //   baseImageDataUrl: response.dataUrl,
-          //   cropCoordinates: coordinates,
-          //   overlayImageDataUrl: shapesURI,
-          // });
+          setShowSuccessMessage(true);
 
           console.log("we got dat screenshot", newImg);
           console.log("and the input", input);
@@ -374,78 +368,71 @@ export const ScreenshotTool = () => {
       }}
       className="absolute h-full w-full top-0 left-0"
     >
-      {isSuccessMessageShown && (
-        <div
-          style={{
-            zIndex: 1000002,
-            ...successMessageLocation,
-          }}
-          className="absolute"
-        >
-          <SuccessfulScreenshot
-            onDismiss={() => {
-              setIsSuccessMessageShown(false);
-              setSuccessMessageLocation(null);
-            }}
-          />
-        </div>
-      )}
       {isDragging && (
         <div
-          className="border-2 absolute "
+          className="absolute border-2 border-primary/80"
           style={screenshotElBoundingRect}
           ref={screenshotElRef}
         ></div>
       )}
 
-      {/* makes sense */}
       <div
         style={{
           zIndex: 1000001,
         }}
-        className="absolute top-2 select-none left-1/2 transform -translate-x-1/2 border rounded-md bg-background"
+        className="absolute top-2 left-1/2 transform -translate-x-1/2"
       >
-        <div className="flex border-b w-full">
+        <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-background/95 p-2 shadow-lg backdrop-blur">
+          <HoverCard openDelay={200}>
+            <HoverCardTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8"
+                onClick={() => {
+                  // Fullscreen screenshot logic
+                }}
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent side="bottom" align="center" className="w-auto">
+              <p className="text-xs">Capture Fullscreen</p>
+            </HoverCardContent>
+          </HoverCard>
+
+          <Separator orientation="vertical" className="h-4" />
+
           <Button
-            variant={"ghost"}
-            className="rounded-none"
+            variant="ghost"
+            size="sm"
+            className="h-8"
             onClick={() => {
-              // actions.setIsScreenshotting(false);
-            }}
-          >
-            Screenshot Fullscreen
-          </Button>
-          <Button
-            className="rounded-none"
-            variant={"ghost"}
-            onClick={() => {
-              // todo
               actions.setIsScreenshotting(false);
             }}
           >
-            Cancel Screenshot
+            Cancel
           </Button>
-        </div>
-        {/* needs to be a list pookie */}
-        <div className="bg-background rounded-md flex items-center p-3 gap-x-3 w-full ">
-          {/* <div className="w-full flex justify-between items-center">
-          </div> */}
 
-          {/* lil img preview */}
-
-          <Button variant={"outline"}>Add to chat</Button>
-          <Button variant={"outline"}>View screenshot</Button>
-
-          <Button
-            className="px-2 py-0 ml-auto"
-            variant={"ghost"}
-            onClick={() => {
-              setIsSuccessMessageShown(false);
-              setSuccessMessageLocation(null);
-            }}
-          >
-            <X size={5} />
-          </Button>
+          {showSuccessMessage && (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-5">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                  <span>Copied to clipboard</span>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 gap-1.5"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span className="text-xs">Add to Chat</span>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -468,29 +455,43 @@ export const ScreenshotTool = () => {
             : "none",
         }}
         className="absolute h-full w-full bg-black/40"
-      ></div>
+      />
     </div>
   );
 };
 
 const SuccessfulScreenshot = ({ onDismiss }: { onDismiss: () => void }) => {
   return (
-    <div className="bg-background rounded-md flex flex-col items-center w-fit p-3 gap-y-3">
-      <div className="w-full flex justify-between items-center">
-        <span>Copied to clipboard!</span>
+    <div className="flex flex-col gap-2 rounded-lg border border-border/40 bg-background/95 p-2 shadow-lg backdrop-blur">
+      <div className="flex items-center gap-4">
+        <span className="text-sm font-medium">Screenshot captured!</span>
         <Button
-          className="px-2 py-0"
-          variant={"ghost"}
-          onClick={() => {
-            onDismiss();
-          }}
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0"
+          onClick={onDismiss}
         >
-          <X size={5} />
+          <X className="h-3 w-3" />
         </Button>
       </div>
-      <div className="flex gap-x-2">
-        <Button variant={"outline"}>Add to chat</Button>
-        <Button variant={"outline"}>View screenshot</Button>
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="h-7 gap-1.5"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          <span className="text-xs">Add to Chat</span>
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="h-7 gap-1.5"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          <span className="text-xs">View</span>
+        </Button>
       </div>
     </div>
   );

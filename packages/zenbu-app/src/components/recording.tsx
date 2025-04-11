@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useChatStore } from "./chat-instance-context";
-import { ListIcon, XIcon } from "lucide-react";
+import { ListIcon, XIcon, Star, Download, Video, MonitorStop } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "~/lib/utils";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -14,6 +13,12 @@ import {
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
 import { z } from "zod";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "./ui/hover-card";
+import { ScrollArea } from "./ui/scroll-area";
 
 type ToolbarAction = {
   id: string;
@@ -364,134 +369,148 @@ const Toolbar = ({
 }) => {
   const [showRecordingsList, setShowRecordingsList] = useState(false);
   const context = useChatStore((state) => state.context);
-  const [currentRecordingSrc, setCurrentRecordingSrc] = useState<null | string>(
-    null,
-  );
-
-  console.log("our recordings yippy", recordings);
 
   return (
-    // left of box is at 50% mark, so move 50% of div width left to make center at 50%
-    <div
-      style={{
-        // rah i need the zIndex manager this is bad
-        zIndex: 1000000000000,
-      }}
-      className="absolute flex-col top-2 left-1/2 gap-y-2 transform -translate-x-1/2 rounded-md bg-background px-2 py-1 flex gap-x-2 items-center"
-    >
-      <div className="flex gap-x-2 items-center justify-center w-full">
-        <RadioGroup defaultValue="comfortable" className="flex">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="default" id="r1" />
-            <Label htmlFor="r1">Record Screen</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="comfortable" id="r2" />
-            <Label htmlFor="r2">Record Area</Label>
-          </div>
-        </RadioGroup>
-        <Button
-          onClick={() => {
-            closeToolbar();
-          }}
-          variant={"ghost"}
-          className="px-3 py-1"
-        >
-          <XIcon />
-        </Button>
-        <Button
-          variant={"ghost"}
-          onClick={() => {
-            setShowRecordingsList((prev) => !prev);
-          }}
-        >
-          <ListIcon />
-        </Button>
-        <Button
-          onClick={() => {
-            if (isRecording) {
-              stopRecording();
-              return;
-            }
+    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-[1000000]">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-background/95 p-2 shadow-lg backdrop-blur">
+          <RadioGroup defaultValue="screen" className="flex gap-4">
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="screen" id="r1" />
+              <Label htmlFor="r1" className="text-sm">Screen</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="area" id="r2" />
+              <Label htmlFor="r2" className="text-sm">Area</Label>
+            </div>
+          </RadioGroup>
 
-            startRecording();
-          }}
-          variant={"ghost"}
-          className={cn([
-            "rounded-full bg-white h-10 w-10 relative hover:bg-white group",
-            isRecording && "animate-pulse",
-          ])}
-        >
-          <div
-            className={cn([
-              "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full w-4 h-4 bg-red-500 group-hover:bg-red-600 transition",
-              isRecording && "rounded-[1px]",
-            ])}
-          ></div>
-        </Button>
-      </div>
+          <div className="h-4 w-[1px] bg-border/40" />
 
-      {showRecordingsList && (
-        <div className="flex flex-col">
-          {recordings.map((recording) => (
-            <div
-              // variant={'ghost'}
-              // onClick={() => {}}
-              className="flex flex-col px-2 text-xs gap-y-2"
-            >
+          <HoverCard openDelay={200}>
+            <HoverCardTrigger asChild>
               <Button
                 onClick={() => {
-                  const filePath = recording.url.split("/").at(-1);
-                  if (!filePath) {
-                    throw new Error(
-                      "dev invariant needs valid url + path at end",
-                    );
+                  if (isRecording) {
+                    stopRecording();
+                    return;
                   }
-                  context.actions.pushItem({
-                    kind: "video",
-                    filePath,
-                    name: "Goo goo ga ga" + Math.random(),
-                  });
+                  startRecording();
                 }}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "relative h-8 w-8 rounded-full bg-background p-0 hover:bg-background/90",
+                  isRecording && "bg-red-500/10 hover:bg-red-500/20"
+                )}
               >
-                Add To Context
+                <div
+                  className={cn(
+                    "absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 transition-all",
+                    isRecording && "rounded-sm"
+                  )}
+                />
               </Button>
-              <Dialog>
-                <DialogTrigger>View {recording.name}</DialogTrigger>
-                <DialogContent
-                  style={{
-                    zIndex: 2147483647,
-                    minWidth: "90vw",
-                    height: "90vh",
-                  }}
-                >
-                  <DialogHeader>
-                    <video
-                      // className="h-[90vh] min-w-[90vw]"
-                      src={recording.url}
-                      controls
-                    />
-                    {/* <DialogTitle>Are you absolutely sure?</DialogTitle> */}
-                    {/* <DialogDescription>
-                      This action cannot be undone. This will permanently delete
-                      your account and remove your data from our servers.
-                    </DialogDescription> */}
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-              {/* <Button
-                onClick={() => {
-                  setCurrentRecordingSrc(recording.url);
-                }}
-                variant={"outline"}
-              >
-                View {recording.name}
-              </Button> */}
-              <video className="h-32 " src={recording.url} />
-            </div>
-          ))}
+            </HoverCardTrigger>
+            <HoverCardContent side="bottom" align="center" className="w-auto">
+              <p className="text-xs">{isRecording ? "Stop Recording" : "Start Recording"}</p>
+            </HoverCardContent>
+          </HoverCard>
+
+          <div className="h-4 w-[1px] bg-border/40" />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8"
+            onClick={() => setShowRecordingsList((prev) => !prev)}
+          >
+            <ListIcon className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8"
+            onClick={closeToolbar}
+          >
+            <XIcon className="h-4 w-4" />
+          </Button>
         </div>
-      )}
+
+        {showRecordingsList && recordings.length > 0 && (
+          <div className="w-[400px] rounded-lg border border-border/40 bg-background/95 p-2 shadow-lg backdrop-blur">
+            <ScrollArea className="h-[300px]">
+              <div className="flex flex-col gap-2">
+                {recordings.map((recording) => (
+                  <div
+                    key={recording.id}
+                    className="group relative overflow-hidden rounded-md border border-border/40 bg-background/50 p-2 hover:border-border"
+                  >
+                    <div className="mb-2 flex items-start justify-between">
+                      <div>
+                        <h4 className="text-sm font-medium">{recording.name}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(recording.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 opacity-0 transition-opacity group-hover:opacity-100"
+                        onClick={() => {
+                          const filePath = recording.url.split("/").at(-1);
+                          if (!filePath) {
+                            throw new Error("Invalid URL format");
+                          }
+                          context.actions.pushItem({
+                            kind: "video",
+                            filePath,
+                            name: recording.name,
+                          });
+                        }}
+                      >
+                        Add to Context
+                      </Button>
+                    </div>
+
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <div className="relative aspect-video cursor-pointer overflow-hidden rounded-md bg-black/10">
+                          <video src={recording.url} className="h-full w-full object-cover" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                            <Video className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent
+                        className="max-h-[90vh] max-w-[90vw]"
+                        style={{ zIndex: 2147483647 }}
+                      >
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <span>{recording.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(recording.timestamp).toLocaleString()}
+                            </span>
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="relative aspect-video">
+                          <video
+                            src={recording.url}
+                            controls
+                            className="h-full w-full rounded-md"
+                          />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

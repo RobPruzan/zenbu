@@ -22,7 +22,7 @@ import { ScreenshotTool } from "./screenshot-tool";
 import { Recorder } from "~/components/screen-sharing";
 import { Recording } from "~/components/recording";
 import { getCommandItems } from "./command-items";
-import { X, FileText, Code, Terminal, MessageSquare } from "lucide-react";
+import { X, FileText, Code, Terminal, MessageSquare, Store } from "lucide-react";
 import { TopBarContent } from "./top-bar-content";
 import { WebsiteTree } from "~/components/website-tree/website-tree";
 import { SlimSidebar } from "~/components/slim-sidebar";
@@ -30,6 +30,8 @@ import { BottomPanel } from "~/components/bottom-panel";
 import { ProjectCommandPalette } from "~/components/project-command-palette";
 import { ReactTree } from "~/components/react-tree/react-tree";
 import { HttpClient } from "~/components/http-client/http-client";
+import { PluginStore } from "~/components/plugin-store/plugin-store";
+import { NextLint } from "~/components/next-lint/next-lint";
 
 interface TabData {
   id: string;
@@ -46,6 +48,8 @@ interface SidebarState {
 export default function Home() {
   const [showProjectsDialog, setShowProjectsDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [showPluginStore, setShowPluginStore] = useState(false);
+  const [showNextLint, setShowNextLint] = useState(false);
   const [leftSidebar, setLeftSidebar] = useState<SidebarState>({
     component: null,
     position: "left",
@@ -80,6 +84,7 @@ export default function Home() {
     const handleToggleReactTree = (event: CustomEvent) =>
       toggleSidebar("reactTree", event.detail?.position);
     const handleToggleHttpClient = () => setShowHttpClient(prev => !prev);
+    const handleTogglePluginStore = () => setShowPluginStore(prev => !prev);
     const handleToggleTopBar = (event: Event) => toggleVisibility("topBar");
     const handleToggleSplit = (event: Event) => toggleVisibility("split");
     const handleToggleDenseTabs = (event: Event) =>
@@ -92,6 +97,9 @@ export default function Home() {
         setProjectPaletteOpen(true);
       }
     };
+    const handleToggleNextLint = () => {
+      setShowNextLint(prev => !prev);
+    };
 
     window.addEventListener("toggle-chat", handleToggleChat as EventListener);
     window.addEventListener(
@@ -103,10 +111,12 @@ export default function Home() {
       handleToggleReactTree as EventListener,
     );
     window.addEventListener("toggle-http-client", handleToggleHttpClient);
+    window.addEventListener("toggle-plugin-store", handleTogglePluginStore);
     window.addEventListener("toggle-top-bar", handleToggleTopBar);
     window.addEventListener("toggle-split", handleToggleSplit);
     window.addEventListener("toggle-dense-tabs", handleToggleDenseTabs);
     window.addEventListener("toggle-bottom-panel", handleToggleBottomPanel);
+    window.addEventListener("toggle-next-lint", handleToggleNextLint);
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
@@ -123,6 +133,7 @@ export default function Home() {
         handleToggleReactTree as EventListener,
       );
       window.removeEventListener("toggle-http-client", handleToggleHttpClient);
+      window.removeEventListener("toggle-plugin-store", handleTogglePluginStore);
       window.removeEventListener("toggle-top-bar", handleToggleTopBar);
       window.removeEventListener("toggle-split", handleToggleSplit);
       window.removeEventListener("toggle-dense-tabs", handleToggleDenseTabs);
@@ -130,6 +141,7 @@ export default function Home() {
         "toggle-bottom-panel",
         handleToggleBottomPanel,
       );
+      window.removeEventListener("toggle-next-lint", handleToggleNextLint);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isAnimating]);
@@ -263,8 +275,31 @@ export default function Home() {
           isOpen={projectPaletteOpen}
           onClose={() => setProjectPaletteOpen(false)}
         />
+        <PluginStore
+          isOpen={showPluginStore}
+          onClose={() => setShowPluginStore(false)}
+        />
         <div className="flex h-full w-full flex-col overflow-hidden">
           <div className="flex h-full w-full overflow-hidden">
+            <AnimatePresence mode="wait">
+              {showNextLint && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "320px", opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                    mass: 0.8,
+                  }}
+                  className="relative border-r border-border/40"
+                >
+                  <NextLint />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <AnimatePresence mode="wait">
               {leftSidebar.component && (
                 <motion.div
@@ -357,99 +392,106 @@ export default function Home() {
                 )}
               </AnimatePresence>
 
-              <div className="flex-1 overflow-hidden">
-                <ResizablePanelGroup
-                  direction={isSplit ? "horizontal" : "vertical"}
-                  className="h-full"
+              <ResizablePanelGroup
+                direction="vertical"
+                className="h-full"
+              >
+                <ResizablePanel
+                  defaultSize={bottomPanelVisible ? 70 : 100}
+                  className="relative"
                 >
-                  <ResizablePanel
-                    defaultSize={devtoolsVisible || isSplit ? 70 : 100}
-                    className="relative"
-                    minSize={
-                      isSplit
-                        ? 20
-                        : devtoolsVisible
-                          ? 15
-                          : topBarVisible
-                            ? 0
-                            : 100
-                    }
+                  <ResizablePanelGroup
+                    direction={isSplit ? "horizontal" : "vertical"}
+                    className="h-full"
                   >
-                    <div className="flex h-full flex-col">
-                      {showHttpClient ? (
-                        <HttpClient onBack={() => setShowHttpClient(false)} />
-                      ) : (
-                        <IFrameWrapper>
-                          <ScreenshotTool />
-                          <BetterToolbar />
-                          <DevtoolsOverlay />
-                          <BetterDrawing />
-                          <Recording />
-                        </IFrameWrapper>
-                      )}
-                    </div>
-                  </ResizablePanel>
-
-                  {isSplit && (
-                    <>
-                      <ResizableHandle withHandle className="bg-border/40" />
-                      <ResizablePanel defaultSize={30} minSize={20}>
-                        <div className="flex h-full flex-col">
+                    <ResizablePanel
+                      defaultSize={devtoolsVisible || isSplit ? 70 : 100}
+                      className="relative"
+                      minSize={
+                        isSplit
+                          ? 20
+                          : devtoolsVisible
+                            ? 15
+                            : topBarVisible
+                              ? 0
+                              : 100
+                      }
+                    >
+                      <div className="flex h-full flex-col">
+                        {showHttpClient ? (
+                          <HttpClient onBack={() => setShowHttpClient(false)} />
+                        ) : (
                           <IFrameWrapper>
-                            <p className="p-4 text-sm text-muted-foreground">
-                              Second iframe area
-                            </p>
+                            <ScreenshotTool />
                             <BetterToolbar />
                             <DevtoolsOverlay />
+                            <BetterDrawing />
+                            <Recording />
                           </IFrameWrapper>
-                        </div>
-                      </ResizablePanel>
-                    </>
-                  )}
+                        )}
+                      </div>
+                    </ResizablePanel>
 
-                  {!isSplit && devtoolsVisible && (
+                    {isSplit && (
+                      <>
+                        <ResizableHandle withHandle className="bg-border/40" />
+                        <ResizablePanel defaultSize={30} minSize={20}>
+                          <div className="flex h-full flex-col">
+                            <IFrameWrapper>
+                              <p className="p-4 text-sm text-muted-foreground">
+                                Second iframe area
+                              </p>
+                              <BetterToolbar />
+                              <DevtoolsOverlay />
+                            </IFrameWrapper>
+                          </div>
+                        </ResizablePanel>
+                      </>
+                    )}
+
+                    {!isSplit && devtoolsVisible && (
+                      <>
+                        <ResizableHandle withHandle className="bg-border/40" />
+                        <ResizablePanel
+                          defaultSize={30}
+                          minSize={15}
+                          collapsible={true}
+                          className="relative"
+                        >
+                          <div className="flex h-full flex-col border-t border-zinc-800/80">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-2 top-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
+                              onClick={() => toggleSidebar("chat", "left")}
+                              disabled={isAnimating}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                            <DevTools
+                              onClose={() => toggleSidebar("chat", "left")}
+                            />
+                          </div>
+                        </ResizablePanel>
+                      </>
+                    )}
+                  </ResizablePanelGroup>
+                </ResizablePanel>
+
+                <AnimatePresence>
+                  {bottomPanelVisible && (
                     <>
-                      <ResizableHandle withHandle className="bg-border/40" />
-                      <ResizablePanel
-                        defaultSize={30}
-                        minSize={15}
-                        collapsible={true}
-                        className="relative"
-                      >
-                        <div className="flex h-full flex-col border-t border-zinc-800/80">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-2 top-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
-                            onClick={() => toggleSidebar("chat", "left")}
-                            disabled={isAnimating}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                          <DevTools
-                            onClose={() => toggleSidebar("chat", "left")}
-                          />
-                        </div>
+                      {/* <ResizableHandle withHandle className="bg-border/40" /> */}
+                      <ResizablePanel defaultSize={30} minSize={15}>
+                        <BottomPanel 
+                          isOpen={bottomPanelVisible}
+                          onClose={() => setBottomPanelVisible(false)} 
+                        />
                       </ResizablePanel>
                     </>
                   )}
-                </ResizablePanelGroup>
-
-                {isSplit && devtoolsVisible && (
-                  <div className="h-[30%] min-h-[100px] border-t border-zinc-800/80 relative flex flex-col flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-2 top-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
-                      onClick={() => toggleSidebar("chat", "left")}
-                      disabled={isAnimating}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                    <DevTools onClose={() => toggleSidebar("chat", "left")} />
-                  </div>
-                )}
-              </div>
+                </AnimatePresence>
+              </ResizablePanelGroup>
             </div>
 
             <AnimatePresence mode="wait">

@@ -222,11 +222,15 @@ export function DevtoolsOverlay() {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      console.log("draw it now.");
-
-      ctx.strokeStyle = "rgba(138, 43, 226, 0.8)";
-      ctx.lineWidth = 2;
       const { domRect } = focusedInfo;
+
+      // Draw semi-transparent fill
+      ctx.fillStyle = "rgba(28, 132, 252, 0.15)";
+      ctx.fillRect(domRect.x, domRect.y, domRect.width, domRect.height);
+
+      // Draw bright blue border
+      ctx.strokeStyle = "rgb(28, 132, 252)";
+      ctx.lineWidth = 2;
       ctx.strokeRect(domRect.x, domRect.y, domRect.width, domRect.height);
     };
 
@@ -238,7 +242,6 @@ export function DevtoolsOverlay() {
         !targetRectRef.current
       ) {
         rafIdRef.current = null;
-
         return;
       }
 
@@ -252,7 +255,13 @@ export function DevtoolsOverlay() {
       current.height = lerp(current.height, target.height, lerpFactor);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = "rgba(138, 43, 226, 0.8)";
+
+      // Draw semi-transparent fill
+      ctx.fillStyle = "rgba(28, 132, 252, 0.15)";
+      ctx.fillRect(current.x, current.y, current.width, current.height);
+
+      // Draw bright blue border
+      ctx.strokeStyle = "rgb(28, 132, 252)";
       ctx.lineWidth = 2;
       ctx.strokeRect(current.x, current.y, current.width, current.height);
 

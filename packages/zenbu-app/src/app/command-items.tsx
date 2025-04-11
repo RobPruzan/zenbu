@@ -154,16 +154,33 @@ import {
   BookOpen,
   Link2,
   PanelBottom,
+  Store,
 } from "lucide-react";
 import { ChatInstanceStore } from "~/components/chat-instance-context";
 
 export const getCommandItems = ({
   actions,
   state,
-  inspector
-}: ChatInstanceStore["toolbar"] & {inspector: ChatInstanceStore['inspector']}) => [
+  inspector,
+}: ChatInstanceStore["toolbar"] & {
+  inspector: ChatInstanceStore["inspector"];
+}) => [
   {
     shortcut: "Toggle Terminal",
+    icon: <PanelBottom size={16} />,
+    onSelect: () => {
+      window.dispatchEvent(new Event("toggle-bottom-panel"));
+    },
+  },
+  {
+    shortcut: "Cloudflare Tunnel",
+    icon: <PanelBottom size={16} />,
+    onSelect: () => {
+      window.dispatchEvent(new Event("toggle-bottom-panel"));
+    },
+  },
+  {
+    shortcut: "Collaborative Share",
     icon: <PanelBottom size={16} />,
     onSelect: () => {
       window.dispatchEvent(new Event("toggle-bottom-panel"));
@@ -173,28 +190,40 @@ export const getCommandItems = ({
     shortcut: "Toggle Chat (Left)",
     icon: <MessageSquare size={16} />,
     onSelect: () => {
-      window.dispatchEvent(new CustomEvent("toggle-chat", { detail: { position: "left" } }));
+      window.dispatchEvent(
+        new CustomEvent("toggle-chat", { detail: { position: "left" } }),
+      );
     },
   },
   {
-    shortcut: "Toggle Chat (Right)", 
+    shortcut: "Toggle Chat (Right)",
     icon: <MessageSquare size={16} />,
     onSelect: () => {
-      window.dispatchEvent(new CustomEvent("toggle-chat", { detail: { position: "right" } }));
+      window.dispatchEvent(
+        new CustomEvent("toggle-chat", { detail: { position: "right" } }),
+      );
     },
   },
   {
     shortcut: "Toggle Website Tree (Left)",
     icon: <PanelLeft size={16} />,
     onSelect: () => {
-      window.dispatchEvent(new CustomEvent("toggle-website-tree", { detail: { position: "left" } }));
+      window.dispatchEvent(
+        new CustomEvent("toggle-website-tree", {
+          detail: { position: "left" },
+        }),
+      );
     },
   },
   {
     shortcut: "Toggle Website Tree (Right)",
     icon: <PanelRight size={16} />,
     onSelect: () => {
-      window.dispatchEvent(new CustomEvent("toggle-website-tree", { detail: { position: "right" } }));
+      window.dispatchEvent(
+        new CustomEvent("toggle-website-tree", {
+          detail: { position: "right" },
+        }),
+      );
     },
   },
   {
@@ -1330,5 +1359,13 @@ export const getCommandItems = ({
     shortcut: "Split Focused Up",
     icon: <ArrowUpIcon size={16} />,
     onSelect: () => {},
+  },
+  {
+    id: "toggle-plugin-store",
+    title: "Open Plugin Store",
+    shortcut: "Ctrl+Shift+P",
+    icon: <Store className="h-5 w-5" />,
+    onSelect: () =>
+      window.dispatchEvent(new CustomEvent("toggle-plugin-store")),
   },
 ];
