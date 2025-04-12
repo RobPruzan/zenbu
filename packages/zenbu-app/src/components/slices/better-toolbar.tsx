@@ -1,6 +1,6 @@
 import { iife } from "~/lib/utils";
 import { useChatStore } from "../chat-instance-context";
-import { Leaf } from "lucide-react";
+import { Ellipsis, Leaf } from "lucide-react";
 import { Button } from "../ui/button";
 import { act, useEffect, useState } from "react";
 import { ChildToParentMessage } from "zenbu-devtools";
@@ -41,12 +41,13 @@ export const BetterToolbar = () => {
             return (
               <Button
                 variant={"outline"}
-                // className=""
+                className="rounded-full px-0 py-0 h-fit p-2"
                 onClick={() => {
                   actions.setRoute("console");
                 }}
               >
-                <Leaf />
+                {/* todo later change size */}
+                <Ellipsis />
               </Button>
             );
           }
@@ -132,16 +133,18 @@ const Console = () => {
           <div key={i} className="mb-1 font-mono text-sm">
             {log.map((item, j) => (
               <span key={j} className="mr-2">
-                {typeof item === 'object' && item !== null ? (
+                {typeof item === "object" && item !== null ? (
                   <details>
                     <summary className="cursor-pointer">Object</summary>
                     <div className="pl-4 text-xs">
                       {Object.entries(item).map(([key, value], idx) => (
                         <div key={idx} className="mt-1">
                           <span className="text-blue-500">{key}:</span>{" "}
-                          {typeof value === 'object' && value !== null ? (
+                          {typeof value === "object" && value !== null ? (
                             <details>
-                              <summary className="cursor-pointer inline-block">Object</summary>
+                              <summary className="cursor-pointer inline-block">
+                                Object
+                              </summary>
                             </details>
                           ) : (
                             <span>{String(value)}</span>

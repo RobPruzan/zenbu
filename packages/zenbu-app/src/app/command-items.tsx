@@ -1368,4 +1368,12 @@ export const getCommandItems = ({
     onSelect: () =>
       window.dispatchEvent(new CustomEvent("toggle-plugin-store")),
   },
+{
+    id: "toggle-plugin-store",
+    shortcut: "Find Element by Screenshot",
+    icon: <Store className="h-5 w-5" />,
+    onSelect: () =>
+      window.dispatchEvent(new CustomEvent("toggle-plugin-store")),
+  },
+    
 ];
