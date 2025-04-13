@@ -1,5 +1,5 @@
 import { iife } from "~/lib/utils";
-import { useChatStore } from "../chat-instance-context";
+import { useChatStore } from "../chat-store";
 import { Ellipsis, Leaf } from "lucide-react";
 import { Button } from "../ui/button";
 import { act, useEffect, useState } from "react";

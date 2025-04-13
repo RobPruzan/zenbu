@@ -1,5 +1,5 @@
 import { Editor } from "tldraw";
-import { SliceCreator } from "../chat-instance-context";
+import { SliceCreator } from "../chat-store";
 
 export type Route = "network" | "console" | "performance" | "off";
 

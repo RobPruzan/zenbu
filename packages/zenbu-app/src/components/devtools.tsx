@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Input } from "~/components/ui/input";
-import { useChatStore } from "./chat-instance-context";
+import { useChatStore } from "./chat-store";
 
 // Add onClose prop to the component interface
 interface DevToolsProps {

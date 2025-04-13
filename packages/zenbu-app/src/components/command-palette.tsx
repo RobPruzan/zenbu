@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Command, Search } from "lucide-react";
-import { useChatStore } from "./chat-instance-context";
+import { useChatStore } from "./chat-store";
 import {
   CommandDialog,
   CommandEmpty,

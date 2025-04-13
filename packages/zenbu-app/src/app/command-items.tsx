@@ -156,7 +156,7 @@ import {
   PanelBottom,
   Store,
 } from "lucide-react";
-import { ChatInstanceStore } from "~/components/chat-instance-context";
+import { ChatInstanceStore } from "~/components/chat-store";
 
 export const getCommandItems = ({
   actions,

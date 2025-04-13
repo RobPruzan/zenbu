@@ -19,7 +19,7 @@ import {
 } from "zenbu-devtools";
 import { useChatContext } from "./chat-interface";
 import { useEventWS } from "~/app/ws";
-import { ChatInstanceContext, useChatStore } from "./chat-instance-context";
+import { ChatInstanceContext, useChatStore } from "./chat-store";
 import { IFRAME_ID } from "~/app/iframe-wrapper";
 
 interface Props {

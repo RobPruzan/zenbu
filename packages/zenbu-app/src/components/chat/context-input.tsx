@@ -9,7 +9,7 @@ import {
 import Image from "next/image";
 import { X } from "lucide-react";
 import { useWSContext } from "./chat";
-import { useChatStore } from "../chat-instance-context";
+import { useChatStore } from "../chat-store";
 import { nanoid } from "nanoid";
 import { ClientMessageEvent, ClientTaskEvent } from "zenbu-plugin/src/ws/ws";
 import { z } from "zod";

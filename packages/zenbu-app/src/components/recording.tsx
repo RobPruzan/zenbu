@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useChatStore } from "./chat-instance-context";
+import { useChatStore } from "./chat-store";
 import { ListIcon, XIcon, Star, Download, Video, MonitorStop } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "~/lib/utils";

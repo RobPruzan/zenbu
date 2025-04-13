@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Editor, Tldraw, TLEditorComponents } from "tldraw";
-import { useChatStore } from "~/components/chat-instance-context";
+import { useChatStore } from "~/components/chat-store";
 import "tldraw/tldraw.css";
 
 const getDrawingComponents = (): TLEditorComponents => {

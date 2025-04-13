@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { ChatInstanceStore, useChatStore } from "./chat-instance-context";
+import { ChatInstanceStore, useChatStore } from "./chat-store";
 
 interface SlimSidebarProps {
   className?: string;

@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import { act, useEffect, useRef, useState } from "react";
 import { set } from "zod";
-import { useChatStore } from "~/components/chat-instance-context";
+import { useChatStore } from "~/components/chat-store";
 import { useMakeRequest } from "~/components/devtools-overlay";
 import { iife, cn } from "~/lib/utils";
 import { captureViewport } from "./better-drawing";

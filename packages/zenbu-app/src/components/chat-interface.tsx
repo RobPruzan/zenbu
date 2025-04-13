@@ -45,7 +45,7 @@ import {
 } from "~/components/ui/tooltip";
 import { pluginRPC } from "~/app/rpc";
 import { flushSync } from "react-dom";
-import { useChatStore } from "./chat-instance-context";
+import { useChatStore } from "./chat-store";
 import { ChatMessage } from "zenbu-plugin/src/ws/utils";
 
 // Define local message type that includes status

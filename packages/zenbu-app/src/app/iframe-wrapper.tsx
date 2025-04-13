@@ -16,7 +16,7 @@ import {
   InspectorStateContext,
   useMakeRequest,
 } from "~/components/devtools-overlay";
-import { useChatStore } from "~/components/chat-instance-context";
+import { useChatStore } from "~/components/chat-store";
 import { Recorder } from "~/components/screen-sharing";
 import { iife } from "~/lib/utils";
 import { Toolbar } from "./toolbar";
@@ -39,7 +39,7 @@ export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
   // const { inspectorState, setInspectorState } = useInspectorStateContext();
   const { inspector } = useChatStore();
 
-  const { toolbar } = useChatStore();
+  const { iframe } = useChatStore();
 
   const makeRequest = useMakeRequest();
 
@@ -57,7 +57,7 @@ export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
       if (
         !e
           .composedPath()
-          .map((el) => "id" in el && el.id)
+          .map((el) => el && "id" in el && el.id)
           .filter(Boolean)
           .includes("child-iframe")
       ) {
@@ -107,7 +107,8 @@ export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
           id={IFRAME_ID}
           key={lastUpdate}
           ref={iframeRef}
-          src="http://localhost:4200"
+          // src="http://localhost:4200"
+          src={iframe.state.url}
           style={{
             height: "100%",
             width: "100%",
@@ -147,7 +148,3 @@ export const IFRAME_ID = "child-iframe";
 // };
 
 // export const useInspectorStateContext = () => useContext(InspectorStateContext);
-
-
-
-

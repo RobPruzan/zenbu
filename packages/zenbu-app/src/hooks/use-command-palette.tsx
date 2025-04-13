@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useChatStore } from "~/components/chat-instance-context";
+import { useChatStore } from "~/components/chat-store";
 import { CommandItem } from "~/components/slices/command-palette-slice";
 import { LucideIcon } from "lucide-react";
 

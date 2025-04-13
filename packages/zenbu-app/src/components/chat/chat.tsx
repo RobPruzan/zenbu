@@ -7,7 +7,7 @@ import {
   useContext,
   useLayoutEffect,
 } from "react";
-import { useChatStore } from "../chat-instance-context";
+import { useChatStore } from "../chat-store";
 import { iife } from "~/lib/utils";
 import { useEventWS } from "~/app/ws";
 import { ClientMessageEvent, ClientTaskEvent } from "zenbu-plugin/src/ws/ws";

@@ -26,6 +26,11 @@ import {
   ToolbarSlice,
   ToolbarSliceInitialState,
 } from "./slices/toolbar-slice";
+import {
+  createIFrameSlice,
+  IFrameSlice,
+  IFrameSliceInitialState,
+} from "./slices/iframe-slice";
 
 export type ChatInstanceInitialState = {
   eventLog: EventLogSliceInitialState;
@@ -33,7 +38,7 @@ export type ChatInstanceInitialState = {
   chatControls: ChatControlsInitialState;
   context: ContextSliceInitialState;
   toolbar: ToolbarSliceInitialState;
-  // commandPalette: CommandPaletteSliceInitialState;
+  iframe: IFrameSliceInitialState;
 };
 
 export type ChatInstanceStore = {
@@ -42,7 +47,7 @@ export type ChatInstanceStore = {
   chatControls: ChatControlsSlice;
   context: ContextSlice;
   toolbar: ToolbarSlice;
-  // commandPalette: CommandPaletteSlice;
+  iframe: IFrameSlice;
 };
 
 export const ChatInstanceContext = createZustandContext(
@@ -56,7 +61,7 @@ export const ChatInstanceContext = createZustandContext(
         ),
         context: createContextSlice(initialState.context)(...args),
         toolbar: createToolbarSLice(initialState.toolbar)(...args),
-        // commandPalette: createCommandPaletteSlice(initialState.commandPalette)(...args),
+        iframe: createIFrameSlice(initialState.iframe)(...args),
       })),
     ),
 );

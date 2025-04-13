@@ -1,5 +1,5 @@
 import { EventLogEvent } from "zenbu-plugin/src/ws/ws";
-import { SliceCreator } from "../chat-instance-context";
+import { SliceCreator } from "../chat-store";
 
 export type EventLogSliceInitialState = {
   events: Array<EventLogEvent>;

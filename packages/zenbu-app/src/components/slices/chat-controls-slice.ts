@@ -1,4 +1,4 @@
-import { SliceCreator } from "../chat-instance-context";
+import { SliceCreator } from "../chat-store";
 
 export type ChatControlsInitialState = {
   input: string;

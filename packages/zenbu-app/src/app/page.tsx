@@ -1,10 +1,7 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
-import { Component, useEffect, useState } from "react";
-import {
-  ChatInstanceContext,
-  useChatStore,
-} from "~/components/chat-instance-context";
+import { Component, Suspense, useEffect, useState } from "react";
+import { ChatInstanceContext, useChatStore } from "~/components/chat-store";
 import { Chat } from "~/components/chat/chat";
 import { CommandPalette } from "~/components/command-palette";
 import { DevtoolsOverlay } from "~/components/devtools-overlay";
@@ -22,7 +19,14 @@ import { ScreenshotTool } from "./screenshot-tool";
 import { Recorder } from "~/components/screen-sharing";
 import { Recording } from "~/components/recording";
 import { getCommandItems } from "./command-items";
-import { X, FileText, Code, Terminal, MessageSquare, Store } from "lucide-react";
+import {
+  X,
+  FileText,
+  Code,
+  Terminal,
+  MessageSquare,
+  Store,
+} from "lucide-react";
 import { TopBarContent } from "./top-bar-content";
 import { WebsiteTree } from "~/components/website-tree/website-tree";
 import { SlimSidebar } from "~/components/slim-sidebar";
@@ -83,8 +87,8 @@ export default function Home() {
       toggleSidebar("websiteTree", event.detail?.position);
     const handleToggleReactTree = (event: CustomEvent) =>
       toggleSidebar("reactTree", event.detail?.position);
-    const handleToggleHttpClient = () => setShowHttpClient(prev => !prev);
-    const handleTogglePluginStore = () => setShowPluginStore(prev => !prev);
+    const handleToggleHttpClient = () => setShowHttpClient((prev) => !prev);
+    const handleTogglePluginStore = () => setShowPluginStore((prev) => !prev);
     const handleToggleTopBar = (event: Event) => toggleVisibility("topBar");
     const handleToggleSplit = (event: Event) => toggleVisibility("split");
     const handleToggleDenseTabs = (event: Event) =>
@@ -98,7 +102,7 @@ export default function Home() {
       }
     };
     const handleToggleNextLint = () => {
-      setShowNextLint(prev => !prev);
+      setShowNextLint((prev) => !prev);
     };
 
     window.addEventListener("toggle-chat", handleToggleChat as EventListener);
@@ -133,7 +137,10 @@ export default function Home() {
         handleToggleReactTree as EventListener,
       );
       window.removeEventListener("toggle-http-client", handleToggleHttpClient);
-      window.removeEventListener("toggle-plugin-store", handleTogglePluginStore);
+      window.removeEventListener(
+        "toggle-plugin-store",
+        handleTogglePluginStore,
+      );
       window.removeEventListener("toggle-top-bar", handleToggleTopBar);
       window.removeEventListener("toggle-split", handleToggleSplit);
       window.removeEventListener("toggle-dense-tabs", handleToggleDenseTabs);
@@ -239,6 +246,9 @@ export default function Home() {
     <main className="relative flex h-screen overflow-hidden bg-background text-foreground">
       <ChatInstanceContext.Provider
         initialValue={{
+          iframe: {
+            url: "http://localhost:4200",
+          },
           toolbar: {
             state: {
               activeRoute: "off",
@@ -341,10 +351,18 @@ export default function Home() {
                       <Chat onCloseChat={() => toggleSidebar("chat", "left")} />
                     </div>
                   ) : leftSidebar.component === "websiteTree" ? (
-                    <WebsiteTree
-                      onClose={() => toggleSidebar("websiteTree", "left")}
-                      onSelect={handleWebsiteSelect}
-                    />
+                    <Suspense
+                      fallback={
+                        <div className="flex h-full items-center justify-center">
+                          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        </div>
+                      }
+                    >
+                      <WebsiteTree
+                        onClose={() => toggleSidebar("websiteTree", "left")}
+                        onSelect={handleWebsiteSelect}
+                      />
+                    </Suspense>
                   ) : leftSidebar.component === "reactTree" ? (
                     <ReactTree
                       onClose={() => toggleSidebar("reactTree", "left")}
@@ -392,10 +410,7 @@ export default function Home() {
                 )}
               </AnimatePresence>
 
-              <ResizablePanelGroup
-                direction="vertical"
-                className="h-full"
-              >
+              <ResizablePanelGroup direction="vertical" className="h-full">
                 <ResizablePanel
                   defaultSize={bottomPanelVisible ? 70 : 100}
                   className="relative"
@@ -483,9 +498,9 @@ export default function Home() {
                     <>
                       {/* <ResizableHandle withHandle className="bg-border/40" /> */}
                       <ResizablePanel defaultSize={30} minSize={15}>
-                        <BottomPanel 
+                        <BottomPanel
                           isOpen={bottomPanelVisible}
-                          onClose={() => setBottomPanelVisible(false)} 
+                          onClose={() => setBottomPanelVisible(false)}
                         />
                       </ResizablePanel>
                     </>
