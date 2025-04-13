@@ -557,8 +557,9 @@ export default function Home() {
                             <div className="relative mx-auto h-[852px] w-[393px] flex-shrink-0 overflow-hidden rounded-[40px] border-[10px] border-black bg-black shadow-xl">
                               <div className="h-full w-full overflow-hidden rounded-[30px]">
                                 <IFrameWrapper>
-                                  <BetterToolbar />
-                                  <DevtoolsOverlay />
+                                  <></>
+                                  {/* <BetterToolbar />
+                                  <DevtoolsOverlay /> */}
                                 </IFrameWrapper>
                               </div>
                             </div>
