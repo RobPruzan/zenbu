@@ -19,16 +19,24 @@ export const daemonRouter = createTRPCRouter({
   }),
 
   createProject: publicProcedure.mutation(async ({ ctx }) => {
+    const startTime = performance.now();
+    
     const json = await fetch("http://localhost:40000/projects", {
       method: "POST",
     }).then((res) => res.json());
+    
     const schema = z.object({
       name: z.string(),
       port: z.number(),
       pid: z.number(),
       cwd: z.string(),
     });
+    
     const data = schema.parse(json);
+    
+    const endTime = performance.now();
+    console.log(`Project creation took ${endTime - startTime}ms`);
+    
     return data;
   }),
   deleteProject: publicProcedure

@@ -13,6 +13,7 @@ import * as util from "node:util";
 import assert from "node:assert/strict";
 import type { Readable } from "node:stream";
 import { validator } from "hono/validator";
+import { cors } from "hono/cors";
 
 // don't share shim with plugin it breaks types for some reason, i think Env gets resolved differently per project for some reason i can't figure it out
 const shim = <T>(): MiddlewareHandler<
@@ -970,6 +971,7 @@ async function gracefulShutdown(signal: string) {
 
 export const createDaemon = () => {
   const app = new Hono();
+  app.use("*", cors());
   const route = app
 
     .get("/", async (c) => {

@@ -155,6 +155,7 @@ import {
   Link2,
   PanelBottom,
   Store,
+  Plus,
 } from "lucide-react";
 import { ChatInstanceStore } from "~/components/chat-store";
 
@@ -162,9 +163,21 @@ export const getCommandItems = ({
   actions,
   state,
   inspector,
+  onCreateProject,
 }: ChatInstanceStore["toolbar"] & {
   inspector: ChatInstanceStore["inspector"];
+  onCreateProject: () => void;
+  // for now we keep it false, but may need a loading state if takes more than 100ms
+  createProjectLoading: boolean;
 }) => [
+  {
+    shortcut: "Create Project",
+    icon: <Plus size={16} />,
+    onSelect: () => {
+      onCreateProject();
+    },
+  },
+
   {
     shortcut: "Toggle Terminal",
     icon: <PanelBottom size={16} />,

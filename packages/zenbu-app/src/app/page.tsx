@@ -36,6 +36,8 @@ import { ReactTree } from "~/components/react-tree/react-tree";
 import { HttpClient } from "~/components/http-client/http-client";
 import { PluginStore } from "~/components/plugin-store/plugin-store";
 import { NextLint } from "~/components/next-lint/next-lint";
+import { trpc } from "~/lib/trpc";
+import { z } from "zod";
 
 interface TabData {
   id: string;
@@ -98,11 +100,9 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "p" && e.metaKey) {
         e.preventDefault();
-        setProjectPaletteOpen(prev => !prev);
+        setProjectPaletteOpen((prev) => !prev);
       }
     };
-
-
 
     const handleToggleNextLint = () => {
       setShowNextLint((prev) => !prev);
@@ -593,6 +593,18 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
   const toolbarState = useChatStore((state) => state.toolbar);
   const inspector = useChatStore((state) => state.inspector);
 
+  const iframe = useChatStore((state) => state.iframe);
+  const createProjectMutation = trpc.daemon.createProject.useMutation({
+    onSuccess: (result) => {
+      // projectsQuery.refetch();
+      iframe.actions.setInspectorState({
+        url: `http://localhost:${result.port}`,
+      });
+    },
+  });
+
+  const utils = trpc.useUtils();
+
   const additionalCommands = [
     {
       id: "toggle-chat-left",
@@ -625,7 +637,32 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
   ];
 
   const items = [
-    ...getCommandItems({ ...toolbarState, inspector }),
+    ...getCommandItems({
+      ...toolbarState,
+      inspector,
+      createProjectLoading: false,
+      onCreateProject: async () => {
+        // createProjectMutation.mutate()
+
+        // todo: because we have to invalidate everything on the mutation, the create project + nav is blocked by other queries, so will need to pass meta in this mutation to precisely invalidate
+        const json = await fetch("http://localhost:40000/projects", {
+          method: "POST",
+        }).then((res) => res.json());
+
+        const schema = z.object({
+          name: z.string(),
+          port: z.number(),
+          pid: z.number(),
+          cwd: z.string(),
+        });
+        const data = schema.parse(json);
+        iframe.actions.setInspectorState({
+          url: `http://localhost:${data.port}`,
+        });
+
+        utils.daemon.getProjects.invalidate();
+      },
+    }),
     ...additionalCommands,
   ];
 
