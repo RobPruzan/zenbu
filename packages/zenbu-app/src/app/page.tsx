@@ -98,9 +98,12 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "p" && e.metaKey) {
         e.preventDefault();
-        setProjectPaletteOpen(true);
+        setProjectPaletteOpen(prev => !prev);
       }
     };
+
+
+
     const handleToggleNextLint = () => {
       setShowNextLint((prev) => !prev);
     };

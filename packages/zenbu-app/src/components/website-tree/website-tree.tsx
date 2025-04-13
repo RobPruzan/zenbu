@@ -23,6 +23,7 @@ import {
   Plus,
   Loader2,
   Trash,
+  Ellipsis,
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import { trpc } from "~/lib/trpc";
@@ -327,8 +328,19 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
             <div className="w-3/5 flex justify-start"> Default</div>
             <div className="w-2/5 flex justify-end">4200</div>
 
-          <div className="w-[22px]"></div>
           </Button>
+          <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-sm px-0 py-0 h-fit w-fit p-1 [&_svg]:size-auto [&_svg]:shrink-1 flex justify-center items-center"
+              // onClick={() => {
+              //   deleteProjectMutation.mutate({
+              //     name: project.name,
+              //   });
+              // }}
+            >
+            <Ellipsis size={14}/>
+            </Button>
         </div>
         {projects.map((project) => (
           <div key={project.pid} className="flex items-center h-8 gap-y-1">
