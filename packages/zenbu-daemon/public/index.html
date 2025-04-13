@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenbu Daemon UI (New)</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #f8f9fa; color: #212529; }
+        .container { max-width: 800px; margin: auto; background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h1, h2 { color: #343a40; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 20px; }
+        h1 { font-size: 1.8em; }
+        h2 { font-size: 1.4em; }
+        ul { list-style: none; padding: 0; }
+        li { background: #f1f3f5; margin-bottom: 12px; padding: 12px 18px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e9ecef; transition: background-color 0.2s ease; }
+        li:hover { background-color: #e9ecef; }
+        li span { margin-right: 10px; }
+        li .details { font-size: 0.85em; color: #6c757d; margin-left: 15px; }
+        li .project-link { color: #007bff; text-decoration: none; font-weight: 500; }
+        li .project-link:hover { text-decoration: underline; }
+        button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 5px; font-size: 0.9em; transition: background-color 0.2s ease, box-shadow 0.2s ease; }
+        button:disabled { cursor: not-allowed; opacity: 0.6; }
+        .delete-btn { background-color: #dc3545; color: white; }
+        .delete-btn:hover:not(:disabled) { background-color: #c82333; box-shadow: 0 2px 4px rgba(220, 53, 69, 0.4); }
+        .create-section { margin-top: 25px; padding: 20px; background: #eef7ff; border-radius: 6px; border: 1px solid #cce5ff; display: flex; align-items: center; justify-content: center; }
+        .create-section button { background-color: #007bff; color: white; font-size: 1em; padding: 10px 20px; display: flex; align-items: center; gap: 8px; }
+        .create-section button:hover:not(:disabled) { background-color: #0056b3; box-shadow: 0 2px 4px rgba(0, 123, 255, 0.4); }
+        .status { margin-top: 20px; padding: 12px 15px; background-color: #fff3cd; border-left: 5px solid #ffc107; color: #856404; border-radius: 5px; display: none; }
+        .status.error { background-color: #f8d7da; border-left-color: #dc3545; color: #721c24; }
+        .status.success { background-color: #d4edda; border-left-color: #28a745; color: #155724; }
+        .btn-spinner { border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #fff; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zenbu Project Daemon</h1>
+
+        <div class="create-section">
+            <button id="createBtn">
+                <span id="createBtnText">🚀 Create New Project</span>
+                <span id="createBtnSpinner" class="btn-spinner"></span>
+            </button>
+        </div>
+
+        <div id="statusMessage" class="status"></div>
+
+        <h2>Active Projects</h2>
+        <ul id="projectList">
+            <!-- Projects will be listed here -->
+            <li>Loading projects...</li>
+        </ul>
+    </div>
+
+    <script>
+        const projectList = document.getElementById('projectList');
+        const createBtn = document.getElementById('createBtn');
+        const createBtnText = document.getElementById('createBtnText');
+        const createBtnSpinner = document.getElementById('createBtnSpinner');
+        const statusMessage = document.getElementById('statusMessage');
+        const apiUrlBase = ''; // Use relative path
+
+        let isLoading = false; // Prevent multiple simultaneous operations
+
+        function setButtonLoading(loading) {
+            createBtn.disabled = loading;
+            createBtnSpinner.style.display = loading ? 'block' : 'none';
+            createBtnText.textContent = loading ? 'Creating...' : '🚀 Create New Project';
+        }
+
+        function showStatus(message, type = 'info') { // type: 'info', 'success', 'error'
+            statusMessage.textContent = message;
+            statusMessage.className = `status ${type}`; // Reset classes and add type
+            statusMessage.style.display = 'block';
+
+            // Auto-hide after 5 seconds, except for errors
+            if (type !== 'error') {
+                 setTimeout(() => {
+                    if (statusMessage.textContent === message) { // Hide only if message hasn't changed
+                        statusMessage.style.display = 'none';
+                    }
+                 }, 5000);
+            }
+        }
+
+        function hideStatus() {
+            statusMessage.style.display = 'none';
+        }
+
+        async function fetchProjects() {
+            projectList.innerHTML = '<li>Loading projects...</li>'; // Show loading state
+
+            try {
+                const response = await fetch(`${apiUrlBase}/projects`);
+                if (!response.ok) {
+                    let errorMsg = `HTTP error! status: ${response.status}`;
+                     try {
+                        const errData = await response.json();
+                        errorMsg = errData.error || errorMsg;
+                     } catch (e) { /* ignore json parse error */ }
+                    throw new Error(errorMsg);
+                }
+                const projects = await response.json();
+
+                projectList.innerHTML = ''; // Clear loading message
+                if (projects.length === 0) {
+                    projectList.innerHTML = '<li>No active projects found. Click "Create New Project" to start one!</li>';
+                } else {
+                    projects.forEach(project => {
+                        const li = document.createElement('li');
+                        const projectUrl = `http://localhost:${project.port}`; // Assuming localhost
+                        li.innerHTML = `
+                            <span>
+                                <a href="${projectUrl}" target="_blank" class="project-link" title="Open Project">${project.name}</a>
+                                <span class="details">(Port: ${project.port})</span>
+                                <span class="details">PID: ${project.pid}</span>
+                            </span>
+                            <button class="delete-btn" data-name="${project.name}" title="Delete Project">Delete</button>
+                        `;
+                        projectList.appendChild(li);
+                    });
+                }
+                return true;
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+                showStatus(`Error fetching projects: ${error.message}`, 'error');
+                projectList.innerHTML = '<li>Error loading projects. Please check the daemon console and refresh.</li>';
+                return false;
+            }
+        }
+
+        async function createProject() {
+            if (isLoading) return;
+            isLoading = true;
+            
+            setButtonLoading(true);
+            hideStatus(); // Clear previous status
+            showStatus(`Creating new project...`, 'info');
+
+            try {
+                const response = await fetch(`${apiUrlBase}/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
+                }
+
+                showStatus(result.message || `Project '${result.name}' created successfully!`, 'success');
+                
+                // Keep spinner going while we fetch updated projects
+                await fetchProjects();
+            } catch (error) {
+                console.error('Error creating project:', error);
+                showStatus(`Error creating project: ${error.message}`, 'error');
+            } finally {
+                setButtonLoading(false);
+                isLoading = false;
+            }
+        }
+
+        async function deleteProject(name) {
+            if (isLoading) return;
+
+            // if (!confirm(`Are you sure you want to delete project '${name}'? This action cannot be undone.`)) {
+            //     return;
+            // }
+
+            isLoading = true;
+            const deleteBtn = document.querySelector(`.delete-btn[data-name="${name}"]`);
+            if (deleteBtn) {
+                deleteBtn.disabled = true;
+                deleteBtn.textContent = "Deleting...";
+            }
+            
+            hideStatus();
+            showStatus(`Deleting project '${name}'...`, 'info');
+
+            try {
+                const response = await fetch(`${apiUrlBase}/projects/${name}`, {
+                    method: 'DELETE',
+                });
+
+                // Handle 204 No Content success separately
+                if (response.status === 204) {
+                    showStatus(`Project '${name}' deleted successfully.`, 'success');
+                } else if (!response.ok) {
+                    let errorMsg = `HTTP error! status: ${response.status}`;
+                    try {
+                        const result = await response.json();
+                        errorMsg = result.error || errorMsg; // Use API error if available
+                    } catch (e) { /* Ignore if response is not JSON */ }
+                    throw new Error(errorMsg);
+                } else {
+                    // Handle unexpected success status codes if needed
+                    const result = await response.json(); // Maybe a 200 OK with a message?
+                    showStatus(result.message || `Project '${name}' deleted.`, 'success');
+                }
+
+                await fetchProjects(); // Refresh list
+            } catch (error) {
+                console.error(`Error deleting project ${name}:`, error);
+                showStatus(`Error deleting project '${name}': ${error.message}`, 'error');
+                // Re-enable the button if it still exists
+                if (deleteBtn) {
+                    deleteBtn.disabled = false;
+                    deleteBtn.textContent = "Delete";
+                }
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // --- Event Listeners ---
+        createBtn.addEventListener('click', createProject);
+
+        // Use event delegation for delete buttons
+        projectList.addEventListener('click', (event) => {
+            if (event.target.classList.contains('delete-btn')) {
+                const name = event.target.getAttribute('data-name');
+                if (name) {
+                    deleteProject(name);
+                }
+            }
+        });
+
+        // --- Initial Load ---
+        fetchProjects();
+    </script>
+</body>
+</html>
