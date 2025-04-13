@@ -49,6 +49,41 @@ const ADJECTIVES = [
   "dandy",
   "groovy",
   "nimble",
+  "brave",
+  "clever",
+  "dapper",
+  "elegant",
+  "fierce",
+  "gentle",
+  "humble",
+  "iconic",
+  "jazzy",
+  "keen",
+  "loyal",
+  "mighty",
+  "noble",
+  "optimal",
+  "peppy",
+  "quirky",
+  "radiant",
+  "smooth",
+  "tender",
+  "unique",
+  "vibrant",
+  "wise",
+  "xenial",
+  "youthful",
+  "zealous",
+  "ancient",
+  "bold",
+  "cosmic",
+  "dazzling",
+  "enchanted",
+  "fluffy",
+  "glowing",
+  "heroic",
+  "intrepid",
+  "jovial",
 ];
 const NOUNS = [
   "penguin",
@@ -66,6 +101,41 @@ const NOUNS = [
   "comet",
   "galaxy",
   "meerkat",
+  "tiger",
+  "unicorn",
+  "volcano",
+  "walrus",
+  "xylophone",
+  "yeti",
+  "zebra",
+  "asteroid",
+  "bison",
+  "cactus",
+  "dolphin",
+  "eagle",
+  "falcon",
+  "giraffe",
+  "hedgehog",
+  "iguana",
+  "jaguar",
+  "koala",
+  "lemur",
+  "mammoth",
+  "narwhal",
+  "octopus",
+  "panther",
+  "quokka",
+  "raccoon",
+  "squirrel",
+  "toucan",
+  "viper",
+  "wombat",
+  "phoenix",
+  "dragon",
+  "wizard",
+  "ninja",
+  "samurai",
+  "pirate",
 ];
 
 const MAX_PROJECT_NAME_GENERATION_ATTEMPTS = 15;
@@ -339,7 +409,12 @@ async function getRunningProjects(): Promise<Result<ProjectProcessInfo[]>> {
             continue;
           case "ok":
             const { name, port } = parsedDetailsResult.value;
-            const projectPath = path.join(PROJECTS_DIR, name);
+            const HACK_PROJECT_PATH_FIX_ME_ASAP_THIS_SHOULD_NOT_BE_KEPT_I_THINK =
+              name + "/" + NESTED_TEMPLATE_DIR_NAME;
+            const projectPath = path.join(
+              PROJECTS_DIR,
+              HACK_PROJECT_PATH_FIX_ME_ASAP_THIS_SHOULD_NOT_BE_KEPT_I_THINK
+            );
             projects.push({ pid, name, port, cwd: projectPath });
         }
       }
@@ -723,7 +798,7 @@ async function ensureWarmInstance() {
   }
 }
 
-app.get("/", async (c: Context) => {
+app.get("/", async (c) => {
   console.log(`${logPrefix.daemon} Request received for / (serving UI)`);
   const htmlResult = await safeReadFile(NEW_INDEX_HTML_PATH, "utf-8");
 
@@ -743,7 +818,7 @@ app.get("/", async (c: Context) => {
   }
 });
 
-app.get("/favicon.ico", async (c: Context) => {
+app.get("/favicon.ico", async (c) => {
   const iconResult = await safeReadFile(FAVICON_PATH, null);
 
   switch (iconResult.kind) {
@@ -759,7 +834,7 @@ app.get("/favicon.ico", async (c: Context) => {
   }
 });
 
-app.get("/projects", async (c: Context) => {
+app.get("/projects", async (c) => {
   console.log(`${logPrefix.daemon} API Request: GET /projects`);
   const projectsResult = await getRunningProjects();
 
@@ -773,16 +848,17 @@ app.get("/projects", async (c: Context) => {
       const activeProjects = projectsResult.value.filter((p) =>
         activeProjectNames.has(p.name)
       );
-      const responseData = activeProjects.map(({ name, port, pid }) => ({
+      const responseData = activeProjects.map(({ name, port, pid, cwd }) => ({
         name,
         port,
         pid,
+        cwd,
       }));
       return c.json(responseData);
   }
 });
 
-app.post("/projects", async (c: Context) => {
+app.post("/projects", async (c) => {
   console.log(`${logPrefix.daemon} API Request: POST /projects`);
   const startTime = Date.now();
   const assignResult = await assignProjectInstance();
@@ -814,7 +890,7 @@ app.post("/projects", async (c: Context) => {
   }
 });
 
-app.delete("/projects/:name", async (c: Context) => {
+app.delete("/projects/:name", async (c) => {
   const name = c.req.param("name");
   const projLog = logPrefix.project(name);
   console.log(`${projLog} API Request: DELETE /projects/${name}`);
