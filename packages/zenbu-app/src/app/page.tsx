@@ -26,6 +26,8 @@ import {
   Terminal,
   MessageSquare,
   Store,
+  SplitSquareHorizontal,
+  Smartphone,
 } from "lucide-react";
 import { TopBarContent } from "./top-bar-content";
 import { WebsiteTree } from "~/components/website-tree/website-tree";
@@ -36,8 +38,10 @@ import { ReactTree } from "~/components/react-tree/react-tree";
 import { HttpClient } from "~/components/http-client/http-client";
 import { PluginStore } from "~/components/plugin-store/plugin-store";
 import { NextLint } from "~/components/next-lint/next-lint";
+import { LeaderKeyHints } from "~/components/leader-key-hints";
 import { trpc } from "~/lib/trpc";
 import { z } from "zod";
+import { cn } from "~/lib/utils";
 
 interface TabData {
   id: string;
@@ -66,7 +70,8 @@ export default function Home() {
   });
   const [devtoolsVisible, setDevtoolsVisible] = useState(false);
   const [topBarVisible, setTopBarVisible] = useState(false);
-  const [isSplit, setIsSplit] = useState(false);
+  const [horizontalSplit, setHorizontalSplit] = useState(false);
+  const [mobileSplit, setMobileSplit] = useState(false);
   const [denseTabsEnabled, setDenseTabsEnabled] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("main");
@@ -74,6 +79,11 @@ export default function Home() {
   const [websiteTreeVisible, setWebsiteTreeVisible] = useState(false);
   const [projectPaletteOpen, setProjectPaletteOpen] = useState(false);
   const [showHttpClient, setShowHttpClient] = useState(false);
+
+  // State for leader key hints
+  const [leaderKeyPending, setLeaderKeyPending] = useState(false);
+  const [showLeaderHints, setShowLeaderHints] = useState(false);
+  const [leaderTimeoutId, setLeaderTimeoutId] = useState<number | null>(null);
 
   // New state for managing tabs
   const [tabs, setTabs] = useState<TabData[]>([
@@ -92,15 +102,91 @@ export default function Home() {
     const handleToggleHttpClient = () => setShowHttpClient((prev) => !prev);
     const handleTogglePluginStore = () => setShowPluginStore((prev) => !prev);
     const handleToggleTopBar = (event: Event) => toggleVisibility("topBar");
-    const handleToggleSplit = (event: Event) => toggleVisibility("split");
+    const handleToggleHorizontalSplit = () => {
+      if (isAnimating) return;
+      setIsAnimating(true);
+      setHorizontalSplit((prev) => {
+        const newState = !prev;
+        if (newState) {
+          setMobileSplit(false);
+        }
+        return newState;
+      });
+      setTimeout(() => setIsAnimating(false), 300);
+    };
+    const handleToggleMobileSplit = () => {
+      if (isAnimating) return;
+      setIsAnimating(true);
+      setMobileSplit((prev) => {
+        const newState = !prev;
+        if (newState) {
+          setHorizontalSplit(false);
+        }
+        return newState;
+      });
+      setTimeout(() => setIsAnimating(false), 300);
+    };
     const handleToggleDenseTabs = (event: Event) =>
       toggleVisibility("denseTabs");
     const handleToggleBottomPanel = () =>
       setBottomPanelVisible((prev) => !prev);
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore keydown events if an input, textarea, or select element is focused
+      const targetElement = e.target as HTMLElement;
+      if (
+        targetElement.tagName === "INPUT" ||
+        targetElement.tagName === "TEXTAREA" ||
+        targetElement.tagName === "SELECT" ||
+        targetElement.isContentEditable
+      ) {
+        return;
+      }
+
+      // Project Palette shortcut
       if (e.key === "p" && e.metaKey) {
         e.preventDefault();
         setProjectPaletteOpen((prev) => !prev);
+      }
+
+      // Leader Key Logic
+      if (showLeaderHints && e.key === "Escape") {
+        e.preventDefault();
+        setShowLeaderHints(false);
+        return;
+      }
+
+      if (leaderKeyPending) {
+        // Clear timeout if another key is pressed after leader
+        if (leaderTimeoutId) clearTimeout(leaderTimeoutId);
+        setLeaderTimeoutId(null);
+        setLeaderKeyPending(false);
+
+        // TODO: Handle actual leader key combinations here
+        // e.g., if (e.key === 'f') { triggerFindFile(); }
+        console.log(`Leader combination: Space + ${e.key}`);
+        e.preventDefault(); // Prevent default action for the combo key
+        return;
+      }
+
+      if (e.key === " " && !e.repeat) { // Space bar pressed (not held)
+        e.preventDefault(); // Prevent default scroll behavior
+        setLeaderKeyPending(true);
+
+        // Set timeout to show hints if no other key is pressed
+        const timeoutId = window.setTimeout(() => {
+          setShowLeaderHints(true);
+          setLeaderKeyPending(false);
+          setLeaderTimeoutId(null);
+        }, 300); // Changed timeout to 300ms
+        setLeaderTimeoutId(timeoutId);
+        return;
+      }
+
+       // Hide hints if any other key is pressed while they are visible
+      if (showLeaderHints && e.key !== "Escape") { // Allow escape to pass through if needed elsewhere
+        setShowLeaderHints(false);
+         // Optional: you might want to process this key press as a normal command
+         // if it wasn't part of a leader sequence.
       }
     };
 
@@ -120,7 +206,8 @@ export default function Home() {
     window.addEventListener("toggle-http-client", handleToggleHttpClient);
     window.addEventListener("toggle-plugin-store", handleTogglePluginStore);
     window.addEventListener("toggle-top-bar", handleToggleTopBar);
-    window.addEventListener("toggle-split", handleToggleSplit);
+    window.addEventListener("toggle-split", handleToggleHorizontalSplit);
+    window.addEventListener("toggle-mobile-split", handleToggleMobileSplit);
     window.addEventListener("toggle-dense-tabs", handleToggleDenseTabs);
     window.addEventListener("toggle-bottom-panel", handleToggleBottomPanel);
     window.addEventListener("toggle-next-lint", handleToggleNextLint);
@@ -145,7 +232,8 @@ export default function Home() {
         handleTogglePluginStore,
       );
       window.removeEventListener("toggle-top-bar", handleToggleTopBar);
-      window.removeEventListener("toggle-split", handleToggleSplit);
+      window.removeEventListener("toggle-split", handleToggleHorizontalSplit);
+      window.removeEventListener("toggle-mobile-split", handleToggleMobileSplit);
       window.removeEventListener("toggle-dense-tabs", handleToggleDenseTabs);
       window.removeEventListener(
         "toggle-bottom-panel",
@@ -185,7 +273,7 @@ export default function Home() {
   };
 
   const toggleVisibility = (
-    component: "devtools" | "topBar" | "split" | "denseTabs",
+    component: "devtools" | "topBar" | "denseTabs",
   ) => {
     if (isAnimating) return;
     setIsAnimating(true);
@@ -196,9 +284,6 @@ export default function Home() {
         break;
       case "topBar":
         setTopBarVisible((prev) => !prev);
-        break;
-      case "split":
-        setIsSplit((prev) => !prev);
         break;
       case "denseTabs":
         setDenseTabsEnabled((prev) => !prev);
@@ -375,7 +460,10 @@ export default function Home() {
               )}
             </AnimatePresence>
 
-            <div className="flex h-full flex-1 flex-col overflow-hidden">
+            <div className={cn(
+              "flex h-full flex-1 flex-col overflow-hidden",
+              mobileSplit && "min-w-[750px]"
+            )}>
               <AnimatePresence mode="wait">
                 {topBarVisible && (
                   <motion.div
@@ -419,14 +507,20 @@ export default function Home() {
                   className="relative"
                 >
                   <ResizablePanelGroup
-                    direction={isSplit ? "horizontal" : "vertical"}
+                    direction={horizontalSplit || mobileSplit ? "horizontal" : "vertical"}
                     className="h-full"
                   >
                     <ResizablePanel
-                      defaultSize={devtoolsVisible || isSplit ? 70 : 100}
+                      defaultSize={
+                        devtoolsVisible
+                          ? 70
+                          : horizontalSplit || mobileSplit
+                            ? 50
+                            : 100
+                       }
                       className="relative"
                       minSize={
-                        isSplit
+                        horizontalSplit || mobileSplit
                           ? 20
                           : devtoolsVisible
                             ? 15
@@ -450,24 +544,40 @@ export default function Home() {
                       </div>
                     </ResizablePanel>
 
-                    {isSplit && (
+                    {(horizontalSplit || mobileSplit) && (
                       <>
                         <ResizableHandle withHandle className="bg-border/40" />
-                        <ResizablePanel defaultSize={30} minSize={20}>
-                          <div className="flex h-full flex-col">
-                            <IFrameWrapper>
-                              <p className="p-4 text-sm text-muted-foreground">
-                                Second iframe area
-                              </p>
-                              <BetterToolbar />
-                              <DevtoolsOverlay />
-                            </IFrameWrapper>
-                          </div>
+                        <ResizablePanel
+                          defaultSize={horizontalSplit ? 50 : undefined}
+                          minSize={horizontalSplit ? 20 : undefined}
+                          collapsible={false}
+                          className={mobileSplit ? "flex items-center justify-center p-4 bg-background" : ""}
+                        >
+                          {mobileSplit ? (
+                            <div className="relative mx-auto h-[852px] w-[393px] flex-shrink-0 overflow-hidden rounded-[40px] border-[10px] border-black bg-black shadow-xl">
+                              <div className="h-full w-full overflow-hidden rounded-[30px]">
+                                <IFrameWrapper>
+                                  <BetterToolbar />
+                                  <DevtoolsOverlay />
+                                </IFrameWrapper>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex h-full flex-col">
+                              <IFrameWrapper>
+                                <p className="p-4 text-sm text-muted-foreground">
+                                  Second iframe area
+                                </p>
+                                <BetterToolbar />
+                                <DevtoolsOverlay />
+                              </IFrameWrapper>
+                            </div>
+                          )}
                         </ResizablePanel>
                       </>
                     )}
 
-                    {!isSplit && devtoolsVisible && (
+                    {!horizontalSplit && !mobileSplit && devtoolsVisible && (
                       <>
                         <ResizableHandle withHandle className="bg-border/40" />
                         <ResizablePanel
@@ -499,7 +609,6 @@ export default function Home() {
                 <AnimatePresence>
                   {bottomPanelVisible && (
                     <>
-                      {/* <ResizableHandle withHandle className="bg-border/40" /> */}
                       <ResizablePanel defaultSize={30} minSize={15}>
                         <BottomPanel
                           isOpen={bottomPanelVisible}
@@ -576,6 +685,12 @@ export default function Home() {
             toggleSidebar("websiteTree", position)
           }
         />
+
+        {/* Render Leader Key Hints */}
+        <LeaderKeyHints
+          isVisible={showLeaderHints}
+          onClose={() => setShowLeaderHints(false)}
+        />
       </ChatInstanceContext.Provider>
     </main>
   );
@@ -608,29 +723,37 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
   const additionalCommands = [
     {
       id: "toggle-chat-left",
-      title: "Toggle Chat (Left)",
-      shortcut: "Ctrl+Shift+L",
+      shortcut: "Toggle Chat Left",
       icon: <MessageSquare className="h-5 w-5" />,
       onSelect: () => onToggleChat("left"),
     },
     {
       id: "toggle-chat-right",
-      title: "Toggle Chat (Right)",
-      shortcut: "Ctrl+Shift+R",
+      shortcut: "Toggle Chat Right",
       icon: <MessageSquare className="h-5 w-5" />,
       onSelect: () => onToggleChat("right"),
     },
     {
       id: "toggle-website-tree-left",
-      title: "Toggle Website Tree (Left)",
-      shortcut: "Ctrl+Shift+W",
+      shortcut: "Toggle Website Tree Left",
       icon: <FileText className="h-5 w-5" />,
       onSelect: () => onToggleWebsiteTree("left"),
     },
     {
+      id: "toggle-mobile-split",
+      shortcut: "Toggle Mobile Split",
+      icon: <Smartphone className="h-5 w-5" />,
+      onSelect: () => window.dispatchEvent(new Event("toggle-mobile-split")),
+    },
+    {
+      id: "toggle-split",
+      shortcut: "Toggle Split",
+      icon: <SplitSquareHorizontal className="h-5 w-5" />,
+      onSelect: () => window.dispatchEvent(new Event("toggle-split")),
+    },
+    {
       id: "toggle-website-tree-right",
-      title: "Toggle Website Tree (Right)",
-      shortcut: "Ctrl+Alt+W",
+      shortcut: "Toggle Website Tree Right",
       icon: <FileText className="h-5 w-5" />,
       onSelect: () => onToggleWebsiteTree("right"),
     },

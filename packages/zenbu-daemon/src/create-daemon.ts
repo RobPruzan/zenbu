@@ -14,6 +14,10 @@ import assert from "node:assert/strict";
 import type { Readable } from "node:stream";
 import { validator } from "hono/validator";
 import { cors } from "hono/cors";
+import pidusage from "pidusage";
+
+// Store process stdout globally since we can't reliably attach it to the process object
+const processStdoutMap = new Map<number, string[]>();
 
 // don't share shim with plugin it breaks types for some reason, i think Env gets resolved differently per project for some reason i can't figure it out
 const shim = <T>(): MiddlewareHandler<
@@ -161,6 +165,7 @@ interface ProjectProcessInfo {
   name: string;
   port: number;
   cwd: string;
+  stdout?: string[];
 }
 
 type ParsedMarker = Omit<ProjectProcessInfo, "cwd" | "pid">;
@@ -357,6 +362,26 @@ function safeSpawn(
       return err("Failed to obtain PID immediately after spawning process.");
     }
 
+    // Initialize stdout array for this process
+    processStdoutMap.set(pid, []);
+
+    // Capture stdout
+    child.stdout.on('data', (data) => {
+      const lines = data.toString().split('\n').filter(Boolean);
+      const currentStdout = processStdoutMap.get(pid) || [];
+      currentStdout.push(...lines);
+      // Keep last 1000 lines
+      if (currentStdout.length > 1000) {
+        currentStdout.splice(0, currentStdout.length - 1000);
+      }
+      processStdoutMap.set(pid, currentStdout);
+    });
+
+    // Clean up stdout when process exits
+    child.on('exit', () => {
+      processStdoutMap.delete(pid);
+    });
+
     return ok({ child, pid });
   } catch (spawnError: unknown) {
     return err(
@@ -428,7 +453,11 @@ async function getRunningProjects(): Promise<Result<ProjectProcessInfo[]>> {
               PROJECTS_DIR,
               HACK_PROJECT_PATH_FIX_ME_ASAP_THIS_SHOULD_NOT_BE_KEPT_I_THINK
             );
-            projects.push({ pid, name, port, cwd: projectPath });
+            
+            // Get stdout from our map
+            const stdout = processStdoutMap.get(pid) || [];
+            
+            projects.push({ pid, name, port, cwd: projectPath, stdout });
         }
       }
 
@@ -1006,6 +1035,56 @@ export const createDaemon = () => {
         case "ok":
           c.header("Content-Type", "image/x-icon");
           return c.body(iconResult.value);
+      }
+    })
+    .get("/projects/:name/stats", async (c) => {
+      const name = c.req.param("name");
+      const projLog = logPrefix.project(name);
+      console.log(`${projLog} API Request: GET /projects/${name}/stats`);
+
+      const projectsResult = await getRunningProjects();
+      
+      switch (projectsResult.kind) {
+        case "error":
+          console.error(
+            `${projLog} Error fetching running projects: ${projectsResult.error}`
+          );
+          return c.json({ error: "Failed to retrieve projects list" }, 500);
+          
+        case "ok":
+          const project = projectsResult.value.find((p) => p.name === name);
+          if (!project) {
+            console.warn(`${projLog} Project not found in running processes`);
+            return c.json({ error: `Project '${name}' not found` }, 404);
+          }
+          
+          try {
+            const stats = await pidusage(project.pid);
+            
+            const result = {
+              pid: project.pid,
+              name: project.name,
+              stats: {
+                cpu: stats.cpu,
+                memory: stats.memory,
+                ppid: stats.ppid,
+                elapsed: stats.elapsed,
+                timestamp: Date.now(),
+              },
+              stdout: project.stdout || []
+            };
+            
+            console.log(`${projLog} Stats retrieved successfully for PID ${project.pid}`);
+            return c.json(result);
+          } catch (error) {
+            console.error(
+              `${projLog} Error getting process stats: ${error instanceof Error ? error.message : String(error)}`
+            );
+            return c.json(
+              { error: `Failed to get stats for project '${name}'` },
+              500
+            );
+          }
       }
     })
     .get("/projects", async (c) => {

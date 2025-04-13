@@ -26,43 +26,51 @@ type Command = {
 // we want an internal representation to order by most recently used, just like vscode
 export function CommandPalette({ items }: { items: Array<Command> }) {
   const [open, setOpen] = React.useState(false);
-  const [shortcutLastOpened, setShortcutLastOpened] = useState<Array<{id:string, lastOpened: number}>>([]);
-  
+  const [shortcutLastOpened, setShortcutLastOpened] = useState<
+    Array<{ id: string; lastOpened: number }>
+  >([]);
+
   // Keep a reference to the current items to detect changes
   const itemsRef = useRef<Array<Command>>();
-  
+
   // Update the shortcutLastOpened when items change
   useEffect(() => {
     if (!itemsRef.current) {
       itemsRef.current = items;
       return;
     }
-    
+
     // Check if items have changed
-    const currentShortcuts = new Set(itemsRef.current.map(item => item.shortcut));
-    const newShortcuts = new Set(items.map(item => item.shortcut));
-    
+    const currentShortcuts = new Set(
+      itemsRef.current.map((item) => item.shortcut),
+    );
+    const newShortcuts = new Set(items.map((item) => item.shortcut));
+
     // If there are new items, add them to shortcutLastOpened
-    const hasNewItems = items.some(item => !currentShortcuts.has(item.shortcut));
-    const hasMissingItems = itemsRef.current.some(item => !newShortcuts.has(item.shortcut));
-    
+    const hasNewItems = items.some(
+      (item) => !currentShortcuts.has(item.shortcut),
+    );
+    const hasMissingItems = itemsRef.current.some(
+      (item) => !newShortcuts.has(item.shortcut),
+    );
+
     if (hasNewItems || hasMissingItems) {
-      setShortcutLastOpened(prev => {
+      setShortcutLastOpened((prev) => {
         // Keep only existing shortcuts
-        const filtered = prev.filter(item => 
-          items.some(command => command.shortcut === item.id)
+        const filtered = prev.filter((item) =>
+          items.some((command) => command.shortcut === item.id),
         );
-        
+
         // Add new shortcuts
-        const existingIds = new Set(filtered.map(item => item.id));
+        const existingIds = new Set(filtered.map((item) => item.id));
         const newEntries = items
-          .filter(item => !existingIds.has(item.shortcut))
-          .map(item => ({ id: item.shortcut, lastOpened: 0 }));
-        
+          .filter((item) => !existingIds.has(item.shortcut))
+          .map((item) => ({ id: item.shortcut, lastOpened: 0 }));
+
         return [...filtered, ...newEntries];
       });
     }
-    
+
     // Update reference
     itemsRef.current = items;
   }, [items]);
@@ -79,7 +87,9 @@ export function CommandPalette({ items }: { items: Array<Command> }) {
     };
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-      if (event.origin !== "http://localhost:4200") {
+      if (
+        event.origin !== "http://localhost:4200" 
+      ) {
         return;
       }
       const data = event.data;
@@ -104,11 +114,9 @@ export function CommandPalette({ items }: { items: Array<Command> }) {
   }, [open]);
 
   const handleSelect = (shortcut: string, onSelect: () => void) => {
-    setShortcutLastOpened(prev => {
-      const newState = prev.map(item => 
-        item.id === shortcut 
-          ? { ...item, lastOpened: Date.now() } 
-          : item
+    setShortcutLastOpened((prev) => {
+      const newState = prev.map((item) =>
+        item.id === shortcut ? { ...item, lastOpened: Date.now() } : item,
       );
       return newState;
     });
@@ -117,8 +125,12 @@ export function CommandPalette({ items }: { items: Array<Command> }) {
 
   // Sort items by last opened time
   const sortedItems = [...items].sort((a, b) => {
-    const aTime = shortcutLastOpened.find(item => item.id === a.shortcut)?.lastOpened || 0;
-    const bTime = shortcutLastOpened.find(item => item.id === b.shortcut)?.lastOpened || 0;
+    const aTime =
+      shortcutLastOpened.find((item) => item.id === a.shortcut)?.lastOpened ||
+      0;
+    const bTime =
+      shortcutLastOpened.find((item) => item.id === b.shortcut)?.lastOpened ||
+      0;
     return bTime - aTime;
   });
 
@@ -129,8 +141,8 @@ export function CommandPalette({ items }: { items: Array<Command> }) {
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Commands">
           {sortedItems.map((item) => (
-            <CommandItem 
-              key={item.shortcut} 
+            <CommandItem
+              key={item.shortcut}
               onSelect={() => handleSelect(item.shortcut, item.onSelect)}
             >
               {item.icon}

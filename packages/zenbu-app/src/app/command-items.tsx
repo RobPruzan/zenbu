@@ -177,7 +177,6 @@ export const getCommandItems = ({
       onCreateProject();
     },
   },
-
   {
     shortcut: "Toggle Terminal",
     icon: <PanelBottom size={16} />,
@@ -369,11 +368,11 @@ export const getCommandItems = ({
     icon: <Globe size={16} />,
     onSelect: () => {},
   },
-  {
-    shortcut: "New Project",
-    icon: <FolderPlus size={16} />,
-    onSelect: () => {},
-  },
+  // {
+  //   shortcut: "New Project",
+  //   icon: <FolderPlus size={16} />,
+  //   onSelect: () => {},
+  // },
   {
     shortcut: "Fork Project",
     icon: <GitFork size={16} />,

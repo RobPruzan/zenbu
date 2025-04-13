@@ -293,6 +293,9 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.4.3
         version: 0.4.3(hono@4.7.6)(zod@3.24.2)
+      '@types/pidusage':
+        specifier: ^2.0.5
+        version: 2.0.5
       extract-zip:
         specifier: ^2.0.1
         version: 2.0.1
@@ -302,6 +305,9 @@ importers:
       hono:
         specifier: ^4.7.4
         version: 4.7.6
+      pidusage:
+        specifier: ^4.0.0
+        version: 4.0.0
       vitest:
         specifier: ^3.1.1
         version: 3.1.1(@types/node@20.17.24)(jiti@1.21.7)(tsx@4.19.3)(yaml@2.7.0)
@@ -3159,6 +3165,9 @@ packages:
   '@types/node@22.13.10':
     resolution: {integrity: sha512-I6LPUvlRH+O6VRUqYOcMudhaIdUVWfsjnZavnsraHvpBwaEyMN29ry+0UVJhImYL16xsscu0aske3yA+uPOWfw==}
 
+  '@types/pidusage@2.0.5':
+    resolution: {integrity: sha512-MIiyZI4/MK9UGUXWt0jJcCZhVw7YdhBuTOuqP/BjuLDLZ2PmmViMIQgZiWxtaMicQfAz/kMrZ5T7PKxFSkTeUA==}
+
   '@types/prop-types@15.7.14':
     resolution: {integrity: sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==}
 
@@ -5439,6 +5448,10 @@ packages:
   picomatch@4.0.2:
     resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
     engines: {node: '>=12'}
+
+  pidusage@4.0.0:
+    resolution: {integrity: sha512-89hVJc5gq157puLYZaO3CH0qfGyDfbDG1KFCE4lCSwK0l1EuEbNa4pIJJXL93ltU5SsYia/DHJUgMY2qE4XRQg==}
+    engines: {node: '>=18'}
 
   pify@2.3.0:
     resolution: {integrity: sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==}
@@ -9168,6 +9181,8 @@ snapshots:
       undici-types: 6.20.0
     optional: true
 
+  '@types/pidusage@2.0.5': {}
+
   '@types/prop-types@15.7.14': {}
 
   '@types/puppeteer@7.0.4(typescript@5.8.2)':
@@ -11735,6 +11750,10 @@ snapshots:
   picomatch@2.3.1: {}
 
   picomatch@4.0.2: {}
+
+  pidusage@4.0.0:
+    dependencies:
+      safe-buffer: 5.2.1
 
   pify@2.3.0: {}
 
