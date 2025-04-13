@@ -100,7 +100,13 @@ const sendMessage = (message: ChildToParentMessage) => {
   window.parent.postMessage(message, TARGET_ORIGIN);
 };
 document.addEventListener("keydown", (e) => {
-  console.log("hola");
+
+
+
+  if (e.metaKey && e.key === "p") {
+    e.preventDefault()
+    // if we want the parent frame to control this (not unconditionally do this here), we need to await a response from the parent iframe to determine how to do this, could cause a lost frame on every keydown which is quite unfortunate
+  }
 
   sendMessage({
     kind: "keydown",

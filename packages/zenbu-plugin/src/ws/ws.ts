@@ -236,7 +236,7 @@ export const injectWebSocket = (server: HttpServer) => {
               }
               case "thread-idle": {
                 // try {
-                emitEvent("🔥");
+                // emitEvent("🔥");
 
                 // yippy we can just send da file
                 //   interface FilePart {

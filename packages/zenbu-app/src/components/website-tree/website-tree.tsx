@@ -248,14 +248,22 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
   );
 
   const { iframe } = useChatStore();
+  const utils = trpc.useUtils();
   const createProjectMutation = trpc.daemon.createProject.useMutation({
+    meta: {noInvalidate: true},
     onSuccess: (result) => {
-      projectsQuery.refetch();
-      iframe.actions.setInspectorState({url: `http://localhost:${result.port}`})
+      const existing = utils.daemon.getProjects.getData();
+      utils.daemon.getProjects.setData(
+        undefined,
+        existing ? [...existing, result] : [result],
+      );
 
+      // projectsQuery.refetch();
+      iframe.actions.setInspectorState({
+        url: `http://localhost:${result.port}`,
+      });
     },
   });
-
 
   const deleteProjectMutation = trpc.daemon.deleteProject.useMutation();
 
@@ -315,7 +323,8 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
             variant={"ghost"}
             className={cn([
               "group flex items-center w-full px-2 py-0 text-xs justify-start h-full",
-              `http://localhost:4200` === iframe.state.url  && "bg-muted/30 hover:bg-muted/60"
+              `http://localhost:4200` === iframe.state.url &&
+                "bg-muted/30 hover:bg-muted/60",
             ])}
             onClick={() => {
               // some store set that determines the project url
@@ -327,29 +336,29 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
           >
             <div className="w-3/5 flex justify-start"> Default</div>
             <div className="w-2/5 flex justify-end">4200</div>
-
           </Button>
           <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-sm px-0 py-0 h-fit w-fit p-1 [&_svg]:size-auto [&_svg]:shrink-1 flex justify-center items-center"
-              // onClick={() => {
-              //   deleteProjectMutation.mutate({
-              //     name: project.name,
-              //   });
-              // }}
-            >
-            <Ellipsis size={14}/>
-            </Button>
+            variant="ghost"
+            size="icon"
+            className="rounded-sm px-0 py-0 h-fit w-fit p-1 [&_svg]:size-auto [&_svg]:shrink-1 flex justify-center items-center"
+            // onClick={() => {
+            //   deleteProjectMutation.mutate({
+            //     name: project.name,
+            //   });
+            // }}
+          >
+            <Ellipsis size={14} />
+          </Button>
         </div>
-        {projects.map((project) => (
+        {projects.toReversed().map((project) => (
           <div key={project.pid} className="flex items-center h-8 gap-y-1">
             <Button
               key={project.pid}
               variant={"ghost"}
               className={cn([
                 "group flex items-center w-[calc(100%-24px)] px-2 py-0 text-xs justify-start h-full",
-                `http://localhost:${project.port}` === iframe.state.url  && "bg-muted/50 hover:bg-muted/60"
+                `http://localhost:${project.port}` === iframe.state.url &&
+                  "bg-muted/50 hover:bg-muted/60",
               ])}
               onClick={() => {
                 // some store set that determines the project url

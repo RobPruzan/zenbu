@@ -104,7 +104,9 @@ export function DevtoolsOverlay() {
   }, [inspector.state.kind]);
   const sendMessage = useIFrameMessenger();
   const { setMessages, setInput } = useChatContext();
+  // why did i do this again? I definitely had a reason
   const store = ChatInstanceContext.useContext();
+  const url = useChatStore((state) => state.iframe.state.url);
 
   useEffect(() => {
     const getState = store.getState;
@@ -116,7 +118,6 @@ export function DevtoolsOverlay() {
     if (!ctx) return;
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-
       // this acts as validation and why we can assert the event is the above type
       // we need to switch to runtime validation, we can't do this generally
       if (event.origin !== "http://localhost:4200") {
@@ -128,6 +129,11 @@ export function DevtoolsOverlay() {
       const data = event.data;
 
       switch (data.kind) {
+        // case 'keydown': {
+        //   if (data.metaKey && data.key === "p") {
+        //     data.
+        //   }
+        // }
         case "notification": {
           console.log("got notification");
           return;
@@ -307,7 +313,7 @@ export function DevtoolsOverlay() {
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [store]);
+  }, [store, url]);
 
   return (
     <canvas
@@ -395,7 +401,7 @@ export const useMakeRequest = () => {
         if (event.data.id === messageId) {
           window.removeEventListener("message", handleMessage);
           res(event.data);
-        } 
+        }
       };
 
       window.addEventListener("message", handleMessage);

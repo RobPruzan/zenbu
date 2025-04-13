@@ -10,6 +10,7 @@ import { useChatStore } from "./chat-store";
 const ProjectCommandContent = ({ onClose }: { onClose: () => void }) => {
   const [search, setSearch] = useState("");
   const { iframe } = useChatStore();
+  const [recentlyVisited, setRecentlyVisited] = useState<Array<{name: string, port: number, pid?: string}>>([]);
   
   const [projects, projectsQuery] = trpc.daemon.getProjects.useSuspenseQuery(
     undefined,
@@ -17,6 +18,17 @@ const ProjectCommandContent = ({ onClose }: { onClose: () => void }) => {
       refetchInterval: 5000,
     }
   );
+
+  useEffect(() => {
+    const storedRecent = localStorage.getItem('recentlyVisitedProjects');
+    if (storedRecent) {
+      try {
+        setRecentlyVisited(JSON.parse(storedRecent));
+      } catch (e) {
+        setRecentlyVisited([]);
+      }
+    }
+  }, []);
 
   const getIcon = (type?: string) => {
     switch (type) {
@@ -35,14 +47,65 @@ const ProjectCommandContent = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
-  const filteredProjects = projects.filter(project =>
-    project.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const navigateToProject = (project: {name: string, port: number, pid?: string}) => {
+    iframe.actions.setInspectorState({
+      url: `http://localhost:${project.port}`,
+    });
+    
+    // Update recently visited - exclude current project from the list
+    const currentUrl = iframe.state?.url;
+    const currentPort = currentUrl ? parseInt(currentUrl.split(':').pop() || '0', 10) : 0;
+    const currentProject = {
+      name: projects.find(p => p.port === currentPort)?.name || "Unknown",
+      port: currentPort
+    };
+    
+    // Filter out the project we're navigating to and the current project
+    const newRecent = [
+      project,
+      ...recentlyVisited.filter(p => 
+        !(p.name === project.name && p.port === project.port) && 
+        !(p.name === currentProject.name && p.port === currentProject.port)
+      ),
+    ].slice(0, 10); // Keep only 10 most recent
+    
+    setRecentlyVisited(newRecent);
+    localStorage.setItem('recentlyVisitedProjects', JSON.stringify(newRecent));
+    onClose();
+  };
 
   const defaultProject = {
     name: "Default",
     port: 4200
   };
+
+  // Get current project to exclude it
+  const currentUrl = iframe.state?.url;
+  const currentPort = currentUrl ? parseInt(currentUrl.split(':').pop() || '0', 10) : 0;
+  
+  // Combine all projects and sort by recency
+  const allProjects = [...recentlyVisited];
+  
+  // Add default project if not in recently visited and not current
+  if (!allProjects.some(p => p.name === "Default" && p.port === 4200) && currentPort !== 4200) {
+    allProjects.push(defaultProject);
+  }
+  
+  // Add remaining projects that aren't in recently visited and aren't current
+  projects.forEach(project => {
+    if (!allProjects.some(p => p.name === project.name && p.port === project.port) && 
+        project.port !== currentPort) {
+      allProjects.push({
+        name: project.name,
+        port: project.port,
+        pid: project.pid
+      });
+    }
+  });
+
+  const filteredProjects = allProjects.filter(project =>
+    project.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <Command className="rounded-lg border border-border/40 bg-background shadow-2xl backdrop-blur">
@@ -55,33 +118,14 @@ const ProjectCommandContent = ({ onClose }: { onClose: () => void }) => {
       <CommandList>
         <CommandEmpty>No projects found.</CommandEmpty>
         <CommandGroup heading="Projects">
-          <CommandItem
-            value="Default"
-            className="flex items-center gap-2 px-4 py-2"
-            onSelect={() => {
-              iframe.actions.setInspectorState({
-                url: `http://localhost:4200`,
-              });
-              onClose();
-            }}
-          >
-            <Globe className="h-4 w-4 opacity-70" />
-            <span className="flex-1">Default</span>
-            <span className="text-xs text-muted-foreground">:4200</span>
-          </CommandItem>
           {filteredProjects.map((project) => (
             <CommandItem
-              key={project.pid}
+              key={`${project.name}-${project.port}-${project.pid || 'default'}`}
               value={project.name}
               className="flex items-center gap-2 px-4 py-2"
-              onSelect={() => {
-                iframe.actions.setInspectorState({
-                  url: `http://localhost:${project.port}`,
-                });
-                onClose();
-              }}
+              onSelect={() => navigateToProject(project)}
             >
-              {/* {getIcon(project.type)} */}
+              <Globe className="h-4 w-4 opacity-70" />
               <span className="flex-1">{project.name}</span>
               <span className="text-xs text-muted-foreground">:{project.port}</span>
             </CommandItem>

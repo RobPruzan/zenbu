@@ -275,7 +275,7 @@ export const getCommandItems = ({
     },
   },
   {
-    shortcut: "TLDraw",
+    shortcut: "Draw",
     icon: <Pencil size={16} />,
     onSelect: () => {
       actions.setIsDrawing(!state.drawing.active);

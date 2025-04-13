@@ -660,7 +660,7 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
           url: `http://localhost:${data.port}`,
         });
 
-        utils.daemon.getProjects.invalidate();
+        utils.daemon.getProjects.refetch();
       },
     }),
     ...additionalCommands,

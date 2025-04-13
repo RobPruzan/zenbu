@@ -371,7 +371,7 @@ export const sendIdleMainThreadMessage = async ({
   //   status: "idle",
   // });
 
-  emitEvent("⚡");
+  // emitEvent("⚡");
   const abortController = new AbortController();
 
   const { fullStream } = streamText({

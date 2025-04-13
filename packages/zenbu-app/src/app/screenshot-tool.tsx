@@ -336,7 +336,6 @@ export const ScreenshotTool = () => {
 
           if (!newImg) {
             console.log("theres nuttin to copy");
-
             return;
           }
           try {
@@ -356,6 +355,8 @@ export const ScreenshotTool = () => {
           }
 
           setShowSuccessMessage(true);
+          // Close the screenshot tool after successful screenshot
+          actions.setIsScreenshotting(false);
 
           console.log("we got dat screenshot", newImg);
           console.log("and the input", input);

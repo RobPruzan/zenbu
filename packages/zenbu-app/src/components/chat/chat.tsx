@@ -201,6 +201,9 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     return null;
   }
 
+  const isLastMessageFromUser = mainThreadMessages.length > 0 && 
+    mainThreadMessages[mainThreadMessages.length - 1].role === "user";
+
   return (
     <WSContext.Provider
       value={{
@@ -249,6 +252,15 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                 })}
               </div>
             ))}
+            
+            {isLastMessageFromUser && (
+              <div className="flex items-center space-x-2 pl-4">
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse"></div>
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
           {/* <ThinkingUITester/> */}
