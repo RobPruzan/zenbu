@@ -35,6 +35,34 @@ export const removeComments = (text: string): string => {
 
 const VERSION = "0.0.0";
 
+/**
+ *
+ * sqlite here, then connect via drizzle
+ * or should the next server manage the drizzle instance? Would I ever want to access it in the
+ * wait im so stupid
+ * 
+ * 
+ * it definitely cannot be here since this is just a plugin that will be able to run via a public api
+ * 
+ * it of course not couple the global app state
+ * 
+ * so we either can setup the db next to the daemon or next to the actual application (next server with trpc)
+ * 
+ * i vote that because that's what I want to query from anyways
+ * 
+ * also makes it easier for me since it's already setup
+ * 
+ * I don't think I'd ever even want to query the DB from the other locations? It should just push data to the client/manage servers
+ * 
+ * er but this case is a little weird- spawn experiment:
+ *  - frontend requests to a server that a process should be spawned
+ *  - we need to tag it with metadata? So then we wait then request our backend
+ * 
+ * okay im dumb you obviously just make an RPC that handles this whole process and communicating with the daemon
+ *
+ * okay this is a good programming model that I'm happy with
+ *
+ */
 const createStore = async () => {
   // todo: check for version file too and if it matches
   const exists = await stat(".zenbu")
@@ -101,7 +129,7 @@ export const createServer = async () => {
       // again, should auto detect file extension
       const path = `vid-${Date.now()}-${nanoid()}.webm`;
 
-      await writeFile(`.zenbu/video/${path}`, videoBytes, );
+      await writeFile(`.zenbu/video/${path}`, videoBytes);
 
       return opts.json({
         success: true,

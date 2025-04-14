@@ -190,6 +190,21 @@ function generateRandomName(): string {
   return `${adj}-${noun}-${suffix}`;
 }
 
+/**
+ * we may need to set this up so you can tag it with an experiment?
+ * or maybe that's not an interesting distinction? You just tag it with metadata on the frontend as a foreign key (normalize the name)
+ * yeah okay so then highest alpha is setting up a db to manage shit with
+ * I think we just manage everything sensibly and not scope a local db (scope of the project has increased quite a bit)
+ * but we should probably support project scoped db's? Maybe?
+ * 
+ * also todo I need to make a lil file explorer impl to find projects to start on
+ * 
+ * some validation after selecting them and how to get them setup (perhaps we automatically run a script on the project to set it up/ have a model transform it)
+ * would be cool if we could have a "migrate to" to make it work
+ * 
+ * 
+ * IOS devs do not have their devtools embedded into the app itself, that is potentially a bad constraint to have
+ */
 const getProcessTitleMarker = (
   name: string,
   port: number,
@@ -366,8 +381,8 @@ function safeSpawn(
     processStdoutMap.set(pid, []);
 
     // Capture stdout
-    child.stdout.on('data', (data) => {
-      const lines = data.toString().split('\n').filter(Boolean);
+    child.stdout.on("data", (data) => {
+      const lines = data.toString().split("\n").filter(Boolean);
       const currentStdout = processStdoutMap.get(pid) || [];
       currentStdout.push(...lines);
       // Keep last 1000 lines
@@ -378,7 +393,7 @@ function safeSpawn(
     });
 
     // Clean up stdout when process exits
-    child.on('exit', () => {
+    child.on("exit", () => {
       processStdoutMap.delete(pid);
     });
 
@@ -453,10 +468,10 @@ async function getRunningProjects(): Promise<Result<ProjectProcessInfo[]>> {
               PROJECTS_DIR,
               HACK_PROJECT_PATH_FIX_ME_ASAP_THIS_SHOULD_NOT_BE_KEPT_I_THINK
             );
-            
+
             // Get stdout from our map
             const stdout = processStdoutMap.get(pid) || [];
-            
+
             projects.push({ pid, name, port, cwd: projectPath, stdout });
         }
       }
@@ -472,15 +487,6 @@ function findWarmInstance(
   runningProjects: ProjectProcessInfo[],
   activeNames: Set<string>
 ): ProjectProcessInfo | null {
-  assert(
-    Array.isArray(runningProjects),
-    "findWarmInstance requires runningProjects array"
-  );
-  assert(
-    activeNames instanceof Set,
-    "findWarmInstance requires activeNames Set"
-  );
-
   const warmInstance = runningProjects.find((p) => !activeNames.has(p.name));
   if (warmInstance) {
     console.log(
@@ -494,10 +500,7 @@ function findWarmInstance(
 async function startDevServer(
   name: string
 ): Promise<Result<ProjectProcessInfo>> {
-  assert(
-    typeof name === "string" && name.length > 0,
-    "startDevServer requires a valid name"
-  );
+  assert(name.length > 0, "startDevServer requires a valid name");
 
   const projectPath = path.join(PROJECTS_DIR, name);
   const actualCodePath = path.join(projectPath, NESTED_TEMPLATE_DIR_NAME);
@@ -718,6 +721,7 @@ async function assignProjectInstance(): Promise<Result<ProjectProcessInfo>> {
         return runningProjectsResult.value;
     }
   });
+  // what the hell is gemini writing
   if (!Array.isArray(runningProjects)) return runningProjects as Err<string>;
 
   const warmInstance = findWarmInstance(runningProjects, activeProjectNames);
@@ -1043,24 +1047,24 @@ export const createDaemon = () => {
       console.log(`${projLog} API Request: GET /projects/${name}/stats`);
 
       const projectsResult = await getRunningProjects();
-      
+
       switch (projectsResult.kind) {
         case "error":
           console.error(
             `${projLog} Error fetching running projects: ${projectsResult.error}`
           );
           return c.json({ error: "Failed to retrieve projects list" }, 500);
-          
+
         case "ok":
           const project = projectsResult.value.find((p) => p.name === name);
           if (!project) {
             console.warn(`${projLog} Project not found in running processes`);
             return c.json({ error: `Project '${name}' not found` }, 404);
           }
-          
+
           try {
             const stats = await pidusage(project.pid);
-            
+
             const result = {
               pid: project.pid,
               name: project.name,
@@ -1071,10 +1075,12 @@ export const createDaemon = () => {
                 elapsed: stats.elapsed,
                 timestamp: Date.now(),
               },
-              stdout: project.stdout || []
+              stdout: project.stdout || [],
             };
-            
-            console.log(`${projLog} Stats retrieved successfully for PID ${project.pid}`);
+
+            console.log(
+              `${projLog} Stats retrieved successfully for PID ${project.pid}`
+            );
             return c.json(result);
           } catch (error) {
             console.error(
