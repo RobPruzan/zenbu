@@ -19,6 +19,7 @@
     "@hono/arktype-validator": "^2.0.0",
     "@hono/node-server": "^1.13.8",
     "@hono/zod-validator": "^0.4.3",
+    "@trpc/client": "^11.0.0-rc.446",
     "ai": "^4.3.4",
     "arktype": "^2.1.9",
     "dotenv": "^16.4.7",
@@ -30,8 +31,10 @@
     "ora": "^8.2.0",
     "prettier": "^3.3.2",
     "socket.io": "^4.8.1",
+    "superjson": "^2.2.1",
     "ts-node": "^10.9.2",
     "vitest": "^3.0.9",
+    "zenbu-app": "workspace:*",
     "zod": "^3.24.2"
   },
   "devDependencies": {

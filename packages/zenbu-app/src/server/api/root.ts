@@ -1,5 +1,9 @@
-import { daemonRouter } from "~/server/api/routers/daemon";
-import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
+// import { daemonRouter } from "~/server/api/routers/daemon-router";
+// import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
+
+import { chatRouter } from "./routers/chat-router";
+import { daemonRouter } from "./routers/daemon-router";
+import { createTRPCRouter, createCallerFactory } from "./trpc";
 
 /**
  * This is the primary router for your server.
@@ -8,6 +12,7 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   daemon: daemonRouter,
+  project: chatRouter,
 });
 
 // export type definition of API

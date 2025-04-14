@@ -19,6 +19,20 @@
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },
+  "main": "src/server/api/root.ts",
+  "exports": {
+    ".": {
+      "types": "./src/server/api/root.ts",
+      "default": "./src/server/api/root.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./src/server/api/root.ts"
+      ]
+    }
+  },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",

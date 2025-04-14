@@ -1,23 +1,31 @@
-import { sqliteTableCreator, text } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTableCreator, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
 import { EventLogEvent } from "zenbu-plugin/src/ws/ws";
+import { createTable } from "./utils";
 
-export const createTable = sqliteTableCreator((name) => `zenbu-app_${name}`);
+const date = (name: string) => integer(name, { mode: "timestamp" });
 
-const createId = (name?: string) => text(name ?? "id").$defaultFn(nanoid);
-const createPrimaryId = (name?: string) => createId(name).primaryKey();
+const idCol = (name?: string) => text(name ?? "id").$defaultFn(nanoid);
+const primaryIdCol = (name?: string) => idCol(name).primaryKey();
+const createdAtCol = () =>
+  date("created_at")
+    .notNull()
+    .$defaultFn(() => new Date());
 
 export const project = createTable("project", {
-  projectId: createPrimaryId("projectId"),
+  projectId: primaryIdCol("projectId"),
   name: text("name").notNull(),
 });
 
 export const projectChat = createTable("projectChat", {
-  projectChatId: createPrimaryId("projectChatId"),
+  projectChatId: primaryIdCol("projectChatId"),
   projectId: text("projectId")
     .notNull()
     .references(() => project.projectId),
-  events: text("events", { mode: "json" }).$type<EventLogEvent>(),
+  events: text("events", { mode: "json" })
+    .$type<Array<EventLogEvent>>()
+    .notNull(),
+  createdAt: createdAtCol(),
 
   // hm this feels weird to make a schema for chat?
   // i don't really want to make a general json object a plugin has to store

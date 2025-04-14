@@ -34,6 +34,7 @@ import {
 import { nanoid } from "nanoid";
 import { planner } from "./planner.js";
 import { FileState, GoogleAIFileManager } from "@google/generative-ai/server";
+import { trpc } from "./trpc.js";
 /**
  *
  *
@@ -52,10 +53,12 @@ import { FileState, GoogleAIFileManager } from "@google/generative-ai/server";
  *
  *
  */
-export type EventLogEvent =
-  | ClientMessageEvent
-  | PluginServerEvent
-  | ClientTaskEvent;
+// export type EventLogEvent =
+//   | ClientMessageEvent
+//   | PluginServerEvent
+//   | ClientTaskEvent;
+
+// export const eventLogEventSchema = z.union();
 
 export const baseClientMessageEventSchema = z.object({
   id: z.string(),
@@ -70,6 +73,7 @@ export const baseClientMessageEventSchema = z.object({
   requestId: z.string(),
   timestamp: z.number(),
 });
+// need to add project id /whatever identifier on the type
 
 export type ClientMessageEvent = z.infer<
   typeof baseClientMessageEventSchema
@@ -100,7 +104,7 @@ const clientTaskEventSchema: z.ZodType<ClientTaskEvent> =
     previousEvents: z.lazy(() => z.array(z.lazy(() => clientTaskEventSchema))),
   });
 
-export const basePluginServerEventSchema = z.object({
+export const pluginServerEventSchema = z.object({
   id: z.string(),
   kind: z.literal("assistant-simple-message"),
   text: z.string(),
@@ -109,8 +113,14 @@ export const basePluginServerEventSchema = z.object({
   threadId: z.string().nullable(),
 });
 
-export type PluginServerEvent = z.infer<typeof basePluginServerEventSchema>;
+export type PluginServerEvent = z.infer<typeof pluginServerEventSchema>;
 
+export const eventLogEventSchema = z.union([
+  pluginServerEventSchema,
+  clientTaskEventSchema,
+  clientMessageEventSchema,
+]);
+export type EventLogEvent = z.infer<typeof eventLogEventSchema>;
 export const HARD_CODED_USER_PROJECT_PATH =
   "/Users/robby/zenbu/packages/examples/iframe-website";
 
@@ -192,14 +202,26 @@ export const injectWebSocket = (server: HttpServer) => {
     socket.on(
       "message",
       async (event: ClientMessageEvent | ClientTaskEvent) => {
-        const emitEvent = (text: string, threadId?: string) =>
-          emitAssistantMessage({
-            ioServer,
-            requestId: event.requestId,
-            roomId,
-            text,
-            threadId: threadId ?? null,
+        // should confirm ordering, but almost certainly never gonna lose the race
+        trpc.project.persistEvent.mutate({
+          event,
+          projectChatId: "todo",
+        });
+        const emitEvent = (text: string, threadId?: string) => {
+          const assistantEventArg: Parameters<typeof emitAssistantMessage>[0] =
+            {
+              ioServer,
+              requestId: event.requestId,
+              roomId,
+              text,
+              threadId: threadId ?? null,
+            };
+          trpc.project.persistEvent.mutate({
+            event: makeAssistantEvent(assistantEventArg),
+            projectChatId: "todo",
           });
+          emitAssistantMessage(assistantEventArg);
+        };
         switch (event.kind) {
           case "user-message": {
             /**
@@ -381,27 +403,24 @@ export const injectWebSocket = (server: HttpServer) => {
   });
 };
 
-const emitAssistantMessage = ({
-  ioServer,
-  roomId,
-  requestId,
-  text,
-  threadId,
-}: {
+const makeAssistantEvent = (
+  arg: Parameters<typeof emitAssistantMessage>[0]
+): Omit<PluginServerEvent, "ioServer" | "roomId"> => ({
+  kind: "assistant-simple-message",
+  associatedRequestId: arg.requestId,
+  text: arg.requestId,
+  timestamp: Date.now(),
+  id: crypto.randomUUID(),
+  threadId: arg.threadId,
+});
+const emitAssistantMessage = (arg: {
   ioServer: Server;
   roomId: string;
   requestId: string;
   text: string;
   threadId: null | string;
 }) => {
-  ioServer.to(roomId).emit("message", {
-    kind: "assistant-simple-message",
-    associatedRequestId: requestId,
-    text,
-    timestamp: Date.now(),
-    id: crypto.randomUUID(),
-    threadId,
-  } satisfies PluginServerEvent);
+  arg.ioServer.to(arg.roomId).emit("message", makeAssistantEvent(arg));
 };
 
 export const imageToBytes = async (path: string) => {
