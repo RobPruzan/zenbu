@@ -1,5 +1,5 @@
 import { CoreMessage, DataContent, Message } from "ai";
-import { EventLogEvent, PluginServerEvent } from "./ws.js";
+import { EventLogEvent, PluginServerEvent } from "./schemas";
 // what if we apply the same processing, but just split the arrays into groups of request ids pairs and order
 // we could just attach a thread id to the event log and call it a day
 

@@ -11,10 +11,11 @@ import { X } from "lucide-react";
 import { useWSContext } from "./chat";
 import { useChatStore } from "../chat-store";
 import { nanoid } from "nanoid";
-import { ClientMessageEvent, ClientTaskEvent } from "zenbu-plugin/src/ws/ws";
 import { z } from "zod";
-import { iife } from "~/lib/utils";
+
 import { ContextItem } from "../slices/context-slice";
+import { iife } from "src/lib/utils";
+import { ClientMessageEvent } from "zenbu-plugin/src/ws/schemas";
 
 // Props for the MentionMenu component
 interface MentionMenuProps {

@@ -8,9 +8,6 @@ import {
   useLayoutEffect,
 } from "react";
 import { useChatStore } from "../chat-store";
-import { iife } from "~/lib/utils";
-import { useEventWS } from "~/app/ws";
-import { ClientMessageEvent, ClientTaskEvent } from "zenbu-plugin/src/ws/ws";
 import { nanoid } from "nanoid";
 import {
   SendIcon,
@@ -45,7 +42,12 @@ import { ThinkingUITester } from "./thinking";
 import { Socket } from "socket.io-client";
 import { flushSync } from "react-dom";
 import { ChatTextArea } from "./context-input";
-import { cn } from "~/lib/utils";
+import { useEventWS } from "src/app/ws";
+import { iife, cn } from "src/lib/utils";
+import {
+  ClientMessageEvent,
+  ClientTaskEvent,
+} from "zenbu-plugin/src/ws/schemas";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -65,16 +67,18 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
 
   const { socket } = useEventWS({
     onMessage: (message) => {
+      const { event, projectChatId } = message;
+      const todo_validationOverProjectIdAndClosureVariables = () => undefined;
+      todo_validationOverProjectIdAndClosureVariables();
       // console.log("got back message", message);
 
-      if (message.kind === "user-message") {
-        throw new Error("Invariant: user message cannot come from server");
-      }
+      // wut was i doing
+      // if (event.kind === "user-message") {
+      //   throw new Error("Invariant: user message cannot come from server");
+      // }
 
       if (
-        message.text.includes(
-          "================== EDITING FILE END =============",
-        )
+        event.text.includes("================== EDITING FILE END =============")
       ) {
         const iframe = document.getElementById(
           "child-iframe",
@@ -86,7 +90,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
         iframe.src = iframe.src;
       }
 
-      eventLog.actions.pushEvent(message);
+      eventLog.actions.pushEvent(event);
     },
   });
 
@@ -201,7 +205,8 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     return null;
   }
 
-  const isLastMessageFromUser = mainThreadMessages.length > 0 && 
+  const isLastMessageFromUser =
+    mainThreadMessages.length > 0 &&
     mainThreadMessages[mainThreadMessages.length - 1].role === "user";
 
   return (
@@ -252,7 +257,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                 })}
               </div>
             ))}
-            
+
             {isLastMessageFromUser && (
               <div className="flex items-center space-x-2 pl-4">
                 <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse"></div>
@@ -260,7 +265,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                 <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse delay-300"></div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
           {/* <ThinkingUITester/> */}
@@ -330,7 +335,8 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                       "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
                       "bg-accent/10 border border-border/40 hover:bg-accent/20 text-foreground",
                       "transition-all duration-300",
-                      !chatControls.state.input.trim() && "opacity-50 cursor-not-allowed"
+                      !chatControls.state.input.trim() &&
+                        "opacity-50 cursor-not-allowed",
                     )}
                   >
                     <Clock className="h-3 w-3 mr-1.5" />
@@ -343,7 +349,8 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                       "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
                       "bg-accent/10 border border-border/40 hover:bg-accent/20 text-foreground",
                       "transition-all duration-300",
-                      !chatControls.state.input.trim() && "opacity-50 cursor-not-allowed"
+                      !chatControls.state.input.trim() &&
+                        "opacity-50 cursor-not-allowed",
                     )}
                   >
                     <span>Send</span>

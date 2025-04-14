@@ -18,9 +18,9 @@ import {
   ParentToChildMessage,
 } from "zenbu-devtools";
 import { useChatContext } from "./chat-interface";
-import { useEventWS } from "~/app/ws";
 import { ChatInstanceContext, useChatStore } from "./chat-store";
-import { IFRAME_ID } from "~/app/iframe-wrapper";
+import { IFRAME_ID } from "src/app/iframe-wrapper";
+import { useEventWS } from "src/app/ws";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -120,8 +120,13 @@ export function DevtoolsOverlay() {
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
       // this acts as validation and why we can assert the event is the above type
       // we need to switch to runtime validation, we can't do this generally
-      if (event.origin !== "http://localhost:4200" &&
-!(new URL(event.origin).port && parseInt(new URL(event.origin).port, 10) > 59000)) {
+      if (
+        event.origin !== "http://localhost:4200" &&
+        !(
+          new URL(event.origin).port &&
+          parseInt(new URL(event.origin).port, 10) > 59000
+        )
+      ) {
         // console.log("wrong origin");
 
         return;
@@ -393,8 +398,13 @@ export const useMakeRequest = () => {
 
     const hotPromise = new Promise<ChildToParentMessage>((res, rej) => {
       const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-        if (event.origin !== "http://localhost:4200" &&
-!(new URL(event.origin).port && parseInt(new URL(event.origin).port, 10) > 59000)) {
+        if (
+          event.origin !== "http://localhost:4200" &&
+          !(
+            new URL(event.origin).port &&
+            parseInt(new URL(event.origin).port, 10) > 59000
+          )
+        ) {
           console.log("wrong orgiin", event);
 
           return;

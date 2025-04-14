@@ -1,4 +1,4 @@
-import { EventLogEvent } from "zenbu-plugin/src/ws/ws";
+import { EventLogEvent } from "zenbu-plugin/src/ws/schemas";
 import { SliceCreator } from "../chat-store";
 
 export type EventLogSliceInitialState = {

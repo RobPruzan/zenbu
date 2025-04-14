@@ -157,8 +157,7 @@ import {
   Store,
   Plus,
 } from "lucide-react";
-import { ChatInstanceStore } from "~/components/chat-store";
-
+import { ChatInstanceStore } from "src/components/chat-store";
 export const getCommandItems = ({
   actions,
   state,

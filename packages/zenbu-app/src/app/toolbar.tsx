@@ -21,15 +21,15 @@ import {
   Activity,
 } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Button } from "~/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Tldraw, TLEditorComponents } from "tldraw";
 import "tldraw/tldraw.css";
+import { Button } from "src/components/ui/button";
 import {
-  ResizableHandle,
-  ResizablePanel,
   ResizablePanelGroup,
-} from "~/components/ui/resizable";
+  ResizablePanel,
+  ResizableHandle,
+} from "src/components/ui/resizable";
 
 type ToolSection =
   | "select"

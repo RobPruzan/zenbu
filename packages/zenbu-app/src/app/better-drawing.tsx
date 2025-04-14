@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useChatStore } from "src/components/chat-store";
 import { Editor, Tldraw, TLEditorComponents } from "tldraw";
-import { useChatStore } from "~/components/chat-store";
+
 import "tldraw/tldraw.css";
 
 const getDrawingComponents = (): TLEditorComponents => {
@@ -11,8 +12,6 @@ const getDrawingComponents = (): TLEditorComponents => {
 };
 export const BetterDrawing = () => {
   const { actions, state } = useChatStore((state) => state.toolbar);
-
-
 
   if (!state.drawing.active) {
     // sub optimal if we want to persist state (we do, but ez for now)

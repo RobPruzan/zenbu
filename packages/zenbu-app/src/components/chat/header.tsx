@@ -6,7 +6,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { cn } from "~/lib/utils";
+import { cn } from "src/lib/utils";
 
 export function Header({ onCloseChat }: { onCloseChat: () => void }) {
   return (
@@ -30,7 +30,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
               "h-8 w-8 p-0 rounded-full",
               "bg-accent/5 border border-border/40",
               "text-muted-foreground hover:text-foreground",
-              "hover:bg-accent/10 transition-all duration-300"
+              "hover:bg-accent/10 transition-all duration-300",
             )}
           >
             <PanelRightOpen className="h-3.5 w-3.5" />
@@ -40,20 +40,21 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
               const iframe = document.getElementById(
                 "child-iframe",
               ) as HTMLIFrameElement;
-              
+
               // Get current scale from transform or default to 1
-              const currentTransform = iframe.style.transform || 'scale(1)';
-              const currentScale = parseFloat(currentTransform.replace(/[^\d.-]/g, '')) || 1;
-              
+              const currentTransform = iframe.style.transform || "scale(1)";
+              const currentScale =
+                parseFloat(currentTransform.replace(/[^\d.-]/g, "")) || 1;
+
               // Scale down by 10% of original scale (not relative to current)
               const newScale = Math.max(0.1, currentScale - 0.1);
-              
+
               // Reset dimensions to ensure it fits the container
               iframe.style.width = "100%";
               iframe.style.height = "100%";
               iframe.style.transform = `scale(${newScale})`;
               iframe.style.transformOrigin = "top left";
-              
+
               // Adjust container to fit the scaled content
               const container = iframe.parentElement;
               if (container) {
@@ -66,7 +67,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
               "h-8 w-8 p-0 rounded-full",
               "bg-accent/5 border border-border/40",
               "text-muted-foreground hover:text-foreground",
-              "hover:bg-accent/10 transition-all duration-300"
+              "hover:bg-accent/10 transition-all duration-300",
             )}
           >
             <Minus className="h-3.5 w-3.5" />
@@ -76,20 +77,21 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
               const iframe = document.getElementById(
                 "child-iframe",
               ) as HTMLIFrameElement;
-              
+
               // Get current scale from transform or default to 1
-              const currentTransform = iframe.style.transform || 'scale(1)';
-              const currentScale = parseFloat(currentTransform.replace(/[^\d.-]/g, '')) || 1;
-              
+              const currentTransform = iframe.style.transform || "scale(1)";
+              const currentScale =
+                parseFloat(currentTransform.replace(/[^\d.-]/g, "")) || 1;
+
               // Scale up by 10% of original scale (not relative to current)
               const newScale = currentScale + 0.1;
-              
+
               // Reset dimensions to ensure it fits the container
               iframe.style.width = "100%";
               iframe.style.height = "100%";
               iframe.style.transform = `scale(${newScale})`;
               iframe.style.transformOrigin = "top left";
-              
+
               // Adjust container to fit the scaled content
               const container = iframe.parentElement;
               if (container) {
@@ -102,7 +104,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
               "h-8 w-8 p-0 rounded-full",
               "bg-accent/5 border border-border/40",
               "text-muted-foreground hover:text-foreground",
-              "hover:bg-accent/10 transition-all duration-300"
+              "hover:bg-accent/10 transition-all duration-300",
             )}
           >
             <Plus className="h-3.5 w-3.5" />

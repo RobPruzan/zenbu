@@ -1,5 +1,4 @@
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
-// import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { AppRouter, appRouter } from "zenbu-app";
 import superjson from "superjson";
 

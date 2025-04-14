@@ -9,27 +9,9 @@ import {
 } from "react";
 // import lastUpdate from "./hot-reload.ts";
 import { InspectorState } from "zenbu-devtools";
-import { useIFrameMessenger } from "~/hooks/use-iframe-listener";
 import lastUpdate from "./hot-reload";
-import {
-  DevtoolsOverlay,
-  InspectorStateContext,
-  useMakeRequest,
-} from "~/components/devtools-overlay";
-import { useChatStore } from "~/components/chat-store";
-import { Recorder } from "~/components/screen-sharing";
-import { iife } from "~/lib/utils";
-import { Toolbar } from "./toolbar";
-import { ScreenshotTool } from "./screenshot-tool";
-import { BetterToolbar } from "~/components/slices/better-toolbar";
-// import { ChildToParentMessage } from "~/devtools";
-// import {
-//   DevtoolsOverlay,
-//   InspectorState,
-//   InspectorStateContext,
-//   useMakeRequest,
-// } from "./components/DevtoolsOverlay";
-// import { useIFrameMessenger } from "./hooks/use-iframe-listener.ts";
+import { useChatStore } from "src/components/chat-store";
+import { useMakeRequest } from "src/components/devtools-overlay";
 
 const snapshot = { kind: "off" as const };
 

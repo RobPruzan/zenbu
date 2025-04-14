@@ -2,18 +2,19 @@
 
 import { ChatMessage } from "zenbu-plugin/src/ws/utils";
 import { RefreshCw } from "lucide-react";
-import { cn } from "~/lib/utils";
-import { iife } from "~/lib/utils";
+import { cn, iife } from "src/lib/utils";
 
 export function UserMessage({ message }: { message: ChatMessage }) {
   return (
     <div className="group mb-6 max-w-full">
-      <div className={cn(
-        "rounded-xl bg-accent/5 backdrop-blur-xl border border-border/40",
-        "shadow-sm overflow-hidden max-w-full",
-        "transform hover:translate-y-[-1px] transition-all duration-300",
-        "hover:shadow-md hover:border-border/60"
-      )}>
+      <div
+        className={cn(
+          "rounded-xl bg-accent/5 backdrop-blur-xl border border-border/40",
+          "shadow-sm overflow-hidden max-w-full",
+          "transform hover:translate-y-[-1px] transition-all duration-300",
+          "hover:shadow-md hover:border-border/60",
+        )}
+      >
         <div className="px-4 py-3 text-xs text-foreground whitespace-pre-wrap font-light leading-relaxed break-words overflow-auto">
           {iife(() => {
             switch (typeof message.content) {
@@ -27,7 +28,7 @@ export function UserMessage({ message }: { message: ChatMessage }) {
                       switch (content.type) {
                         case "image": {
                           return (
-                            <img 
+                            <img
                               src={(content.image as URL).href}
                               alt="User shared image"
                               className="rounded-md max-w-[300px] my-2"

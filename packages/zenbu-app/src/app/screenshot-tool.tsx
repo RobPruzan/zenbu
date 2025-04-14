@@ -1,19 +1,22 @@
 import { nanoid } from "nanoid";
 import { act, useEffect, useRef, useState } from "react";
 import { set } from "zod";
-import { useChatStore } from "~/components/chat-store";
-import { useMakeRequest } from "~/components/devtools-overlay";
-import { iife, cn } from "~/lib/utils";
+
 import { captureViewport } from "./better-drawing";
 import { IFRAME_ID } from "./iframe-wrapper";
-import { Button } from "~/components/ui/button";
+
 import { Camera, X, ImagePlus, Eye, MessageSquare, Check } from "lucide-react";
+
+import { useChatStore } from "src/components/chat-store";
+import { useMakeRequest } from "src/components/devtools-overlay";
+import { Button } from "src/components/ui/button";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "~/components/ui/hover-card";
-import { Separator } from "~/components/ui/separator";
+} from "src/components/ui/hover-card";
+import { Separator } from "src/components/ui/separator";
+
 // import { inputTest } from "./input";
 
 const pivotMap = {
@@ -423,11 +426,7 @@ export const ScreenshotTool = () => {
                   <Check className="h-3.5 w-3.5 text-green-500" />
                   <span>Copied to clipboard</span>
                 </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="h-7 gap-1.5"
-                >
+                <Button variant="secondary" size="sm" className="h-7 gap-1.5">
                   <MessageSquare className="h-3.5 w-3.5" />
                   <span className="text-xs">Add to Chat</span>
                 </Button>
@@ -477,19 +476,11 @@ const SuccessfulScreenshot = ({ onDismiss }: { onDismiss: () => void }) => {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-7 gap-1.5"
-        >
+        <Button variant="secondary" size="sm" className="h-7 gap-1.5">
           <MessageSquare className="h-3.5 w-3.5" />
           <span className="text-xs">Add to Chat</span>
         </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-7 gap-1.5"
-        >
+        <Button variant="secondary" size="sm" className="h-7 gap-1.5">
           <Eye className="h-3.5 w-3.5" />
           <span className="text-xs">View</span>
         </Button>
@@ -556,11 +547,11 @@ const loadImage = (dataUrl: string): Promise<HTMLImageElement> => {
 
 /**
  * FIXME
- * 
+ *
  * THE CROP SHOULD TAKE IN THE SCROLL POSITION OTHERWISE IT WILL BE WRONG
- * 
- * WE ASSUME WINDOW.SCROLLTOP IS ALWAYS == 0 BY CROPPING HOW WE DO 
- * 
+ *
+ * WE ASSUME WINDOW.SCROLLTOP IS ALWAYS == 0 BY CROPPING HOW WE DO
+ *
  */
 export const overlayImages = async ({
   baseImageDataUrl,

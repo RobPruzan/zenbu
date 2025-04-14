@@ -2,18 +2,40 @@ import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { db } from "src/server/db";
 import { firstRecordAssert, firstRecord } from "src/server/db/utils";
-import { eventLogEventSchema } from "zenbu-plugin/src/ws/ws";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import * as Schema from "src/server/db/schema";
+import { eventLogEventSchema } from "zenbu-plugin/src/ws/schemas";
 // import * as Schema from "../db/schema.ts"
 // import { db } from "src/server/";
 
-// import * as Schema from "~/server";
-
 // i should make a schema shim for this too ngl
 // how do drizzle schemas work if u inline a type? hm
+// or fetch the projects, then prefetch all events, then fetch the events
+// okay i out my foot down a project should only have one chat, gyat.
 export const chatRouter = createTRPCRouter({
+  getEvents: publicProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
+    .query(async (opts) => {
+      const project = await db
+        .select()
+        .from(Schema.projectChat)
+        .where(eq(Schema.projectChat.projectChatId, opts.input.projectId))
+        .then(firstRecord);
+
+      if (!project) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Project with that id does not exist",
+        });
+      }
+
+      return project.events;
+    }),
   createProject: publicProcedure
     .input(
       z.object({

@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { Button } from "~/components/ui/button";
-import { useChatContext } from "~/components/chat-interface";
+
 import {
   Inspect,
   Terminal,
@@ -22,9 +20,14 @@ import {
   Clock,
   FileText,
 } from "lucide-react";
-import { ScrollArea } from "~/components/ui/scroll-area";
-import { Input } from "~/components/ui/input";
+
 import { useChatStore } from "./chat-store";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+
+import { useChatContext } from "./chat-interface";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { ScrollArea } from "./ui/scroll-area";
 
 // Add onClose prop to the component interface
 interface DevToolsProps {
@@ -286,7 +289,7 @@ export default function DevTools({ onClose }: DevToolsProps) {
       <div className="absolute inset-0 z-0 overflow-hidden">
         {/* Darker solid background */}
         <div className="absolute inset-0 bg-[#080809]"></div>
-        
+
         {/* Glass blur effect layer with distortion */}
         <div className="absolute inset-0 backdrop-filter backdrop-blur-lg"></div>
       </div>

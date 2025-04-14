@@ -1,6 +1,3 @@
-// import { daemonRouter } from "~/server/api/routers/daemon-router";
-// import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
-
 import { chatRouter } from "./routers/chat-router";
 import { daemonRouter } from "./routers/daemon-router";
 import { createTRPCRouter, createCallerFactory } from "./trpc";

@@ -1,10 +1,8 @@
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Card, CardContent } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
-import { X } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { Button } from "./ui/button";
+import { X, Badge } from "lucide-react";
+import { Card, CardContent } from "./ui/card";
 
 interface Hint {
   key: string;
@@ -42,7 +40,10 @@ export function LeaderKeyHints({
   // Effect to handle clicks outside the component
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (hintsRef.current && !hintsRef.current.contains(event.target as Node)) {
+      if (
+        hintsRef.current &&
+        !hintsRef.current.contains(event.target as Node)
+      ) {
         onClose(); // Call onClose if click is outside
       }
     }
@@ -61,14 +62,17 @@ export function LeaderKeyHints({
   }, [isVisible, onClose]); // Re-run effect if isVisible or onClose changes
 
   // Group hints by category
-  const groupedHints = hintsData.reduce((acc, hint) => {
-    const category = hint.category || "Other";
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(hint);
-    return acc;
-  }, {} as Record<string, Hint[]>);
+  const groupedHints = hintsData.reduce(
+    (acc, hint) => {
+      const category = hint.category || "Other";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(hint);
+      return acc;
+    },
+    {} as Record<string, Hint[]>,
+  );
 
   return (
     <AnimatePresence>
@@ -92,17 +96,29 @@ export function LeaderKeyHints({
               <X className="h-4 w-4" />
               <span className="sr-only">Close Hints</span>
             </Button>
-            <CardContent className="p-4 pt-5"> {/* Added top padding to avoid overlap with button */}
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3"> {/* Adjust grid columns as needed */}
+            <CardContent className="p-4 pt-5">
+              {" "}
+              {/* Added top padding to avoid overlap with button */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                {" "}
+                {/* Adjust grid columns as needed */}
                 {Object.entries(groupedHints).map(([category, hints]) => (
                   <div key={category} className="space-y-1.5">
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                       {category}
                     </h4>
                     {hints.map((hint) => (
-                      <div key={hint.key} className="flex items-center justify-between text-sm">
-                        <span className="text-foreground/90">{hint.description}</span>
-                        <Badge variant="outline" className="ml-2 px-1.5 font-mono text-xs">
+                      <div
+                        key={hint.key}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="text-foreground/90">
+                          {hint.description}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="ml-2 px-1.5 font-mono text-xs"
+                        >
                           {hint.key}
                         </Badge>
                       </div>
@@ -116,4 +132,4 @@ export function LeaderKeyHints({
       )}
     </AnimatePresence>
   );
-} 
+}

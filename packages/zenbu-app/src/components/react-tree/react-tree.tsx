@@ -1,8 +1,18 @@
 "use client";
 
-import { ChevronRight, ChevronDown, Component, Box, Layers, Search, RefreshCcw, Filter, Maximize2 } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronDown,
+  Component,
+  Box,
+  Layers,
+  Search,
+  RefreshCcw,
+  Filter,
+  Maximize2,
+} from "lucide-react";
 import { Button } from "../ui/button";
-import { cn } from "~/lib/utils";
+import { cn } from "src/lib/utils";
 import { useState } from "react";
 import { ReactComponentData, mockComponentTree } from "./mock-data";
 
@@ -33,19 +43,25 @@ export function ReactTree({ onClose }: ReactTreeProps) {
         {component.props && Object.keys(component.props).length > 0 && (
           <div className="space-y-1">
             <div className="font-medium text-purple-400">Props</div>
-            <pre className="text-muted-foreground">{JSON.stringify(component.props, null, 2)}</pre>
+            <pre className="text-muted-foreground">
+              {JSON.stringify(component.props, null, 2)}
+            </pre>
           </div>
         )}
         {component.state && Object.keys(component.state).length > 0 && (
           <div className="space-y-1">
             <div className="font-medium text-blue-400">State</div>
-            <pre className="text-muted-foreground">{JSON.stringify(component.state, null, 2)}</pre>
+            <pre className="text-muted-foreground">
+              {JSON.stringify(component.state, null, 2)}
+            </pre>
           </div>
         )}
         {component.context && Object.keys(component.context).length > 0 && (
           <div className="space-y-1">
             <div className="font-medium text-green-400">Context</div>
-            <pre className="text-muted-foreground">{JSON.stringify(component.context, null, 2)}</pre>
+            <pre className="text-muted-foreground">
+              {JSON.stringify(component.context, null, 2)}
+            </pre>
           </div>
         )}
       </div>
@@ -56,11 +72,17 @@ export function ReactTree({ onClose }: ReactTreeProps) {
     const isExpanded = expandedNodes.has(node.id);
     const isSelected = selectedNode === node.id;
     const hasChildren = node.children && node.children.length > 0;
-    const showDetails = isSelected && (node.props || node.state || node.context);
+    const showDetails =
+      isSelected && (node.props || node.state || node.context);
 
-    if (searchTerm && !node.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+    if (
+      searchTerm &&
+      !node.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ) {
       if (!hasChildren) return null;
-      const filteredChildren = node.children?.map(child => renderNode(child, depth + 1)).filter(Boolean);
+      const filteredChildren = node.children
+        ?.map((child) => renderNode(child, depth + 1))
+        .filter(Boolean);
       if (!filteredChildren?.length) return null;
       return <>{filteredChildren}</>;
     }
@@ -70,8 +92,10 @@ export function ReactTree({ onClose }: ReactTreeProps) {
         <div
           className={cn(
             "flex items-center gap-1 rounded px-2 py-1",
-            isSelected ? "bg-accent text-accent-foreground" : "hover:bg-accent/50",
-            "cursor-pointer text-sm"
+            isSelected
+              ? "bg-accent text-accent-foreground"
+              : "hover:bg-accent/50",
+            "cursor-pointer text-sm",
           )}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
           onClick={() => setSelectedNode(node.id)}
@@ -101,7 +125,9 @@ export function ReactTree({ onClose }: ReactTreeProps) {
           ) : (
             <Layers className="h-3 w-3 text-green-400" />
           )}
-          <span className={cn(node.type === "element" && "text-muted-foreground")}>
+          <span
+            className={cn(node.type === "element" && "text-muted-foreground")}
+          >
             {node.name}
           </span>
         </div>
@@ -127,13 +153,23 @@ export function ReactTree({ onClose }: ReactTreeProps) {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSearchTerm("")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setSearchTerm("")}
+          >
             <RefreshCcw className="h-3.5 w-3.5" />
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7">
             <Filter className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onClose}
+          >
             <Maximize2 className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -143,4 +179,4 @@ export function ReactTree({ onClose }: ReactTreeProps) {
       </div>
     </div>
   );
-} 
+}

@@ -1,40 +1,26 @@
-import { anthropic } from "@ai-sdk/anthropic";
-import {
-  CoreMessage,
-  FilePart,
-  generateObject,
-  generateText,
-  ImagePart,
-  streamObject,
-  streamText,
-  tool,
-  UserContent,
-} from "ai";
+import { FilePart, ImagePart, UserContent } from "ai";
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
-import type { Socket } from "socket.io";
 import { z } from "zod";
-import { ChatMessage, toChatMessages, toGroupedChatMessages } from "./utils.js";
-import { getTemplatedZenbuPrompt, removeComments } from "../create-server.js";
-import { codeBaseSearch, indexCodebase } from "../tools/code-base-search.js";
-import { readFile, stat, writeFile } from "node:fs/promises";
-import { editFile } from "../tools/edit.js";
-import { groq } from "@ai-sdk/groq";
-import { openai } from "@ai-sdk/openai";
-import { smartEdit } from "../tools/good-edit-impl.js";
+import { removeComments } from "../create-server.js";
+import { indexCodebase } from "../tools/code-base-search.js";
+import { readFile } from "node:fs/promises";
 import {
   activeStreams,
   iife,
   parallelizeTask,
-  parallelizeTaskSet,
   sendActiveMainThreadMessage,
   sendIdleMainThreadMessage,
-  taskSet,
 } from "../tools/message-runtime.js";
-import { nanoid } from "nanoid";
-import { planner } from "./planner.js";
 import { FileState, GoogleAIFileManager } from "@google/generative-ai/server";
 import { trpc } from "./trpc.js";
+import { ChatMessage, toChatMessages } from "./utils.js";
+import {
+  EventLogEvent,
+  ClientMessageEvent,
+  ClientTaskEvent,
+  PluginServerEvent,
+} from "./schemas.js";
 /**
  *
  *
@@ -60,67 +46,6 @@ import { trpc } from "./trpc.js";
 
 // export const eventLogEventSchema = z.union();
 
-export const baseClientMessageEventSchema = z.object({
-  id: z.string(),
-  kind: z.literal("user-message"),
-  context: z.array(
-    z.union([
-      z.object({ kind: z.literal("image"), filePath: z.string() }),
-      z.object({ kind: z.literal("video"), filePath: z.string() }),
-    ])
-  ),
-  text: z.string(),
-  requestId: z.string(),
-  timestamp: z.number(),
-});
-// need to add project id /whatever identifier on the type
-
-export type ClientMessageEvent = z.infer<
-  typeof baseClientMessageEventSchema
-> & {
-  previousEvents: Array<ClientMessageEvent>;
-};
-
-const clientMessageEventSchema: z.ZodType<ClientMessageEvent> =
-  baseClientMessageEventSchema.extend({
-    previousEvents: z.lazy(() => clientMessageEventSchema.array()),
-  });
-
-export const baseClientTaskEventSchema = z.object({
-  id: z.string(),
-  kind: z.literal("user-task"),
-  context: z.any(),
-  text: z.string(),
-  requestId: z.string(),
-  timestamp: z.number(),
-});
-
-export type ClientTaskEvent = z.infer<typeof baseClientTaskEventSchema> & {
-  previousEvents: Array<EventLogEvent>;
-};
-
-const clientTaskEventSchema: z.ZodType<ClientTaskEvent> =
-  baseClientTaskEventSchema.extend({
-    previousEvents: z.lazy(() => z.array(z.lazy(() => clientTaskEventSchema))),
-  });
-
-export const pluginServerEventSchema = z.object({
-  id: z.string(),
-  kind: z.literal("assistant-simple-message"),
-  text: z.string(),
-  associatedRequestId: z.string(),
-  timestamp: z.number(),
-  threadId: z.string().nullable(),
-});
-
-export type PluginServerEvent = z.infer<typeof pluginServerEventSchema>;
-
-export const eventLogEventSchema = z.union([
-  pluginServerEventSchema,
-  clientTaskEventSchema,
-  clientMessageEventSchema,
-]);
-export type EventLogEvent = z.infer<typeof eventLogEventSchema>;
 export const HARD_CODED_USER_PROJECT_PATH =
   "/Users/robby/zenbu/packages/examples/iframe-website";
 
@@ -201,11 +126,21 @@ export const injectWebSocket = (server: HttpServer) => {
 
     socket.on(
       "message",
-      async (event: ClientMessageEvent | ClientTaskEvent) => {
+      // er do i want the project id on the event? Nah probably not it should be sent with the event
+      // i mean uh
+      // will be easy to wrap because of the api boundaries
+      // for the server event i guess we should wrap it too sending the project id back for validation + consistency
+      async ({
+        event,
+        projectChatId,
+      }: {
+        event: ClientMessageEvent | ClientTaskEvent;
+        projectChatId: string;
+      }) => {
         // should confirm ordering, but almost certainly never gonna lose the race
         trpc.project.persistEvent.mutate({
           event,
-          projectChatId: "todo",
+          projectChatId,
         });
         const emitEvent = (text: string, threadId?: string) => {
           const assistantEventArg: Parameters<typeof emitAssistantMessage>[0] =
@@ -215,10 +150,12 @@ export const injectWebSocket = (server: HttpServer) => {
               roomId,
               text,
               threadId: threadId ?? null,
+              projectChatId,
             };
           trpc.project.persistEvent.mutate({
             event: makeAssistantEvent(assistantEventArg),
-            projectChatId: "todo",
+            // project chat
+            projectChatId,
           });
           emitAssistantMessage(assistantEventArg);
         };
@@ -405,10 +342,10 @@ export const injectWebSocket = (server: HttpServer) => {
 
 const makeAssistantEvent = (
   arg: Parameters<typeof emitAssistantMessage>[0]
-): Omit<PluginServerEvent, "ioServer" | "roomId"> => ({
+): PluginServerEvent => ({
   kind: "assistant-simple-message",
   associatedRequestId: arg.requestId,
-  text: arg.requestId,
+  text: arg.text,
   timestamp: Date.now(),
   id: crypto.randomUUID(),
   threadId: arg.threadId,
@@ -419,8 +356,12 @@ const emitAssistantMessage = (arg: {
   requestId: string;
   text: string;
   threadId: null | string;
+  projectChatId: string;
 }) => {
-  arg.ioServer.to(arg.roomId).emit("message", makeAssistantEvent(arg));
+  arg.ioServer.to(arg.roomId).emit("message", {
+    projectChatId: arg.requestId,
+    event: makeAssistantEvent(arg),
+  });
 };
 
 export const imageToBytes = async (path: string) => {

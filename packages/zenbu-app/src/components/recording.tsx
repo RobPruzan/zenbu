@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useChatStore } from "./chat-store";
-import { ListIcon, XIcon, Star, Download, Video, MonitorStop } from "lucide-react";
+import {
+  ListIcon,
+  XIcon,
+  Star,
+  Download,
+  Video,
+  MonitorStop,
+} from "lucide-react";
 import { Button } from "./ui/button";
-import { cn } from "~/lib/utils";
+
 import {
   Dialog,
   DialogContent,
@@ -13,12 +20,9 @@ import {
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
 import { z } from "zod";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "./ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { ScrollArea } from "./ui/scroll-area";
+import { cn } from "src/lib/utils";
 
 type ToolbarAction = {
   id: string;
@@ -377,11 +381,15 @@ const Toolbar = ({
           <RadioGroup defaultValue="screen" className="flex gap-4">
             <div className="flex items-center gap-2">
               <RadioGroupItem value="screen" id="r1" />
-              <Label htmlFor="r1" className="text-sm">Screen</Label>
+              <Label htmlFor="r1" className="text-sm">
+                Screen
+              </Label>
             </div>
             <div className="flex items-center gap-2">
               <RadioGroupItem value="area" id="r2" />
-              <Label htmlFor="r2" className="text-sm">Area</Label>
+              <Label htmlFor="r2" className="text-sm">
+                Area
+              </Label>
             </div>
           </RadioGroup>
 
@@ -401,19 +409,21 @@ const Toolbar = ({
                 size="sm"
                 className={cn(
                   "relative h-8 w-8 rounded-full bg-background p-0 hover:bg-background/90",
-                  isRecording && "bg-red-500/10 hover:bg-red-500/20"
+                  isRecording && "bg-red-500/10 hover:bg-red-500/20",
                 )}
               >
                 <div
                   className={cn(
                     "absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 transition-all",
-                    isRecording && "rounded-sm"
+                    isRecording && "rounded-sm",
                   )}
                 />
               </Button>
             </HoverCardTrigger>
             <HoverCardContent side="bottom" align="center" className="w-auto">
-              <p className="text-xs">{isRecording ? "Stop Recording" : "Start Recording"}</p>
+              <p className="text-xs">
+                {isRecording ? "Stop Recording" : "Start Recording"}
+              </p>
             </HoverCardContent>
           </HoverCard>
 
@@ -449,7 +459,9 @@ const Toolbar = ({
                   >
                     <div className="mb-2 flex items-start justify-between">
                       <div>
-                        <h4 className="text-sm font-medium">{recording.name}</h4>
+                        <h4 className="text-sm font-medium">
+                          {recording.name}
+                        </h4>
                         <p className="text-xs text-muted-foreground">
                           {new Date(recording.timestamp).toLocaleString()}
                         </p>
@@ -477,7 +489,10 @@ const Toolbar = ({
                     <Dialog>
                       <DialogTrigger asChild>
                         <div className="relative aspect-video cursor-pointer overflow-hidden rounded-md bg-black/10">
-                          <video src={recording.url} className="h-full w-full object-cover" />
+                          <video
+                            src={recording.url}
+                            className="h-full w-full object-cover"
+                          />
                           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
                             <Video className="h-6 w-6 text-white" />
                           </div>

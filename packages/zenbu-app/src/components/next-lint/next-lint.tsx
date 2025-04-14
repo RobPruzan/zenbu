@@ -1,7 +1,14 @@
-import { Zap, Info, Clock, Package, ChevronRight, AlertTriangle } from "lucide-react";
+import {
+  Zap,
+  Info,
+  Clock,
+  Package,
+  ChevronRight,
+  AlertTriangle,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { cn } from "~/lib/utils";
+import { cn } from "src/lib/utils";
 
 interface NextLintIssue {
   id: string;
@@ -68,7 +75,8 @@ export function NextLint() {
 
       <div className="p-3">
         <p className="text-xs text-muted-foreground">
-          Optimize performance issues and improve page metrics. Selected issues are from your current file and related dependencies.
+          Optimize performance issues and improve page metrics. Selected issues
+          are from your current file and related dependencies.
         </p>
 
         <Button className="mt-3 w-full" size="sm">
@@ -80,7 +88,9 @@ export function NextLint() {
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-medium">Issues</h3>
-              <Badge variant="outline" className="text-xs">3</Badge>
+              <Badge variant="outline" className="text-xs">
+                3
+              </Badge>
             </div>
             <span className="text-xs text-green-500">22ms</span>
           </div>
@@ -93,8 +103,12 @@ export function NextLint() {
               >
                 <div className="mb-1.5 flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    {issue.type === "performance" && <Clock className="h-3.5 w-3.5 text-foreground" />}
-                    {issue.type === "bundle" && <Package className="h-3.5 w-3.5 text-foreground" />}
+                    {issue.type === "performance" && (
+                      <Clock className="h-3.5 w-3.5 text-foreground" />
+                    )}
+                    {issue.type === "bundle" && (
+                      <Package className="h-3.5 w-3.5 text-foreground" />
+                    )}
                     <span className="text-sm font-medium">{issue.title}</span>
                     {issue.children && (
                       <Badge variant="secondary" className="text-xs">
@@ -107,13 +121,19 @@ export function NextLint() {
                   )}
                 </div>
 
-                <p className="text-xs text-muted-foreground">{issue.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {issue.description}
+                </p>
 
                 {issue.metric && (
                   <div className="mt-2 flex items-center gap-1 text-xs">
-                    <span className="text-foreground/80">Current: {issue.metric.value}</span>
+                    <span className="text-foreground/80">
+                      Current: {issue.metric.value}
+                    </span>
                     <span className="text-foreground/60">•</span>
-                    <span className="text-foreground/80">Target: {issue.metric.threshold}</span>
+                    <span className="text-foreground/80">
+                      Target: {issue.metric.threshold}
+                    </span>
                   </div>
                 )}
 
@@ -128,11 +148,15 @@ export function NextLint() {
             ))}
           </div>
 
-          <Button variant="ghost" size="sm" className="mt-3 w-full text-xs text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3 w-full text-xs text-muted-foreground"
+          >
             view previous (4)
           </Button>
         </div>
       </div>
     </div>
   );
-} 
+}

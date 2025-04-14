@@ -1,5 +1,3 @@
-import { iife } from "~/lib/utils";
-
 import {
   LineChart,
   Line,
@@ -14,8 +12,8 @@ import { Ellipsis, Leaf, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { act, useEffect, useState } from "react";
 import { ChildToParentMessage } from "zenbu-devtools";
-import { trpc } from "~/lib/trpc";
-
+import { trpc } from "src/lib/trpc";
+import { iife } from "src/lib/utils";
 /**
  *
  * will need that framer motion stuff yippy
@@ -149,17 +147,19 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
   const { actions } = useChatStore((state) => state.toolbar);
   const [stats, setStats] = useState<ProcessStats[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'metrics' | 'logs'>('metrics');
+  const [activeTab, setActiveTab] = useState<"metrics" | "logs">("metrics");
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch(`http://localhost:40000/projects/${name}/stats`);
+        const response = await fetch(
+          `http://localhost:40000/projects/${name}/stats`,
+        );
         if (!response.ok) {
           throw new Error(`Failed to fetch stats: ${response.statusText}`);
         }
         const result: ProcessStatsResponse = await response.json();
-        
+
         const processedStat: ProcessStats = {
           pid: result.pid,
           name: result.name,
@@ -202,33 +202,36 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
   };
 
   const latestStats = stats.length > 0 ? stats[stats.length - 1] : null;
-  const maxMemoryValue = Math.max(...stats.map(stat => stat.memory / 1024 / 1024), 100);
-  
+  const maxMemoryValue = Math.max(
+    ...stats.map((stat) => stat.memory / 1024 / 1024),
+    100,
+  );
+
   return (
     <div className="h-[300px] w-[500px] bg-background backdrop-blur-sm rounded-lg border border-border/30 shadow-lg flex flex-col p-3">
       <div className="flex justify-between items-center mb-3">
         <div className="flex gap-1.5">
-          <Button 
-            variant={activeTab === 'metrics' ? 'secondary' : 'ghost'}
+          <Button
+            variant={activeTab === "metrics" ? "secondary" : "ghost"}
             size="sm"
             className="h-6 text-xs px-2.5"
-            onClick={() => setActiveTab('metrics')}
+            onClick={() => setActiveTab("metrics")}
           >
             Metrics
           </Button>
-          <Button 
-            variant={activeTab === 'logs' ? 'secondary' : 'ghost'}
+          <Button
+            variant={activeTab === "logs" ? "secondary" : "ghost"}
             size="sm"
             className="h-6 text-xs px-2.5"
-            onClick={() => setActiveTab('logs')}
+            onClick={() => setActiveTab("logs")}
           >
             Logs
           </Button>
         </div>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="sm"
-          className="h-5 w-5 rounded-full" 
+          className="h-5 w-5 rounded-full"
           onClick={() => actions.setRoute("off")}
         >
           <X size={12} />
@@ -241,34 +244,44 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
             {error}
           </div>
         </div>
-      ) : activeTab === 'metrics' ? (
+      ) : activeTab === "metrics" ? (
         <div className="grid grid-cols-2 gap-3 flex-1">
           <div className="bg-muted/5 rounded-md p-2.5 border border-border/10 flex flex-col">
             <h4 className="text-[11px] font-medium mb-1.5 text-muted-foreground flex items-center justify-between">
               <span>CPU Usage</span>
-              <span className="font-mono">{latestStats ? `${latestStats.cpu.toFixed(1)}%` : '-'}</span>
+              <span className="font-mono">
+                {latestStats ? `${latestStats.cpu.toFixed(1)}%` : "-"}
+              </span>
             </h4>
             <div className="flex-1 min-h-[100px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                  <XAxis dataKey="timestamp" tick={false} stroke="rgba(255,255,255,0.1)" />
-                  <YAxis 
-                    domain={[0, 100]} 
-                    tickFormatter={(value) => `${value}`} 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(255,255,255,0.06)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="timestamp"
+                    tick={false}
+                    stroke="rgba(255,255,255,0.1)"
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tickFormatter={(value) => `${value}`}
                     width={20}
                     stroke="rgba(255,255,255,0.1)"
-                    tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 9 }}
+                    tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 9 }}
                   />
                   <Tooltip
                     formatter={(value: any) => [`${value.toFixed(1)}%`, "CPU"]}
                     labelFormatter={() => ""}
-                    contentStyle={{ 
-                      backgroundColor: 'rgba(0,0,0,0.8)', 
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '4px',
-                      fontSize: '10px',
-                      padding: '3px 6px'
+                    contentStyle={{
+                      backgroundColor: "rgba(0,0,0,0.8)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "4px",
+                      fontSize: "10px",
+                      padding: "3px 6px",
                     }}
                   />
                   <Line
@@ -277,7 +290,12 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
                     stroke="#3b82f6"
                     strokeWidth={1.5}
                     dot={false}
-                    activeDot={{ r: 2.5, fill: '#3b82f6', stroke: 'rgba(59, 130, 246, 0.2)', strokeWidth: 4 }}
+                    activeDot={{
+                      r: 2.5,
+                      fill: "#3b82f6",
+                      stroke: "rgba(59, 130, 246, 0.2)",
+                      strokeWidth: 4,
+                    }}
                     isAnimationActive={false}
                   />
                 </LineChart>
@@ -288,19 +306,31 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
           <div className="bg-muted/5 rounded-md p-2.5 border border-border/10 flex flex-col">
             <h4 className="text-[11px] font-medium mb-1.5 text-muted-foreground flex items-center justify-between">
               <span>Memory Usage</span>
-              <span className="font-mono">{latestStats ? `${(latestStats.memory / 1024 / 1024).toFixed(1)}MB` : '-'}</span>
+              <span className="font-mono">
+                {latestStats
+                  ? `${(latestStats.memory / 1024 / 1024).toFixed(1)}MB`
+                  : "-"}
+              </span>
             </h4>
             <div className="flex-1 min-h-[100px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={stats}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                  <XAxis dataKey="timestamp" tick={false} stroke="rgba(255,255,255,0.1)" />
-                  <YAxis 
-                    domain={[0, Math.ceil(maxMemoryValue / 100) * 100]} 
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(255,255,255,0.06)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="timestamp"
+                    tick={false}
+                    stroke="rgba(255,255,255,0.1)"
+                  />
+                  <YAxis
+                    domain={[0, Math.ceil(maxMemoryValue / 100) * 100]}
                     tickFormatter={(value) => `${(value / 1000).toFixed(1)}k`}
                     width={30}
                     stroke="rgba(255,255,255,0.1)"
-                    tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 9 }}
+                    tick={{ fill: "rgba(255,255,255,0.45)", fontSize: 9 }}
                   />
                   <Tooltip
                     formatter={(value: any) => [
@@ -308,12 +338,12 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
                       "Memory",
                     ]}
                     labelFormatter={() => ""}
-                    contentStyle={{ 
-                      backgroundColor: 'rgba(0,0,0,0.8)', 
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '4px',
-                      fontSize: '10px',
-                      padding: '3px 6px'
+                    contentStyle={{
+                      backgroundColor: "rgba(0,0,0,0.8)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "4px",
+                      fontSize: "10px",
+                      padding: "3px 6px",
                     }}
                   />
                   <Line
@@ -322,7 +352,12 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
                     stroke="#10b981"
                     strokeWidth={1.5}
                     dot={false}
-                    activeDot={{ r: 2.5, fill: '#10b981', stroke: 'rgba(16, 185, 129, 0.2)', strokeWidth: 4 }}
+                    activeDot={{
+                      r: 2.5,
+                      fill: "#10b981",
+                      stroke: "rgba(16, 185, 129, 0.2)",
+                      strokeWidth: 4,
+                    }}
                     isAnimationActive={false}
                   />
                 </LineChart>
@@ -332,16 +367,30 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
 
           <div className="col-span-2 grid grid-cols-3 gap-2">
             <div className="bg-muted/5 px-2 py-1.5 rounded-md border border-border/10">
-              <div className="text-[10px] font-medium text-muted-foreground mb-0.5">PPID</div>
-              <div className="text-xs font-mono tabular-nums">{latestStats?.ppid || '-'}</div>
+              <div className="text-[10px] font-medium text-muted-foreground mb-0.5">
+                PPID
+              </div>
+              <div className="text-xs font-mono tabular-nums">
+                {latestStats?.ppid || "-"}
+              </div>
             </div>
             <div className="bg-muted/5 px-2 py-1.5 rounded-md border border-border/10">
-              <div className="text-[10px] font-medium text-muted-foreground mb-0.5">CPU Time</div>
-              <div className="text-xs font-mono tabular-nums">{latestStats ? `${latestStats.ctime.toFixed(1)}s` : '-'}</div>
+              <div className="text-[10px] font-medium text-muted-foreground mb-0.5">
+                CPU Time
+              </div>
+              <div className="text-xs font-mono tabular-nums">
+                {latestStats ? `${latestStats.ctime.toFixed(1)}s` : "-"}
+              </div>
             </div>
             <div className="bg-muted/5 px-2 py-1.5 rounded-md border border-border/10">
-              <div className="text-[10px] font-medium text-muted-foreground mb-0.5">Elapsed</div>
-              <div className="text-xs font-mono tabular-nums">{latestStats ? formatElapsedTime(latestStats.elapsed / 1000) : '-'}</div>
+              <div className="text-[10px] font-medium text-muted-foreground mb-0.5">
+                Elapsed
+              </div>
+              <div className="text-xs font-mono tabular-nums">
+                {latestStats
+                  ? formatElapsedTime(latestStats.elapsed / 1000)
+                  : "-"}
+              </div>
             </div>
           </div>
         </div>
@@ -351,12 +400,17 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
             <div className="max-w-full">
               {latestStats?.stdout?.length ? (
                 latestStats.stdout.map((line, i) => (
-                  <div key={i} className="whitespace-pre-wrap break-all text-muted-foreground">
+                  <div
+                    key={i}
+                    className="whitespace-pre-wrap break-all text-muted-foreground"
+                  >
                     {line}
                   </div>
                 ))
               ) : (
-                <div className="text-muted-foreground/50 italic">No logs available</div>
+                <div className="text-muted-foreground/50 italic">
+                  No logs available
+                </div>
               )}
             </div>
           </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "~/lib/utils";
 import {
   Share2,
   Grid,
@@ -37,6 +36,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { ChatInstanceStore, useChatStore } from "./chat-store";
+import { cn } from "src/lib/utils";
 
 interface SlimSidebarProps {
   className?: string;

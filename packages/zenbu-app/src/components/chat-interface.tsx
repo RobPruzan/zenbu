@@ -35,18 +35,18 @@ import {
   PanelRightOpen,
   Video,
 } from "lucide-react";
-import { Button } from "~/components/ui/button";
-import { ScrollArea } from "~/components/ui/scroll-area";
+
+import { flushSync } from "react-dom";
+import { useChatStore } from "./chat-store";
+import { ChatMessage } from "zenbu-plugin/src/ws/utils";
+import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "./ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "~/components/ui/tooltip";
-import { pluginRPC } from "~/app/rpc";
-import { flushSync } from "react-dom";
-import { useChatStore } from "./chat-store";
-import { ChatMessage } from "zenbu-plugin/src/ws/utils";
+} from "./ui/tooltip";
 
 // Define local message type that includes status
 interface Message {

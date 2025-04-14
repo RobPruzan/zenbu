@@ -1,7 +1,7 @@
 import { integer, sqliteTableCreator, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
-import { EventLogEvent } from "zenbu-plugin/src/ws/ws";
 import { createTable } from "./utils";
+import { EventLogEvent } from "zenbu-plugin/src/ws/schemas";
 
 const date = (name: string) => integer(name, { mode: "timestamp" });
 

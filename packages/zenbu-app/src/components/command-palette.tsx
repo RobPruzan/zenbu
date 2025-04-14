@@ -87,9 +87,7 @@ export function CommandPalette({ items }: { items: Array<Command> }) {
     };
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-      if (
-        event.origin !== "http://localhost:4200" 
-      ) {
+      if (event.origin !== "http://localhost:4200") {
         return;
       }
       const data = event.data;

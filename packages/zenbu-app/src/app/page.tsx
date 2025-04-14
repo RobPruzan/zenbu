@@ -1,23 +1,12 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
 import { Component, Suspense, useEffect, useState } from "react";
-import { ChatInstanceContext, useChatStore } from "~/components/chat-store";
-import { Chat } from "~/components/chat/chat";
-import { CommandPalette } from "~/components/command-palette";
-import { DevtoolsOverlay } from "~/components/devtools-overlay";
-import { BetterToolbar } from "~/components/slices/better-toolbar";
-import { Button } from "~/components/ui/button";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "~/components/ui/resizable";
+
 import DevTools from "../components/devtools";
 import { BetterDrawing } from "./better-drawing";
 import { IFrameWrapper } from "./iframe-wrapper";
 import { ScreenshotTool } from "./screenshot-tool";
-import { Recorder } from "~/components/screen-sharing";
-import { Recording } from "~/components/recording";
+
 import { getCommandItems } from "./command-items";
 import {
   X,
@@ -30,25 +19,32 @@ import {
   Smartphone,
 } from "lucide-react";
 import { TopBarContent } from "./top-bar-content";
-import { WebsiteTree } from "~/components/website-tree/website-tree";
-import { SlimSidebar } from "~/components/slim-sidebar";
-import { BottomPanel } from "~/components/bottom-panel";
-import { ProjectCommandPalette } from "~/components/project-command-palette";
-import { ReactTree } from "~/components/react-tree/react-tree";
-import { HttpClient } from "~/components/http-client/http-client";
-import { PluginStore } from "~/components/plugin-store/plugin-store";
-import { NextLint } from "~/components/next-lint/next-lint";
-import { LeaderKeyHints } from "~/components/leader-key-hints";
-import { trpc } from "~/lib/trpc";
-import { z } from "zod";
-import { cn } from "~/lib/utils";
 
-interface TabData {
-  id: string;
-  title: string;
-  icon: React.ReactNode;
-  url?: string; // Optional URL for iframe content
-}
+import { z } from "zod";
+import { BottomPanel } from "src/components/bottom-panel";
+import { ChatInstanceContext, useChatStore } from "src/components/chat-store";
+import { Chat } from "src/components/chat/chat";
+import { CommandPalette } from "src/components/command-palette";
+import { DevtoolsOverlay } from "src/components/devtools-overlay";
+import { HttpClient } from "src/components/http-client/http-client";
+import { LeaderKeyHints } from "src/components/leader-key-hints";
+import { NextLint } from "src/components/next-lint/next-lint";
+import { PluginStore } from "src/components/plugin-store/plugin-store";
+import { ProjectCommandPalette } from "src/components/project-command-palette";
+import { ReactTree } from "src/components/react-tree/react-tree";
+import { Recording } from "src/components/recording";
+import { BetterToolbar } from "src/components/slices/better-toolbar";
+import { SlimSidebar } from "src/components/slim-sidebar";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "src/components/ui/resizable";
+import { WebsiteTree } from "src/components/website-tree/website-tree";
+import { trpc } from "src/lib/trpc";
+import { cn } from "src/lib/utils";
+import { Button } from "src/components/ui/button";
+import usePersistQueryClient from "src/hooks/use-persist-query-client";
 
 interface SidebarState {
   component: "chat" | "websiteTree" | "reactTree" | null;
@@ -56,8 +52,6 @@ interface SidebarState {
 }
 
 export default function Home() {
-  const [showProjectsDialog, setShowProjectsDialog] = useState(false);
-  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showPluginStore, setShowPluginStore] = useState(false);
   const [showNextLint, setShowNextLint] = useState(false);
   const [leftSidebar, setLeftSidebar] = useState<SidebarState>({
@@ -74,23 +68,15 @@ export default function Home() {
   const [mobileSplit, setMobileSplit] = useState(false);
   const [denseTabsEnabled, setDenseTabsEnabled] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("main");
   const [bottomPanelVisible, setBottomPanelVisible] = useState(false);
-  const [websiteTreeVisible, setWebsiteTreeVisible] = useState(false);
   const [projectPaletteOpen, setProjectPaletteOpen] = useState(false);
   const [showHttpClient, setShowHttpClient] = useState(false);
 
-  // State for leader key hints
   const [leaderKeyPending, setLeaderKeyPending] = useState(false);
   const [showLeaderHints, setShowLeaderHints] = useState(false);
   const [leaderTimeoutId, setLeaderTimeoutId] = useState<number | null>(null);
 
-  // New state for managing tabs
-  const [tabs, setTabs] = useState<TabData[]>([
-    { id: "main", title: "Main", icon: <FileText size={14} /> },
-    { id: "code", title: "Editor", icon: <Code size={14} /> },
-    { id: "terminal", title: "Terminal", icon: <Terminal size={14} /> },
-  ]);
+  usePersistQueryClient();
 
   useEffect(() => {
     const handleToggleChat = (event: CustomEvent) =>
@@ -101,7 +87,7 @@ export default function Home() {
       toggleSidebar("reactTree", event.detail?.position);
     const handleToggleHttpClient = () => setShowHttpClient((prev) => !prev);
     const handleTogglePluginStore = () => setShowPluginStore((prev) => !prev);
-    const handleToggleTopBar = (event: Event) => toggleVisibility("topBar");
+    const handleToggleTopBar = () => toggleVisibility("topBar");
     const handleToggleHorizontalSplit = () => {
       if (isAnimating) return;
       setIsAnimating(true);
@@ -126,12 +112,10 @@ export default function Home() {
       });
       setTimeout(() => setIsAnimating(false), 300);
     };
-    const handleToggleDenseTabs = (event: Event) =>
-      toggleVisibility("denseTabs");
+    const handleToggleDenseTabs = () => toggleVisibility("denseTabs");
     const handleToggleBottomPanel = () =>
       setBottomPanelVisible((prev) => !prev);
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore keydown events if an input, textarea, or select element is focused
       const targetElement = e.target as HTMLElement;
       if (
         targetElement.tagName === "INPUT" ||
@@ -142,13 +126,11 @@ export default function Home() {
         return;
       }
 
-      // Project Palette shortcut
       if (e.key === "p" && e.metaKey) {
         e.preventDefault();
         setProjectPaletteOpen((prev) => !prev);
       }
 
-      // Leader Key Logic
       if (showLeaderHints && e.key === "Escape") {
         e.preventDefault();
         setShowLeaderHints(false);
@@ -156,37 +138,30 @@ export default function Home() {
       }
 
       if (leaderKeyPending) {
-        // Clear timeout if another key is pressed after leader
         if (leaderTimeoutId) clearTimeout(leaderTimeoutId);
         setLeaderTimeoutId(null);
         setLeaderKeyPending(false);
 
-        // TODO: Handle actual leader key combinations here
-        // e.g., if (e.key === 'f') { triggerFindFile(); }
         console.log(`Leader combination: Space + ${e.key}`);
-        e.preventDefault(); // Prevent default action for the combo key
+        e.preventDefault();
         return;
       }
 
-      if (e.key === " " && !e.repeat) { // Space bar pressed (not held)
-        e.preventDefault(); // Prevent default scroll behavior
+      if (e.key === " " && !e.repeat) {
+        e.preventDefault();
         setLeaderKeyPending(true);
 
-        // Set timeout to show hints if no other key is pressed
         const timeoutId = window.setTimeout(() => {
           setShowLeaderHints(true);
           setLeaderKeyPending(false);
           setLeaderTimeoutId(null);
-        }, 300); // Changed timeout to 300ms
+        }, 300);
         setLeaderTimeoutId(timeoutId);
         return;
       }
 
-       // Hide hints if any other key is pressed while they are visible
-      if (showLeaderHints && e.key !== "Escape") { // Allow escape to pass through if needed elsewhere
+      if (showLeaderHints && e.key !== "Escape") {
         setShowLeaderHints(false);
-         // Optional: you might want to process this key press as a normal command
-         // if it wasn't part of a leader sequence.
       }
     };
 
@@ -233,7 +208,10 @@ export default function Home() {
       );
       window.removeEventListener("toggle-top-bar", handleToggleTopBar);
       window.removeEventListener("toggle-split", handleToggleHorizontalSplit);
-      window.removeEventListener("toggle-mobile-split", handleToggleMobileSplit);
+      window.removeEventListener(
+        "toggle-mobile-split",
+        handleToggleMobileSplit,
+      );
       window.removeEventListener("toggle-dense-tabs", handleToggleDenseTabs);
       window.removeEventListener(
         "toggle-bottom-panel",
@@ -256,25 +234,20 @@ export default function Home() {
     const currentState = position === "left" ? leftSidebar : rightSidebar;
 
     if (currentState.component === component) {
-      // Close if it's already open
       targetSetter({ component: null, position });
     } else {
-      // Close other sidebar if it's showing the same component
       const otherState = position === "left" ? rightSidebar : leftSidebar;
       if (otherState.component === component) {
         otherSetter({ component: null, position: otherState.position });
       }
 
-      // Open in target position
       targetSetter({ component, position });
     }
 
     setTimeout(() => setIsAnimating(false), 300);
   };
 
-  const toggleVisibility = (
-    component: "devtools" | "topBar" | "denseTabs",
-  ) => {
+  const toggleVisibility = (component: "devtools" | "topBar" | "denseTabs") => {
     if (isAnimating) return;
     setIsAnimating(true);
 
@@ -293,49 +266,25 @@ export default function Home() {
     setTimeout(() => setIsAnimating(false), 300);
   };
 
-  const handleTabSelect = (id: string) => {
-    setActiveTab(id);
-    // You would update iframe content or do other actions based on tab selection
-  };
+  // should fetch projects, by default read the first one
+  // i guess it would also be good to always spawn on the last project user was on, that feels more like a local state thing
+  const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
+  const project = projects.at(0);
 
-  const handleNewTab = () => {
-    const tabId = `tab-${Date.now()}`;
-    const newTab: TabData = {
-      id: tabId,
-      title: `Tab ${tabs.length + 1}`,
-      icon: <FileText size={14} />,
-    };
-    setTabs([...tabs, newTab]);
-    setActiveTab(tabId); // Automatically select the new tab
-  };
+  if (!project) {
+    throw new Error(
+      "invariant: must have projects for now, nice onboarding screen later",
+    );
+  }
 
-  const handleCloseTab = (id: string) => {
-    // Don't allow closing the last tab
-    if (tabs.length <= 1) return;
-
-    // If closing the active tab, select another tab
-    if (id === activeTab) {
-      const tabIndex = tabs.findIndex((tab) => tab.id === id);
-      // Select previous tab if available, otherwise the next one
-      const newActiveTab = tabs[tabIndex - 1]?.id || tabs[tabIndex + 1]?.id;
-      setActiveTab(newActiveTab);
-    }
-
-    // Remove the tab
-    setTabs(tabs.filter((tab) => tab.id !== id));
-  };
-
-  const handleWebsiteSelect = (url: string) => {
-    // Handle website selection, e.g., open in iframe or new tab
-    console.log("Selected website:", url);
-  };
+  // we need to remove the coupling with the "default" project, wont be using that anymore since now that just complicates things
 
   return (
     <main className="relative flex h-screen overflow-hidden bg-background text-foreground">
       <ChatInstanceContext.Provider
         initialValue={{
           iframe: {
-            url: "http://localhost:4200",
+            url: `http://localhost:${project.port}`,
           },
           toolbar: {
             state: {
@@ -448,7 +397,8 @@ export default function Home() {
                     >
                       <WebsiteTree
                         onClose={() => toggleSidebar("websiteTree", "left")}
-                        onSelect={handleWebsiteSelect}
+                        onSelect={() => {}}
+                        // onSelect={handleWebsiteSelect}
                       />
                     </Suspense>
                   ) : leftSidebar.component === "reactTree" ? (
@@ -460,10 +410,12 @@ export default function Home() {
               )}
             </AnimatePresence>
 
-            <div className={cn(
-              "flex h-full flex-1 flex-col overflow-hidden",
-              mobileSplit && "min-w-[750px]"
-            )}>
+            <div
+              className={cn(
+                "flex h-full flex-1 flex-col overflow-hidden",
+                mobileSplit && "min-w-[750px]",
+              )}
+            >
               <AnimatePresence mode="wait">
                 {topBarVisible && (
                   <motion.div
@@ -489,14 +441,14 @@ export default function Home() {
                     }}
                     className="relative flex-shrink-0 border-b border-border/40 overflow-hidden bg-background"
                   >
-                    <TopBarContent
+                    {/* <TopBarContent
                       dense={denseTabsEnabled}
                       tabs={tabs}
                       activeTabId={activeTab}
                       onTabSelect={handleTabSelect}
-                      onTabClose={handleCloseTab}
+                      onTabClose={}
                       onNewTab={handleNewTab}
-                    />
+                    /> */}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -507,7 +459,9 @@ export default function Home() {
                   className="relative"
                 >
                   <ResizablePanelGroup
-                    direction={horizontalSplit || mobileSplit ? "horizontal" : "vertical"}
+                    direction={
+                      horizontalSplit || mobileSplit ? "horizontal" : "vertical"
+                    }
                     className="h-full"
                   >
                     <ResizablePanel
@@ -517,7 +471,7 @@ export default function Home() {
                           : horizontalSplit || mobileSplit
                             ? 50
                             : 100
-                       }
+                      }
                       className="relative"
                       minSize={
                         horizontalSplit || mobileSplit
@@ -551,7 +505,11 @@ export default function Home() {
                           defaultSize={horizontalSplit ? 50 : undefined}
                           minSize={horizontalSplit ? 20 : undefined}
                           collapsible={false}
-                          className={mobileSplit ? "flex items-center justify-center p-4 bg-background" : ""}
+                          className={
+                            mobileSplit
+                              ? "flex items-center justify-center p-4 bg-background"
+                              : ""
+                          }
                         >
                           {mobileSplit ? (
                             <div className="relative mx-auto h-[852px] w-[393px] flex-shrink-0 overflow-hidden rounded-[40px] border-[10px] border-black bg-black shadow-xl">
@@ -710,14 +668,6 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
   const inspector = useChatStore((state) => state.inspector);
 
   const iframe = useChatStore((state) => state.iframe);
-  const createProjectMutation = trpc.daemon.createProject.useMutation({
-    onSuccess: (result) => {
-      // projectsQuery.refetch();
-      iframe.actions.setInspectorState({
-        url: `http://localhost:${result.port}`,
-      });
-    },
-  });
 
   const utils = trpc.useUtils();
 

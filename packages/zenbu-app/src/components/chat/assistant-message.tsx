@@ -1,8 +1,7 @@
 "use client";
 
 import { ChatMessage } from "zenbu-plugin/src/ws/utils";
-import { cn } from "~/lib/utils";
-import { iife } from "~/lib/utils";
+import { cn, iife } from "src/lib/utils";
 
 export function AssistantMessage({ message }: { message: ChatMessage }) {
   return (
@@ -20,7 +19,7 @@ export function AssistantMessage({ message }: { message: ChatMessage }) {
                     switch (content.type) {
                       case "image": {
                         return (
-                          <img 
+                          <img
                             src={(content.image as URL).href}
                             alt="Assistant shared image"
                             className="rounded-md max-w-[300px] my-2"

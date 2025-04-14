@@ -10,10 +10,8 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { getTemplatedZenbuPrompt, removeComments } from "../create-server.js";
 import {
-  EventLogEvent,
   getCodebaseIndexPrompt,
   imageToBytes,
-  PluginServerEvent,
   videoToBytes,
   videoToBytes as videoToData,
 } from "../ws/ws.js";
@@ -26,6 +24,7 @@ import { planner } from "../ws/planner.js";
 import { bestEdit } from "./best-edit-impl.js";
 import { editFileSpec } from "../ws/apply.js";
 import { textEditor } from "./edit/text-editor.js";
+import { EventLogEvent, PluginServerEvent } from "~/ws/schemas.js";
 
 // actually the main thread should definitely be scoped to the socket room itself, not to the message...
 /**

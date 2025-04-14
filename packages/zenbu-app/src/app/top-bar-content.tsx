@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/utils";
+import { cn } from "src/lib/utils";
 import { Plus, X } from "lucide-react"; // Import icons for tab actions
 import { motion } from "framer-motion";
+import { Button } from "src/components/ui/button";
 
 interface Tab {
   id: string;
@@ -33,10 +33,12 @@ export const TopBarContent: React.FC<TopBarContentProps> = ({
   const currentActiveId = activeTabId ?? displayTabs[0]?.id;
 
   return (
-    <div className={cn(
-      "flex items-center bg-background/90 backdrop-blur-sm",
-      dense ? "h-7" : "h-8"
-    )}>
+    <div
+      className={cn(
+        "flex items-center bg-background/90 backdrop-blur-sm",
+        dense ? "h-7" : "h-8",
+      )}
+    >
       <div className="flex-1 flex items-center overflow-x-auto no-scrollbar">
         {displayTabs.map((tab, index) => (
           <motion.button
@@ -48,16 +50,19 @@ export const TopBarContent: React.FC<TopBarContentProps> = ({
               "border-r border-border/20",
               tab.id === currentActiveId
                 ? "bg-muted/30 text-foreground"
-                : "text-muted-foreground hover:bg-muted/20 hover:text-foreground"
+                : "text-muted-foreground hover:bg-muted/20 hover:text-foreground",
             )}
             style={{
-              height: dense ? "28px" : "32px"
+              height: dense ? "28px" : "32px",
             }}
             title={tab.title}
             initial={false}
             animate={{
               opacity: 1,
-              backgroundColor: tab.id === currentActiveId ? "rgba(var(--muted) / 0.3)" : "transparent",
+              backgroundColor:
+                tab.id === currentActiveId
+                  ? "rgba(var(--muted) / 0.3)"
+                  : "transparent",
             }}
             transition={{
               duration: 0.1,
@@ -66,21 +71,23 @@ export const TopBarContent: React.FC<TopBarContentProps> = ({
           >
             <div className="flex items-center truncate w-full">
               {tab.icon && (
-                <span className={cn(
-                  "mr-1.5 opacity-70 group-hover:opacity-100 transition-opacity",
-                  dense ? "mr-1" : ""
-                )}>
+                <span
+                  className={cn(
+                    "mr-1.5 opacity-70 group-hover:opacity-100 transition-opacity",
+                    dense ? "mr-1" : "",
+                  )}
+                >
                   {tab.icon}
                 </span>
               )}
               <span className="truncate">{tab.title}</span>
             </div>
-            
+
             {onTabClose && (
               <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ 
-                  opacity: tab.id === currentActiveId ? 0.8 : 0
+                animate={{
+                  opacity: tab.id === currentActiveId ? 0.8 : 0,
                 }}
                 whileHover={{ opacity: 1 }}
                 className="ml-2 absolute right-1"
@@ -91,7 +98,9 @@ export const TopBarContent: React.FC<TopBarContentProps> = ({
                   className={cn(
                     "h-5 w-5 rounded-sm p-0 opacity-0 group-hover:opacity-100 hover:bg-background/40",
                     dense ? "h-4 w-4" : "",
-                    tab.id === currentActiveId ? "text-foreground" : "text-muted-foreground"
+                    tab.id === currentActiveId
+                      ? "text-foreground"
+                      : "text-muted-foreground",
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -105,14 +114,14 @@ export const TopBarContent: React.FC<TopBarContentProps> = ({
             )}
           </motion.button>
         ))}
-        
+
         {onNewTab && (
           <motion.div
             initial={false}
             whileHover={{ backgroundColor: "rgba(var(--muted) / 0.2)" }}
             className="border-r border-border/20"
             style={{
-              height: dense ? "28px" : "32px"
+              height: dense ? "28px" : "32px",
             }}
           >
             <Button
@@ -121,7 +130,7 @@ export const TopBarContent: React.FC<TopBarContentProps> = ({
               onClick={onNewTab}
               className={cn(
                 "rounded-none h-full w-8 hover:bg-transparent text-muted-foreground hover:text-foreground transition-colors",
-                dense ? "w-6" : "w-8"
+                dense ? "w-6" : "w-8",
               )}
               title="New tab"
             >
@@ -130,7 +139,7 @@ export const TopBarContent: React.FC<TopBarContentProps> = ({
           </motion.div>
         )}
       </div>
-      
+
       <div className="flex items-center h-full border-l border-border/20">
         <div className="px-2 h-full flex items-center">
           {/* Space for additional controls */}
@@ -138,4 +147,4 @@ export const TopBarContent: React.FC<TopBarContentProps> = ({
       </div>
     </div>
   );
-}; 
+};

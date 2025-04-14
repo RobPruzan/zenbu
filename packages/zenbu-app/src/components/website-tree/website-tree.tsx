@@ -1,7 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "~/components/ui/button";
-import { cn, iife } from "~/lib/utils";
+
 import {
   ChevronRight,
   Globe,
@@ -25,9 +24,11 @@ import {
   Trash,
   Ellipsis,
 } from "lucide-react";
-import { api } from "~/trpc/react";
-import { trpc } from "~/lib/trpc";
+
 import { useChatStore } from "../chat-store";
+import { trpc } from "src/lib/trpc";
+import { cn } from "src/lib/utils";
+import { Button } from "../ui/button";
 
 interface WebsiteNode {
   id: string;
@@ -250,7 +251,7 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
   const { iframe } = useChatStore();
   const utils = trpc.useUtils();
   const createProjectMutation = trpc.daemon.createProject.useMutation({
-    meta: {noInvalidate: true},
+    meta: { noInvalidate: true },
     onSuccess: (result) => {
       const existing = utils.daemon.getProjects.getData();
       utils.daemon.getProjects.setData(
