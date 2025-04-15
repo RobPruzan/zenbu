@@ -164,7 +164,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, level = 0, onSelect }) => {
       return <Folder className="h-3 w-3 mr-1 opacity-70" />;
     }
 
-    // File icons based on name
     if (node.title.endsWith(".json"))
       return <FileJson className="h-3 w-3 mr-1 text-yellow-300" />;
     if (node.title.endsWith(".ts") || node.title.endsWith(".js"))
@@ -319,38 +318,6 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
           <TreeNode key={node.id} node={node} onSelect={onSelect} />
         ))} */}
 
-        <div className="flex items-center h-8">
-          <Button
-            variant={"ghost"}
-            className={cn([
-              "group flex items-center w-full px-2 py-0 text-xs justify-start h-full",
-              `http://localhost:4200` === iframe.state.url &&
-                "bg-muted/30 hover:bg-muted/60",
-            ])}
-            onClick={() => {
-              // some store set that determines the project url
-              iframe.actions.setInspectorState({
-                url: `http://localhost:4200`,
-              });
-              onSelect?.(`http://localhost:4200`);
-            }}
-          >
-            <div className="w-3/5 flex justify-start"> Default</div>
-            <div className="w-2/5 flex justify-end">4200</div>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-sm px-0 py-0 h-fit w-fit p-1 [&_svg]:size-auto [&_svg]:shrink-1 flex justify-center items-center"
-            // onClick={() => {
-            //   deleteProjectMutation.mutate({
-            //     name: project.name,
-            //   });
-            // }}
-          >
-            <Ellipsis size={14} />
-          </Button>
-        </div>
         {projects.toReversed().map((project) => (
           <div key={project.pid} className="flex items-center h-8 gap-y-1">
             <Button

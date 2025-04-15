@@ -64,28 +64,50 @@ export const chatRouter = createTRPCRouter({
     .input(
       z.object({
         event: eventLogEventSchema,
-        projectChatId: z.string(),
+        projectId: z.string(),
       }),
     )
     .mutation(async (opts) => {
-      const projectChat = await db
+      console.log("someone trying to persist an event", opts.input.projectId);
+      // fetch project, check if chat exists, if not create, if does update it
+      const project = await db
         .select()
-        .from(Schema.projectChat)
-        .where(eq(Schema.project.projectId, opts.input.projectChatId))
+        .from(Schema.project)
+        .where(eq(Schema.project.projectId, opts.input.projectId))
         .then(firstRecord);
-      if (!projectChat) {
+
+      if (!project) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "No project chat with id provided",
+          message:
+            "Project with that id does not exist:" + opts.input.projectId,
         });
       }
 
-      const _ = await db
-        .update(Schema.projectChat)
-        .set({
-          // todo: is there a way to just push the data to the json buffer
-          events: [...projectChat.events, opts.input.event],
-        })
-        .where(eq(Schema.projectChat.projectChatId, projectChat.projectChatId));
+      let projectChat = await db
+        .select()
+        .from(Schema.projectChat)
+        .where(eq(Schema.projectChat.projectId, opts.input.projectId))
+        .then(firstRecord);
+
+      if (!projectChat) {
+        projectChat = await db
+          .insert(Schema.projectChat)
+          .values({
+            projectId: opts.input.projectId,
+            events: [opts.input.event],
+          })
+          .returning()
+          .then(firstRecordAssert);
+      } else {
+        await db
+          .update(Schema.projectChat)
+          .set({
+            events: [...projectChat.events, opts.input.event],
+          })
+          .where(
+            eq(Schema.projectChat.projectChatId, projectChat.projectChatId),
+          );
+      }
     }),
 });

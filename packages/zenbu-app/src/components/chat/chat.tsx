@@ -117,6 +117,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     });
     // });
   }, [eventLog.events]);
+  const projectId = useChatStore((state) => state.iframe.state.projectId);
   // const { mainThreadMessages, otherThreadsMessages } =
   //
 
@@ -174,7 +175,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     console.log("sending", chatControls.state.input);
     chatControls.actions.setInput("");
 
-    socket.emit("message", clientEvent);
+    socket.emit("message", { event: clientEvent, projectId });
     updateInputSize();
   };
 
@@ -195,7 +196,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
 
     chatControls.actions.setInput("");
 
-    socket.emit("message", clientEvent);
+    socket.emit("message", { event: clientEvent, projectId });
 
     updateInputSize();
   };

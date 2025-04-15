@@ -170,7 +170,7 @@ export const getCommandItems = ({
   createProjectLoading: boolean;
 }) => [
   {
-    shortcut: "Create Project",
+    shortcut: "New Project",
     icon: <Plus size={16} />,
     onSelect: () => {
       onCreateProject();

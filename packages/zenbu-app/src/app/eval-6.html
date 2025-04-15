@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cozy Calendar</title>
+    <!-- Google Fonts for cozy typography -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f7f3ef;
+        --card-bg: #fff8f3;
+        --primary: #e2bfae;
+        --accent: #b6c7b9;
+        --today: #ffe5b4;
+        --text: #5a4a42;
+        --shadow: 0 4px 24px 0 rgba(90, 74, 66, 0.08);
+        --radius: 18px;
+        --header-size: 2.2rem;
+        --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      body {
+        background: linear-gradient(135deg, #f7f3ef 0%, #f3e7d9 100%);
+        min-height: 100vh;
+        font-family: "Quicksand", sans-serif;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+      }
+      .calendar-container {
+        background: var(--card-bg);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 2.5rem 2rem 2rem 2rem;
+        max-width: 410px;
+        width: 100%;
+        margin: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+      }
+      .calendar-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.2rem;
+      }
+      .calendar-title {
+        font-size: var(--header-size);
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-align: center;
+        flex: 1;
+        color: var(--text);
+      }
+      .nav-btn {
+        background: var(--primary);
+        border: none;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        font-size: 1.3rem;
+        color: var(--text);
+        cursor: pointer;
+        box-shadow: 0 2px 8px 0 rgba(90, 74, 66, 0.07);
+        transition:
+          background var(--transition),
+          transform var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 0.5rem;
+      }
+      .nav-btn:hover {
+        background: var(--accent);
+        transform: scale(1.08);
+      }
+      .calendar-grid {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .calendar-day,
+      .calendar-date {
+        text-align: center;
+        padding: 0.5rem 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        border-radius: 10px;
+        user-select: none;
+      }
+      .calendar-day {
+        color: #b6a89a;
+        font-weight: 700;
+        background: none;
+        letter-spacing: 1px;
+      }
+      .calendar-date {
+        background: none;
+        cursor: pointer;
+        transition:
+          background var(--transition),
+          color var(--transition),
+          box-shadow var(--transition);
+        position: relative;
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .calendar-date.today {
+        background: var(--today);
+        color: #a05a2c;
+        box-shadow: 0 2px 8px 0 rgba(255, 229, 180, 0.18);
+        font-weight: 700;
+        border: 2px solid #ffd9a0;
+      }
+      .calendar-date.has-event {
+        background: var(--accent);
+        color: #fff;
+        font-weight: 700;
+        box-shadow: 0 2px 8px 0 rgba(182, 199, 185, 0.18);
+      }
+      .calendar-date:hover {
+        background: var(--primary);
+        color: #fff;
+        transform: scale(1.05);
+      }
+      .cozy-greeting {
+        font-size: 1.1rem;
+        color: #b6a89a;
+        margin-bottom: 1.2rem;
+        text-align: center;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+      }
+      /* Modal styles */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(247, 243, 239, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .modal.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .modal-content {
+        background: var(--card-bg);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 2rem 1.5rem 1.5rem 1.5rem;
+        min-width: 300px;
+        max-width: 90vw;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        position: relative;
+      }
+      .modal-content h3 {
+        margin: 0 0 1rem 0;
+        font-size: 1.3rem;
+        color: var(--text);
+        font-weight: 700;
+        text-align: center;
+      }
+      .modal-content textarea {
+        border: 1.5px solid var(--primary);
+        border-radius: 10px;
+        padding: 0.7rem;
+        font-size: 1rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 70px;
+        background: #fff;
+        margin-bottom: 1.2rem;
+        outline: none;
+        transition: border var(--transition);
+      }
+      .modal-content textarea:focus {
+        border: 1.5px solid var(--accent);
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.7rem;
+      }
+      .modal-btn {
+        background: var(--primary);
+        color: var(--text);
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1.2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background var(--transition),
+          color var(--transition);
+      }
+      .modal-btn.save {
+        background: var(--accent);
+        color: #fff;
+      }
+      .modal-btn:hover {
+        background: var(--today);
+        color: #a05a2c;
+      }
+      @media (max-width: 500px) {
+        .calendar-container {
+          padding: 1.2rem 0.5rem 1rem 0.5rem;
+          max-width: 98vw;
+        }
+        .calendar-title {
+          font-size: 1.3rem;
+        }
+        .cozy-greeting {
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="calendar-container">
+      <div class="cozy-greeting" id="cozyGreeting"></div>
+      <div class="calendar-header">
+        <button class="nav-btn" id="prevMonth" aria-label="Previous Month">
+          &#8592;
+        </button>
+        <div class="calendar-title" id="calendarTitle"></div>
+        <button class="nav-btn" id="nextMonth" aria-label="Next Month">
+          &#8594;
+        </button>
+      </div>
+      <div class="calendar-grid" id="calendarDays"></div>
+      <div class="calendar-grid" id="calendarDates"></div>
+    </div>
+    <!-- Modal for events -->
+    <div class="modal" id="eventModal">
+      <div class="modal-content">
+        <h3 id="modalDate"></h3>
+        <textarea
+          id="eventText"
+          placeholder="Write a cozy note or event..."
+        ></textarea>
+        <div class="modal-actions">
+          <button class="modal-btn" id="closeModal">Cancel</button>
+          <button class="modal-btn save" id="saveEvent">Save</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // --- Cozy Calendar App ---
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const cozyGreetings = [
+        "Welcome! Wishing you a warm and wonderful day.",
+        "Take a deep breath and enjoy your cozy moments.",
+        "Here's to a month filled with comfort and joy.",
+        "Snuggle up and plan your days with ease.",
+        "Let every day bring a little happiness.",
+        "A cozy calendar for your beautiful plans.",
+        "May your days be gentle and your plans be kind.",
+      ];
+
+      // State
+      let currentMonth, currentYear;
+      let selectedDate = null;
+
+      // DOM
+      const calendarTitle = document.getElementById("calendarTitle");
+      const calendarDays = document.getElementById("calendarDays");
+      const calendarDates = document.getElementById("calendarDates");
+      const prevMonthBtn = document.getElementById("prevMonth");
+      const nextMonthBtn = document.getElementById("nextMonth");
+      const cozyGreeting = document.getElementById("cozyGreeting");
+      // Modal
+      const eventModal = document.getElementById("eventModal");
+      const modalDate = document.getElementById("modalDate");
+      const eventText = document.getElementById("eventText");
+      const closeModalBtn = document.getElementById("closeModal");
+      const saveEventBtn = document.getElementById("saveEvent");
+
+      // --- Helpers ---
+      function getToday() {
+        const now = new Date();
+        return {
+          day: now.getDate(),
+          month: now.getMonth(),
+          year: now.getFullYear(),
+        };
+      }
+      function daysInMonth(month, year) {
+        return new Date(year, month + 1, 0).getDate();
+      }
+      function getFirstDayOfMonth(month, year) {
+        return new Date(year, month, 1).getDay();
+      }
+      function pad(n) {
+        return n < 10 ? "0" + n : n;
+      }
+      function getEventKey(year, month, day) {
+        return `cozycal-event-${year}-${pad(month + 1)}-${pad(day)}`;
+      }
+      function getEvent(year, month, day) {
+        return localStorage.getItem(getEventKey(year, month, day)) || "";
+      }
+      function setEvent(year, month, day, text) {
+        if (text.trim()) {
+          localStorage.setItem(getEventKey(year, month, day), text);
+        } else {
+          localStorage.removeItem(getEventKey(year, month, day));
+        }
+      }
+      function hasEvent(year, month, day) {
+        return !!getEvent(year, month, day);
+      }
+      function randomGreeting() {
+        return cozyGreetings[Math.floor(Math.random() * cozyGreetings.length)];
+      }
+
+      // --- Render Calendar ---
+      function renderCalendar(month, year) {
+        // Header
+        calendarTitle.textContent = `${monthNames[month]} ${year}`;
+        // Days
+        calendarDays.innerHTML = "";
+        for (let d = 0; d < 7; d++) {
+          const dayDiv = document.createElement("div");
+          dayDiv.className = "calendar-day";
+          dayDiv.textContent = dayNames[d];
+          calendarDays.appendChild(dayDiv);
+        }
+        // Dates
+        calendarDates.innerHTML = "";
+        const firstDay = getFirstDayOfMonth(month, year);
+        const numDays = daysInMonth(month, year);
+        // Fill blanks before first day
+        for (let i = 0; i < firstDay; i++) {
+          const blank = document.createElement("div");
+          blank.className = "calendar-date";
+          blank.style.visibility = "hidden";
+          calendarDates.appendChild(blank);
+        }
+        // Dates
+        const today = getToday();
+        for (let date = 1; date <= numDays; date++) {
+          const dateDiv = document.createElement("div");
+          dateDiv.className = "calendar-date";
+          if (
+            date === today.day &&
+            month === today.month &&
+            year === today.year
+          ) {
+            dateDiv.classList.add("today");
+          }
+          if (hasEvent(year, month, date)) {
+            dateDiv.classList.add("has-event");
+          }
+          dateDiv.textContent = date;
+          dateDiv.tabIndex = 0;
+          dateDiv.setAttribute("role", "button");
+          dateDiv.setAttribute("aria-label", `Day ${date}`);
+          dateDiv.addEventListener("click", () =>
+            openEventModal(year, month, date),
+          );
+          dateDiv.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              openEventModal(year, month, date);
+            }
+          });
+          calendarDates.appendChild(dateDiv);
+        }
+      }
+
+      // --- Modal Logic ---
+      function openEventModal(year, month, day) {
+        selectedDate = { year, month, day };
+        modalDate.textContent = `${monthNames[month]} ${day}, ${year}`;
+        eventText.value = getEvent(year, month, day);
+        eventModal.classList.add("active");
+        setTimeout(() => eventText.focus(), 100);
+      }
+      function closeEventModal() {
+        eventModal.classList.remove("active");
+        selectedDate = null;
+      }
+      function saveEvent() {
+        if (!selectedDate) return;
+        setEvent(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          eventText.value,
+        );
+        closeEventModal();
+        renderCalendar(currentMonth, currentYear);
+      }
+
+      // --- Navigation ---
+      prevMonthBtn.addEventListener("click", () => {
+        if (currentMonth === 0) {
+          currentMonth = 11;
+          currentYear--;
+        } else {
+          currentMonth--;
+        }
+        renderCalendar(currentMonth, currentYear);
+      });
+      nextMonthBtn.addEventListener("click", () => {
+        if (currentMonth === 11) {
+          currentMonth = 0;
+          currentYear++;
+        } else {
+          currentMonth++;
+        }
+        renderCalendar(currentMonth, currentYear);
+      });
+
+      // --- Modal Events ---
+      closeModalBtn.addEventListener("click", closeEventModal);
+      saveEventBtn.addEventListener("click", saveEvent);
+      eventModal.addEventListener("click", (e) => {
+        if (e.target === eventModal) closeEventModal();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (eventModal.classList.contains("active") && e.key === "Escape") {
+          closeEventModal();
+        }
+      });
+
+      // --- Init ---
+      function init() {
+        const today = getToday();
+        currentMonth = today.month;
+        currentYear = today.year;
+        cozyGreeting.textContent = randomGreeting();
+        renderCalendar(currentMonth, currentYear);
+      }
+      init();
+    </script>
+  </body>
+</html>

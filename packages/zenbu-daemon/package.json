@@ -9,12 +9,17 @@
   "dependencies": {
     "@hono/node-server": "^1.14.1",
     "@hono/zod-validator": "^0.4.3",
+    "@trpc/client": "^11.0.0-rc.446",
     "@types/pidusage": "^2.0.5",
     "extract-zip": "^2.0.1",
     "get-port": "^7.1.0",
     "hono": "^4.7.4",
+    "node-pty": "^1.0.0",
     "pidusage": "^4.0.0",
+    "socket.io": "^4.8.1",
+    "superjson": "^2.2.1",
     "vitest": "^3.1.1",
+    "zenbu-app": "workspace:*",
     "zenbu-plugin": "workspace:*",
     "zod": "^3.24.2"
   },

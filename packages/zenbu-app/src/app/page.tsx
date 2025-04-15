@@ -1,6 +1,6 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
-import { Component, Suspense, useEffect, useState } from "react";
+import { Component, Suspense, useEffect, useRef, useState } from "react";
 
 import DevTools from "../components/devtools";
 import { BetterDrawing } from "./better-drawing";
@@ -21,7 +21,7 @@ import {
 import { TopBarContent } from "./top-bar-content";
 
 import { z } from "zod";
-import { BottomPanel } from "src/components/bottom-panel";
+// import { BottomPanel } from "src/components/bottom-panel";
 import { ChatInstanceContext, useChatStore } from "src/components/chat-store";
 import { Chat } from "src/components/chat/chat";
 import { CommandPalette } from "src/components/command-palette";
@@ -40,11 +40,18 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "src/components/ui/resizable";
+import * as ResizablePrimitive from "react-resizable-panels";
 import { WebsiteTree } from "src/components/website-tree/website-tree";
 import { trpc } from "src/lib/trpc";
 import { cn } from "src/lib/utils";
 import { Button } from "src/components/ui/button";
 import usePersistQueryClient from "src/hooks/use-persist-query-client";
+import dynamic from "next/dynamic";
+import { ChildToParentMessage } from "zenbu-devtools";
+
+const BottomPanel = dynamic(() => import("src/components/bottom-panel"), {
+  ssr: false,
+});
 
 interface SidebarState {
   component: "chat" | "websiteTree" | "reactTree" | null;
@@ -76,7 +83,9 @@ export default function Home() {
   const [showLeaderHints, setShowLeaderHints] = useState(false);
   const [leaderTimeoutId, setLeaderTimeoutId] = useState<number | null>(null);
 
-  usePersistQueryClient();
+  const bottomPanelRef =
+    useRef<ResizablePrimitive.ImperativePanelHandle | null>(null);
+  // usePersistQueryClient();
 
   useEffect(() => {
     const handleToggleChat = (event: CustomEvent) =>
@@ -130,6 +139,14 @@ export default function Home() {
         e.preventDefault();
         setProjectPaletteOpen((prev) => !prev);
       }
+      console.log("key");
+
+      if (e.key === "j" && e.metaKey) {
+        console.log("do i run???");
+
+        e.preventDefault();
+        setBottomPanelVisible((prev) => !prev);
+      }
 
       if (showLeaderHints && e.key === "Escape") {
         e.preventDefault();
@@ -165,6 +182,52 @@ export default function Home() {
       }
     };
 
+    const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
+      const data = event.data;
+
+      if (data.kind === "keydown") {
+        const e = data;
+
+        if (e.key === "p" && e.metaKey) {
+          setProjectPaletteOpen((prev) => !prev);
+        }
+
+        if (e.key === "j" && e.metaKey) {
+          setBottomPanelVisible((prev) => !prev);
+        }
+
+        if (showLeaderHints && e.key === "Escape") {
+          setShowLeaderHints(false);
+          return;
+        }
+
+        if (leaderKeyPending) {
+          if (leaderTimeoutId) clearTimeout(leaderTimeoutId);
+          setLeaderTimeoutId(null);
+          setLeaderKeyPending(false);
+
+          console.log(`Leader combination: Space + ${e.key}`);
+          return;
+        }
+
+        if (e.key === " " && !e.repeat) {
+          setLeaderKeyPending(true);
+
+          const timeoutId = window.setTimeout(() => {
+            setShowLeaderHints(true);
+            setLeaderKeyPending(false);
+            setLeaderTimeoutId(null);
+          }, 300);
+          setLeaderTimeoutId(timeoutId);
+          return;
+        }
+
+        if (showLeaderHints && e.key !== "Escape") {
+          setShowLeaderHints(false);
+        }
+      }
+    };
+
     const handleToggleNextLint = () => {
       setShowNextLint((prev) => !prev);
     };
@@ -187,6 +250,7 @@ export default function Home() {
     window.addEventListener("toggle-bottom-panel", handleToggleBottomPanel);
     window.addEventListener("toggle-next-lint", handleToggleNextLint);
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("message", handleMessage);
 
     return () => {
       window.removeEventListener(
@@ -219,8 +283,9 @@ export default function Home() {
       );
       window.removeEventListener("toggle-next-lint", handleToggleNextLint);
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("message", handleMessage);
     };
-  }, [isAnimating]);
+  }, [isAnimating, leaderKeyPending, leaderTimeoutId, showLeaderHints]);
 
   const toggleSidebar = (
     component: "chat" | "websiteTree" | "reactTree",
@@ -270,10 +335,81 @@ export default function Home() {
   // i guess it would also be good to always spawn on the last project user was on, that feels more like a local state thing
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
   const project = projects.at(0);
+  const createProjectMutation = trpc.daemon.createProject.useMutation();
 
   if (!project) {
-    throw new Error(
-      "invariant: must have projects for now, nice onboarding screen later",
+    return (
+      <div className="flex h-screen w-full flex-col bg-background">
+        <header className="border-b border-border px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-6 w-6 text-primary"
+                fill="currentColor"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+              <span className="text-xl font-bold">Zenbu</span>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex flex-1 items-center justify-center">
+          <div className="max-w-2xl px-6 py-12 text-center">
+            <h1 className="mb-4 text-4xl font-bold tracking-tight">
+              Welcome to Zenbu
+            </h1>
+            <p className="mb-8 text-xl text-muted-foreground">
+              Your intelligent development environment
+            </p>
+
+            <div className="mx-auto max-w-md">
+              <div className="mb-6 rounded-lg border border-border bg-card p-6">
+                <h2 className="mb-4 text-xl font-semibold">
+                  Create your first project
+                </h2>
+                <p className="mb-6 text-muted-foreground">
+                  Start by creating a new project to explore all the features
+                  Zenbu has to offer.
+                </p>
+                <Button
+                  variant={"outline"}
+                  onClick={() => {
+                    createProjectMutation.mutate();
+                  }}
+                  disabled={createProjectMutation.isPending}
+                  className="w-full"
+                >
+                  {createProjectMutation.isPending ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Creating your project...
+                    </span>
+                  ) : (
+                    "Create New Project"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -285,6 +421,7 @@ export default function Home() {
         initialValue={{
           iframe: {
             url: `http://localhost:${project.port}`,
+            projectId: project.id!, // whatever
           },
           toolbar: {
             state: {
@@ -565,18 +702,33 @@ export default function Home() {
                   </ResizablePanelGroup>
                 </ResizablePanel>
 
-                <AnimatePresence>
-                  {bottomPanelVisible && (
-                    <>
-                      <ResizablePanel defaultSize={30} minSize={15}>
-                        <BottomPanel
-                          isOpen={bottomPanelVisible}
-                          onClose={() => setBottomPanelVisible(false)}
-                        />
-                      </ResizablePanel>
-                    </>
-                  )}
-                </AnimatePresence>
+                {bottomPanelVisible && (
+                  <>
+                    <ResizableHandle withHandle />
+                    <ResizablePanel ref={bottomPanelRef} defaultSize={30}>
+                      <BottomPanel
+                        open={() => {
+                          setBottomPanelVisible(true);
+                        }}
+                        isOpen={bottomPanelVisible}
+                        close={() => {
+                          // doesn't work, ill figure it out later idec anymore
+                          bottomPanelRef.current?.resize(0);
+                          setBottomPanelVisible(false);
+                        }}
+                      />
+                    </ResizablePanel>
+                  </>
+                )}
+                {/* <div
+                  style={
+                    {
+                      // maxHeight: bottomPanelVisible ? "auto" : "0px",
+                    }
+                  }
+                > */}
+
+                {/* </div> */}
               </ResizablePanelGroup>
             </div>
 

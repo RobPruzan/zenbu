@@ -132,15 +132,15 @@ export const injectWebSocket = (server: HttpServer) => {
       // for the server event i guess we should wrap it too sending the project id back for validation + consistency
       async ({
         event,
-        projectChatId,
+        projectId,
       }: {
         event: ClientMessageEvent | ClientTaskEvent;
-        projectChatId: string;
+        projectId: string;
       }) => {
         // should confirm ordering, but almost certainly never gonna lose the race
         trpc.project.persistEvent.mutate({
           event,
-          projectChatId,
+          projectId,
         });
         const emitEvent = (text: string, threadId?: string) => {
           const assistantEventArg: Parameters<typeof emitAssistantMessage>[0] =
@@ -150,12 +150,12 @@ export const injectWebSocket = (server: HttpServer) => {
               roomId,
               text,
               threadId: threadId ?? null,
-              projectChatId,
+              projectId,
             };
           trpc.project.persistEvent.mutate({
             event: makeAssistantEvent(assistantEventArg),
             // project chat
-            projectChatId,
+            projectId,
           });
           emitAssistantMessage(assistantEventArg);
         };
@@ -356,10 +356,10 @@ const emitAssistantMessage = (arg: {
   requestId: string;
   text: string;
   threadId: null | string;
-  projectChatId: string;
+  projectId: string;
 }) => {
   arg.ioServer.to(arg.roomId).emit("message", {
-    projectChatId: arg.requestId,
+    projectId: arg.requestId,
     event: makeAssistantEvent(arg),
   });
 };

@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>macOS Dark Clone</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><rect width='32' height='32' rx='8' fill='%23222222'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white'></text></svg>"
+    />
+    <style>
+      :root {
+        --bg: #18191a;
+        --bar: #23242a;
+        --bar-blur: rgba(35, 36, 42, 0.85);
+        --dock: #23242aee;
+        --window: #23242a;
+        --window-border: #444;
+        --window-header: #23242a;
+        --window-header-blur: rgba(35, 36, 42, 0.85);
+        --text: #f5f5f7;
+        --text-dim: #b0b0b3;
+        --accent: #0a84ff;
+        --icon-hover: #333;
+        --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        --radius: 12px;
+        --dock-radius: 22px;
+        --dock-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.45);
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "San Francisco", "Segoe UI", "Arial", sans-serif;
+        user-select: none;
+        overflow: hidden;
+      }
+      /* Top Bar */
+      .topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 36px;
+        background: var(--bar-blur);
+        backdrop-filter: blur(16px);
+        display: flex;
+        align-items: center;
+        z-index: 100;
+        box-shadow: 0 1px 0 0 #2228;
+        padding: 0 16px;
+        font-size: 15px;
+      }
+      .topbar .menu {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      .topbar .menu .icon {
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+        margin-right: 4px;
+        display: inline-block;
+      }
+      .topbar .menu .apple {
+        width: 22px;
+        height: 22px;
+        margin-right: 8px;
+        margin-top: 2px;
+      }
+      .topbar .right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 14px;
+        color: var(--text-dim);
+      }
+      .topbar .right .icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 2px;
+        vertical-align: middle;
+      }
+      /* Dock */
+      .dock {
+        position: fixed;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        background: var(--dock);
+        border-radius: var(--dock-radius);
+        box-shadow: var(--dock-shadow);
+        padding: 10px 22px 8px 22px;
+        display: flex;
+        gap: 18px;
+        z-index: 90;
+        backdrop-filter: blur(16px);
+        border: 1px solid #2226;
+      }
+      .dock .dock-icon {
+        width: 54px;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        transition:
+          transform 0.18s cubic-bezier(0.4, 2, 0.6, 1),
+          background 0.2s;
+        cursor: pointer;
+        position: relative;
+      }
+      .dock .dock-icon:hover {
+        background: var(--icon-hover);
+        transform: scale(1.18);
+        z-index: 2;
+      }
+      .dock .dot {
+        position: absolute;
+        bottom: 7px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 8px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 50%;
+        box-shadow: 0 0 6px 2px #0a84ff88;
+        opacity: 0.8;
+      }
+      /* Finder Window */
+      .window {
+        position: absolute;
+        top: 80px;
+        left: 120px;
+        width: 420px;
+        height: 320px;
+        background: var(--window);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1.5px solid var(--window-border);
+        overflow: hidden;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        min-width: 280px;
+        min-height: 180px;
+        resize: both;
+      }
+      .window-header {
+        height: 38px;
+        background: var(--window-header-blur);
+        backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        padding: 0 14px;
+        border-bottom: 1px solid #3338;
+        cursor: grab;
+        user-select: none;
+      }
+      .window-header .window-controls {
+        display: flex;
+        gap: 7px;
+        margin-right: 12px;
+      }
+      .window-header .window-controls .ctrl {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-top: 1px;
+        border: 1px solid #2226;
+      }
+      .window-header .close {
+        background: #ff5f56;
+      }
+      .window-header .min {
+        background: #ffbd2e;
+      }
+      .window-header .max {
+        background: #27c93f;
+      }
+      .window-header .title {
+        font-weight: 500;
+        font-size: 15px;
+        color: var(--text-dim);
+        margin-left: 2px;
+        letter-spacing: 0.01em;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .window-content {
+        flex: 1;
+        background: #23242a;
+        padding: 18px 22px;
+        color: var(--text);
+        font-size: 16px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .window-content .icon {
+        width: 22px;
+        height: 22px;
+        vertical-align: middle;
+        margin-right: 7px;
+      }
+      .window-content ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .window-content li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-radius: 6px;
+        transition: background 0.15s;
+        cursor: pointer;
+      }
+      .window-content li:hover {
+        background: #2a2b31;
+      }
+      /* Responsive */
+      @media (max-width: 600px) {
+        .window {
+          width: 95vw !important;
+          left: 2vw !important;
+          min-width: 180px;
+        }
+        .dock {
+          padding: 8px 8px 6px 8px;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="menu">
+        <span class="apple">
+          <!-- Apple SVG -->
+          <svg class="icon" viewBox="0 0 24 24" fill="white">
+            <path
+              d="M16.7 2.6c0 1.1-.4 2.1-1.1 2.9-.8.9-2.1 1.6-3.2 1.5-.1-1.1.4-2.2 1.1-3 .8-.9 2.2-1.6 3.2-1.4zm3.2 15.2c-.4.8-.8 1.5-1.3 2.2-.8 1.1-1.6 2.1-2.8 2.1-1.1 0-1.4-.7-2.8-.7s-1.8.7-2.8.7c-1.2 0-2.1-1.1-2.8-2.1-1.9-2.7-3.3-7.6-1.4-10.9.8-1.4 2.2-2.2 3.7-2.2 1.1 0 2.1.8 2.8.8.7 0 1.9-.9 3.2-.8 1.1.1 2.2.6 3 1.5-2.6 1.4-2.2 5.1.4 6.1zm-4.1-13.2c0-.1 0-.1 0 0z"
+            />
+          </svg>
+        </span>
+        <span>Finder</span>
+        <span>Edit</span>
+        <span>View</span>
+        <span>Go</span>
+        <span>Window</span>
+        <span>Help</span>
+      </div>
+      <div class="right">
+        <span>
+          <!-- WiFi SVG -->
+          <svg
+            class="icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+          >
+            <path d="M2 8.82a15.91 15.91 0 0 1 20 0" />
+            <path d="M5.5 12.5a10.91 10.91 0 0 1 13 0" />
+            <path d="M8.5 16.5a5.91 5.91 0 0 1 7 0" />
+            <circle cx="12" cy="20" r="1.5" fill="white" />
+          </svg>
+        </span>
+        <span>
+          <!-- Battery SVG -->
+          <svg
+            class="icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+          >
+            <rect x="2" y="7" width="18" height="10" rx="3" />
+            <rect x="20" y="10" width="2" height="4" rx="1" fill="white" />
+          </svg>
+        </span>
+        <span id="clock"></span>
+      </div>
+    </div>
+    <!-- Finder Window -->
+    <div class="window" id="finder">
+      <div class="window-header" id="finder-header">
+        <div class="window-controls">
+          <span class="ctrl close"></span>
+          <span class="ctrl min"></span>
+          <span class="ctrl max"></span>
+        </div>
+        <span class="title">
+          <!-- Finder SVG -->
+          <svg class="icon" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="2" width="20" height="20" rx="5" fill="#3a7afe" />
+            <path
+              d="M7 8c1.5 2 3.5 2 5 0"
+              stroke="white"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <circle cx="8.5" cy="11.5" r="1" fill="white" />
+            <circle cx="15.5" cy="11.5" r="1" fill="white" />
+          </svg>
+          Finder
+        </span>
+      </div>
+      <div class="window-content">
+        <ul>
+          <li>
+            <!-- Home SVG -->
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#0a84ff"
+              stroke-width="2"
+            >
+              <path d="M3 12l9-9 9 9" />
+              <path d="M9 21V9h6v12" />
+            </svg>
+            Home
+          </li>
+          <li>
+            <!-- Documents SVG -->
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#0a84ff"
+              stroke-width="2"
+            >
+              <rect x="4" y="4" width="16" height="16" rx="3" />
+              <path d="M8 8h8M8 12h8M8 16h4" />
+            </svg>
+            Documents
+          </li>
+          <li>
+            <!-- Downloads SVG -->
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#0a84ff"
+              stroke-width="2"
+            >
+              <path d="M12 5v14" />
+              <path d="M19 12l-7 7-7-7" />
+            </svg>
+            Downloads
+          </li>
+          <li>
+            <!-- Pictures SVG -->
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#0a84ff"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="4" />
+              <circle cx="8.5" cy="8.5" r="2.5" />
+              <path d="M21 15l-5-5-4 4-7 7" />
+            </svg>
+            Pictures
+          </li>
+          <li>
+            <!-- Music SVG -->
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#0a84ff"
+              stroke-width="2"
+            >
+              <circle cx="8" cy="19" r="3" />
+              <circle cx="18" cy="17" r="3" />
+              <path d="M13 17V5l7-2" />
+            </svg>
+            Music
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- Dock -->
+    <div class="dock">
+      <div class="dock-icon" title="Finder" onclick="showFinder()">
+        <!-- Finder SVG -->
+        <svg viewBox="0 0 48 48" width="38" height="38">
+          <rect x="4" y="4" width="40" height="40" rx="10" fill="#3a7afe" />
+          <path
+            d="M14 16c3 4 7 4 10 0"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+          <circle cx="17" cy="23" r="2" fill="white" />
+          <circle cx="31" cy="23" r="2" fill="white" />
+        </svg>
+        <span class="dot"></span>
+      </div>
+      <div class="dock-icon" title="Safari">
+        <!-- Safari SVG -->
+        <svg viewBox="0 0 48 48" width="38" height="38">
+          <circle cx="24" cy="24" r="20" fill="#222" />
+          <circle cx="24" cy="24" r="18" fill="#3a7afe" />
+          <path d="M24 24l10-4" stroke="#ff453a" stroke-width="2" />
+          <path d="M24 24l-6 10" stroke="#32d74b" stroke-width="2" />
+          <circle cx="24" cy="24" r="4" fill="#fff" />
+        </svg>
+      </div>
+      <div class="dock-icon" title="Mail">
+        <!-- Mail SVG -->
+        <svg viewBox="0 0 48 48" width="38" height="38">
+          <rect x="8" y="12" width="32" height="24" rx="6" fill="#222" />
+          <rect x="10" y="14" width="28" height="20" rx="4" fill="#3a7afe" />
+          <path d="M10 14l14 12 14-12" stroke="#fff" stroke-width="2" />
+        </svg>
+      </div>
+      <div class="dock-icon" title="Music">
+        <!-- Music SVG -->
+        <svg viewBox="0 0 48 48" width="38" height="38">
+          <circle cx="16" cy="36" r="6" fill="#ff375f" />
+          <circle cx="34" cy="32" r="6" fill="#0a84ff" />
+          <rect x="22" y="10" width="4" height="20" rx="2" fill="#fff" />
+          <rect x="26" y="10" width="4" height="16" rx="2" fill="#fff" />
+        </svg>
+      </div>
+      <div class="dock-icon" title="System Preferences">
+        <!-- Settings SVG -->
+        <svg viewBox="0 0 48 48" width="38" height="38">
+          <circle cx="24" cy="24" r="18" fill="#222" />
+          <circle cx="24" cy="24" r="12" fill="#3a7afe" />
+          <circle cx="24" cy="24" r="6" fill="#fff" />
+          <g stroke="#fff" stroke-width="2">
+            <path d="M24 6v6" />
+            <path d="M24 36v6" />
+            <path d="M6 24h6" />
+            <path d="M36 24h6" />
+            <path d="M12.9 12.9l4.2 4.2" />
+            <path d="M31 31l4.2 4.2" />
+            <path d="M12.9 35.1l4.2-4.2" />
+            <path d="M31 17l4.2-4.2" />
+          </g>
+        </svg>
+      </div>
+      <div class="dock-icon" title="Trash">
+        <!-- Trash SVG -->
+        <svg viewBox="0 0 48 48" width="38" height="38">
+          <rect x="14" y="18" width="20" height="18" rx="4" fill="#222" />
+          <rect x="18" y="10" width="12" height="8" rx="3" fill="#3a7afe" />
+          <rect x="20" y="22" width="2" height="10" rx="1" fill="#fff" />
+          <rect x="26" y="22" width="2" height="10" rx="1" fill="#fff" />
+        </svg>
+      </div>
+    </div>
+    <script>
+      // Clock
+      function updateClock() {
+        const now = new Date();
+        let h = now.getHours();
+        let m = now.getMinutes();
+        let ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12;
+        h = h ? h : 12;
+        m = m < 10 ? "0" + m : m;
+        document.getElementById("clock").textContent = h + ":" + m + " " + ampm;
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // Finder window drag
+      (function () {
+        const win = document.getElementById("finder");
+        const header = document.getElementById("finder-header");
+        let offsetX,
+          offsetY,
+          dragging = false;
+
+        header.addEventListener("mousedown", function (e) {
+          dragging = true;
+          offsetX = e.clientX - win.offsetLeft;
+          offsetY = e.clientY - win.offsetTop;
+          header.style.cursor = "grabbing";
+        });
+        document.addEventListener("mousemove", function (e) {
+          if (dragging) {
+            let x = e.clientX - offsetX;
+            let y = e.clientY - offsetY;
+            // Keep window in viewport
+            x = Math.max(0, Math.min(window.innerWidth - win.offsetWidth, x));
+            y = Math.max(
+              36,
+              Math.min(window.innerHeight - win.offsetHeight, y),
+            );
+            win.style.left = x + "px";
+            win.style.top = y + "px";
+          }
+        });
+        document.addEventListener("mouseup", function () {
+          dragging = false;
+          header.style.cursor = "grab";
+        });
+      })();
+
+      // Finder window controls
+      document.querySelector(".window-header .close").onclick = function () {
+        document.getElementById("finder").style.display = "none";
+      };
+      document.querySelector(".window-header .min").onclick = function () {
+        document.getElementById("finder").style.height = "38px";
+        document.getElementById("finder").style.overflow = "hidden";
+      };
+      document.querySelector(".window-header .max").onclick = function () {
+        const win = document.getElementById("finder");
+        win.style.width = "90vw";
+        win.style.height = "80vh";
+        win.style.left = "5vw";
+        win.style.top = "50px";
+        win.style.overflow = "auto";
+      };
+
+      // Show Finder from Dock
+      function showFinder() {
+        const win = document.getElementById("finder");
+        win.style.display = "flex";
+        win.style.width = "420px";
+        win.style.height = "320px";
+        win.style.left = "120px";
+        win.style.top = "80px";
+        win.style.overflow = "auto";
+      }
+      window.showFinder = showFinder;
+    </script>
+  </body>
+</html>

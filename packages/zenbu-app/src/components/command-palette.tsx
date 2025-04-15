@@ -87,9 +87,10 @@ export function CommandPalette({ items }: { items: Array<Command> }) {
     };
 
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-      if (event.origin !== "http://localhost:4200") {
-        return;
-      }
+      // breaks if yo use react devtools
+      // if (event.origin !== "http://localhost:4200") {
+      //   return;
+      // }
       const data = event.data;
 
       switch (data.kind) {

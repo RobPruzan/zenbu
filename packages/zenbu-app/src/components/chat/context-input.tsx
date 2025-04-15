@@ -161,7 +161,7 @@ export const ChatTextArea = () => {
 
     syncSelectedItems();
   };
-
+  const projectId = useChatStore((state) => state.iframe.state.projectId);
   const insertMention = (mention: string) => {
     const chatInput = chatInputRef.current;
     if (!chatInput) return;
@@ -515,7 +515,7 @@ export const ChatTextArea = () => {
 
             actions.setItems([]);
             eventLog.actions.pushEvent(clientEvent);
-            socket.emit("message", clientEvent);
+            socket.emit("message", { event: clientEvent, projectId });
             target.textContent = "";
           }
         }}

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Twitter Clone</title>
+    <style>
+      /* Reset some default styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #f5f8fa;
+        color: #14171a;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* Header styles */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 20px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #e1e8ed;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+
+      .logo {
+        font-weight: bold;
+        font-size: 24px;
+        color: #1da1f2;
+      }
+
+      .search-container {
+        flex: 1;
+        max-width: 400px;
+        margin: 0 20px;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e1e8ed;
+        border-radius: 20px;
+        background-color: #f5f8fa;
+        font-size: 14px;
+      }
+
+      /* Layout styles */
+      .container {
+        display: flex;
+        flex: 1;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      /* Sidebar styles */
+      aside.sidebar {
+        width: 250px;
+        padding: 20px;
+        border-right: 1px solid #e1e8ed;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        cursor: pointer;
+        font-size: 16px;
+        color: #657786;
+        transition:
+          background-color 0.2s,
+          color 0.2s;
+      }
+
+      .nav-item:hover {
+        background-color: #e8f5fd;
+        color: #1da1f2;
+      }
+
+      .nav-icon {
+        margin-right: 15px;
+        font-size: 20px;
+      }
+
+      /* Main feed styles */
+      main.feed {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Tweet box styles */
+      .tweet-box {
+        display: flex;
+        padding: 15px 0;
+        border-bottom: 1px solid #e1e8ed;
+      }
+
+      .profile-pic {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-right: 15px;
+        flex-shrink: 0;
+      }
+
+      .tweet-input {
+        flex: 1;
+      }
+
+      .tweet-input textarea {
+        width: 100%;
+        border: none;
+        resize: none;
+        font-size: 14px;
+        line-height: 1.4;
+        outline: none;
+      }
+
+      /* Tweets styles */
+      .tweets {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .tweet {
+        display: flex;
+        padding: 15px 0;
+        border-bottom: 1px solid #e1e8ed;
+      }
+
+      .tweet-content {
+        flex: 1;
+      }
+
+      .tweet-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+
+      .tweet-author {
+        font-weight: bold;
+        margin-right: 5px;
+        font-size: 14px;
+      }
+
+      .tweet-handle {
+        color: #657786;
+        font-size: 14px;
+        margin-right: 5px;
+      }
+
+      .tweet-time {
+        color: #657786;
+        font-size: 14px;
+      }
+
+      .tweet-text {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      /* Interaction icons */
+      .tweet-actions {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 10px;
+        max-width: 400px;
+      }
+
+      .action {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-size: 14px;
+        color: #657786;
+        transition: color 0.2s;
+      }
+
+      .action:hover {
+        color: #1da1f2;
+      }
+
+      .action svg {
+        margin-right: 6px;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 1024px) {
+        aside.sidebar {
+          width: 200px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          flex-direction: column;
+        }
+        .container {
+          flex-direction: column;
+        }
+        aside.sidebar {
+          width: 100%;
+          flex-direction: row;
+          justify-content: space-around;
+          border-bottom: 1px solid #e1e8ed;
+        }
+        main.feed {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="logo">Twitter</div>
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search Twitter" />
+      </div>
+    </header>
+
+    <!-- Main layout -->
+    <div class="container">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="nav-item">
+          <div class="nav-icon">🏠</div>
+          <div>Home</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">🔎</div>
+          <div>Explore</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">🔔</div>
+          <div>Notifications</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">✉️</div>
+          <div>Messages</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">🔖</div>
+          <div>Bookmarks</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">⚙️</div>
+          <div>Settings</div>
+        </div>
+      </aside>
+
+      <!-- Main Feed -->
+      <main class="feed">
+        <!-- Tweet Input -->
+        <div class="tweet-box">
+          <img
+            src="https://via.placeholder.com/50"
+            alt="Profile"
+            class="profile-pic"
+          />
+          <div class="tweet-input">
+            <textarea rows="3" placeholder="What's happening?"></textarea>
+          </div>
+        </div>
+
+        <!-- Tweets List -->
+        <div class="tweets">
+          <!-- Example Tweet -->
+          <div class="tweet">
+            <img
+              src="https://via.placeholder.com/50"
+              alt="Profile"
+              class="profile-pic"
+            />
+            <div class="tweet-content">
+              <div class="tweet-header">
+                <span class="tweet-author">Jane Doe</span>
+                <span class="tweet-handle">@janedoe</span>
+                <span class="tweet-time">• 2h</span>
+              </div>
+              <div class="tweet-text">
+                Just finished a great coding session! 🚀 #coding #developer
+              </div>
+              <div class="tweet-actions">
+                <div class="action">
+                  <!-- Like Icon -->
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 8.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l8.84 8.84 8.84-8.84a5.5 5.5 0 0 0 0-7.78z"
+                    ></path>
+                  </svg>
+                  <span>Like</span>
+                </div>
+                <div class="action">
+                  <!-- Comment Icon -->
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                    ></path>
+                  </svg>
+                  <span>Comment</span>
+                </div>
+                <div class="action">
+                  <!-- Share Icon -->
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19l-7-7 7-7"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                  <span>Share</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add more tweets as needed -->
+          <div class="tweet">
+            <img
+              src="https://via.placeholder.com/50"
+              alt="Profile"
+              class="profile-pic"
+            />
+            <div class="tweet-content">
+              <div class="tweet-header">
+                <span class="tweet-author">John Smith</span>
+                <span class="tweet-handle">@johnsmith</span>
+                <span class="tweet-time">• 5h</span>
+              </div>
+              <div class="tweet-text">
+                Loving the new features in HTML and CSS! 🎉 #webdevelopment
+              </div>
+              <div class="tweet-actions">
+                <div class="action">
+                  <!-- Like Icon -->
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 8.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l8.84 8.84 8.84-8.84a5.5 5.5 0 0 0 0-7.78z"
+                    ></path>
+                  </svg>
+                  <span>Like</span>
+                </div>
+                <div class="action">
+                  <!-- Comment Icon -->
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                    ></path>
+                  </svg>
+                  <span>Comment</span>
+                </div>
+                <div class="action">
+                  <!-- Share Icon -->
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19l-7-7 7-7"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                  <span>Share</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

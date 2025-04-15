@@ -24,10 +24,7 @@
     "incremental": true,
 
     /* Path Aliases */
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./src/*"]
-    }
+    "baseUrl": "."
   },
   "include": [
     ".eslintrc.cjs",

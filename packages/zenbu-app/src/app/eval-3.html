@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>VSCode Clone - Single File</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        --bg: #1e1e1e;
+        --sidebar: #23272e;
+        --sidebar-active: #2c313a;
+        --tab-bg: #23272e;
+        --tab-active: #1e1e1e;
+        --tab-border: #252526;
+        --tab-text: #d4d4d4;
+        --tab-active-text: #fff;
+        --explorer-bg: #23272e;
+        --explorer-hover: #313640;
+        --explorer-text: #d4d4d4;
+        --icon: #bfbfbf;
+        --icon-active: #3794ff;
+        --editor-bg: #1e1e1e;
+        --editor-border: #252526;
+        --statusbar: #007acc;
+        --statusbar-text: #fff;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--tab-text);
+        font-family: "Segoe UI", "Fira Mono", "monospace", Arial, sans-serif;
+        font-size: 15px;
+        overflow: hidden;
+      }
+      body {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+      }
+      #container {
+        flex: 1;
+        display: flex;
+        height: 100%;
+        width: 100vw;
+        min-width: 0;
+        min-height: 0;
+      }
+      .sidebar {
+        width: 50px;
+        background: var(--sidebar);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 0;
+        gap: 8px;
+        border-right: 1px solid var(--editor-border);
+        user-select: none;
+      }
+      .sidebar .icon-btn {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-bottom: 2px;
+        transition: background 0.15s;
+      }
+      .sidebar .icon-btn.active,
+      .sidebar .icon-btn:hover {
+        background: var(--sidebar-active);
+      }
+      .sidebar svg {
+        width: 22px;
+        height: 22px;
+        fill: var(--icon);
+        transition: fill 0.15s;
+      }
+      .sidebar .icon-btn.active svg {
+        fill: var(--icon-active);
+      }
+      .explorer {
+        width: 220px;
+        background: var(--explorer-bg);
+        border-right: 1px solid var(--editor-border);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        user-select: none;
+      }
+      .explorer-header {
+        padding: 10px 16px 6px 16px;
+        font-weight: bold;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        color: #bbb;
+        border-bottom: 1px solid var(--editor-border);
+      }
+      .explorer-files {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+      }
+      .explorer-file {
+        display: flex;
+        align-items: center;
+        padding: 4px 16px;
+        gap: 8px;
+        cursor: pointer;
+        color: var(--explorer-text);
+        border-radius: 4px;
+        font-size: 14px;
+        transition: background 0.12s;
+      }
+      .explorer-file:hover,
+      .explorer-file.active {
+        background: var(--explorer-hover);
+      }
+      .explorer-file svg {
+        width: 18px;
+        height: 18px;
+        fill: var(--icon);
+        flex-shrink: 0;
+      }
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        background: var(--editor-bg);
+      }
+      .tabs {
+        display: flex;
+        align-items: center;
+        height: 36px;
+        background: var(--tab-bg);
+        border-bottom: 1px solid var(--tab-border);
+        overflow-x: auto;
+        min-width: 0;
+      }
+      .tab {
+        display: flex;
+        align-items: center;
+        padding: 0 16px 0 10px;
+        height: 100%;
+        cursor: pointer;
+        background: var(--tab-bg);
+        color: var(--tab-text);
+        border-right: 1px solid var(--tab-border);
+        font-size: 14px;
+        gap: 8px;
+        position: relative;
+        transition: background 0.12s;
+        min-width: 80px;
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .tab.active {
+        background: var(--tab-active);
+        color: var(--tab-active-text);
+        font-weight: 500;
+      }
+      .tab svg {
+        width: 16px;
+        height: 16px;
+        fill: var(--icon);
+        flex-shrink: 0;
+      }
+      .tab .close {
+        margin-left: 8px;
+        width: 16px;
+        height: 16px;
+        fill: #888;
+        cursor: pointer;
+        opacity: 0.7;
+        transition:
+          fill 0.15s,
+          opacity 0.15s;
+      }
+      .tab .close:hover {
+        fill: #f14c4c;
+        opacity: 1;
+      }
+      #editor {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+        background: var(--editor-bg);
+        border: none;
+      }
+      .statusbar {
+        height: 26px;
+        background: var(--statusbar);
+        color: var(--statusbar-text);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        font-size: 13px;
+        letter-spacing: 0.2px;
+        user-select: none;
+      }
+      /* Scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 8px;
+        background: #23272e;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #23272e;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #313640;
+      }
+    </style>
+    <!-- Monaco Editor CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+  </head>
+  <body>
+    <div id="container">
+      <div class="sidebar" id="sidebar">
+        <div class="icon-btn active" data-panel="explorer" title="Explorer">
+          <!-- File Explorer Icon -->
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M3 5v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-7.17a2 2 0 0 1-1.41-.59l-1.83-1.83A2 2 0 0 0 7.17 2H5a2 2 0 0 0-2 2zm2 0h2.17l1.83 1.83A2 2 0 0 0 10.59 7H19v12H5V5z"
+            />
+          </svg>
+        </div>
+        <div class="icon-btn" data-panel="search" title="Search">
+          <!-- Search Icon -->
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99a1 1 0 0 0 1.41-1.41l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+            />
+          </svg>
+        </div>
+        <div class="icon-btn" data-panel="scm" title="Source Control">
+          <!-- Source Control Icon -->
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M17 16.95V13.5a2.5 2.5 0 1 0-2 0v3.45a4.5 4.5 0 1 0 2 0zm-1-5.45a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm-8 7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zm0-7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+            />
+          </svg>
+        </div>
+        <div class="icon-btn" data-panel="run" title="Run & Debug">
+          <!-- Run Icon -->
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+        </div>
+        <div class="icon-btn" data-panel="extensions" title="Extensions">
+          <!-- Extensions Icon -->
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M20.29 8.37l-4.66-4.66a2 2 0 0 0-2.83 0l-1.17 1.17 7.49 7.49 1.17-1.17a2 2 0 0 0 0-2.83zm-9.19 9.19l-4.66-4.66a2 2 0 0 1 0-2.83l1.17-1.17 7.49 7.49-1.17 1.17a2 2 0 0 1-2.83 0z"
+            />
+          </svg>
+        </div>
+      </div>
+      <div class="explorer" id="explorer">
+        <div class="explorer-header">EXPLORER</div>
+        <div class="explorer-files" id="explorer-files">
+          <!-- Files will be rendered here -->
+        </div>
+      </div>
+      <div class="main">
+        <div class="tabs" id="tabs">
+          <!-- Tabs will be rendered here -->
+        </div>
+        <div id="editor"></div>
+      </div>
+    </div>
+    <div class="statusbar" id="statusbar">
+      VSCode Clone &mdash; All in one HTML file
+    </div>
+    <script>
+      // --- File System (in-memory) ---
+      const files = [
+        {
+          name: "index.html",
+          icon: "html",
+          content: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello World</title>
+  </head>
+  <body>
+    <h1>Hello, VSCode Clone!</h1>
+  </body>
+</html>
+`,
+        },
+        {
+          name: "main.js",
+          icon: "js",
+          content: `console.log("Hello, VSCode Clone!");`,
+        },
+        {
+          name: "style.css",
+          icon: "css",
+          content: `body {
+  background: #1e1e1e;
+  color: #fff;
+}`,
+        },
+        {
+          name: "README.md",
+          icon: "md",
+          content: `# VSCode Clone
+
+This is a single-file VSCode clone with Monaco Editor!
+`,
+        },
+      ];
+
+      // --- Icon SVGs ---
+      const icons = {
+        html: `<svg viewBox="0 0 24 24"><path d="M1.5 0l1.7 19.1L12 24l8.8-4.9L22.5 0H1.5zm16.2 6.9l-.2 2.2-.1 1.2H7.1l.2 2.3h8.2l-.2 2.2-.1 1.2-3.2 1.4v.1h-.1l-3.2-1.4-.2-2.2h2.1l.1 1.1 1.2.5 1.2-.5.1-1.1H7.1l-.2-2.2-.1-1.2h10.2l-.2-2.2z"/></svg>`,
+        js: `<svg viewBox="0 0 24 24"><path d="M2 2v20h20V2H2zm11.5 17.1c0 1.2-.7 2-2.1 2-1.1 0-1.7-.6-2.1-1.3l1.2-.7c.2.4.4.7.9.7.4 0 .7-.2.7-.8v-4.3h1.4v4.4zm4.7 2c-1.3 0-2.1-.6-2.5-1.4l1.2-.7c.3.5.7.9 1.3.9.5 0 .8-.2.8-.6 0-.4-.3-.5-.9-.8l-.3-.1c-.9-.4-1.5-.9-1.5-2 0-1 .8-1.7 2-1.7.9 0 1.6.3 2.1 1.2l-1.1.7c-.2-.4-.5-.6-.9-.6-.4 0-.7.2-.7.6 0 .4.3.6.9.8l.3.1c1 .4 1.6.9 1.6 2.1 0 1.2-.9 1.8-2.1 1.8z"/></svg>`,
+        css: `<svg viewBox="0 0 24 24"><path d="M1.5 0l1.7 19.1L12 24l8.8-4.9L22.5 0H1.5zm16.2 6.9l-.2 2.2-.1 1.2H7.1l.2 2.3h8.2l-.2 2.2-.1 1.2-3.2 1.4v.1h-.1l-3.2-1.4-.2-2.2h2.1l.1 1.1 1.2.5 1.2-.5.1-1.1H7.1l-.2-2.2-.1-1.2h10.2l-.2-2.2z"/></svg>`,
+        md: `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8.5 12H7v-2.5l-1.25 1.5L4.5 12.5V15H3v-6h1.5l1.25 1.5L7 9H8.5v6zm7.5 0h-1.5v-2.25l-1.25 1.5-1.25-1.5V15H10v-6h1.5l1.25 1.5 1.25-1.5H17v6z"/></svg>`,
+        default: `<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="#bfbfbf"/></svg>`,
+      };
+
+      // --- Tabs State ---
+      let openTabs = [];
+      let activeTab = null;
+
+      // --- DOM Elements ---
+      const explorerFiles = document.getElementById("explorer-files");
+      const tabs = document.getElementById("tabs");
+      const statusbar = document.getElementById("statusbar");
+
+      // --- Render File Explorer ---
+      function renderExplorer() {
+        explorerFiles.innerHTML = "";
+        files.forEach((file, idx) => {
+          const div = document.createElement("div");
+          div.className =
+            "explorer-file" + (activeTab === file.name ? " active" : "");
+          div.innerHTML =
+            (icons[file.icon] || icons.default) + `<span>${file.name}</span>`;
+          div.onclick = () => openFile(file.name);
+          explorerFiles.appendChild(div);
+        });
+      }
+
+      // --- Render Tabs ---
+      function renderTabs() {
+        tabs.innerHTML = "";
+        openTabs.forEach((tab, idx) => {
+          const file = files.find((f) => f.name === tab);
+          const div = document.createElement("div");
+          div.className = "tab" + (activeTab === tab ? " active" : "");
+          div.innerHTML =
+            (icons[file.icon] || icons.default) +
+            `<span>${file.name}</span>` +
+            `<svg class="close" viewBox="0 0 24 24"><path d="M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7A1 1 0 0 0 5.7 7.11L10.59 12l-4.89 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 12l4.89-4.89a1 1 0 0 0 0-1.4z"/></svg>`;
+          div.onclick = (e) => {
+            if (e.target.classList.contains("close")) {
+              closeTab(tab);
+              e.stopPropagation();
+            } else {
+              setActiveTab(tab);
+            }
+          };
+          tabs.appendChild(div);
+        });
+      }
+
+      // --- Open File ---
+      function openFile(name) {
+        if (!openTabs.includes(name)) openTabs.push(name);
+        setActiveTab(name);
+      }
+
+      // --- Close Tab ---
+      function closeTab(name) {
+        const idx = openTabs.indexOf(name);
+        if (idx !== -1) openTabs.splice(idx, 1);
+        if (activeTab === name) {
+          if (openTabs.length) {
+            setActiveTab(openTabs[Math.max(0, idx - 1)]);
+          } else {
+            setActiveTab(null);
+          }
+        } else {
+          renderTabs();
+        }
+        renderExplorer();
+      }
+
+      // --- Set Active Tab ---
+      function setActiveTab(name) {
+        activeTab = name;
+        renderTabs();
+        renderExplorer();
+        if (name) {
+          const file = files.find((f) => f.name === name);
+          if (window.editor) {
+            window.editor.setValue(file.content);
+            setEditorLanguage(file.name);
+          }
+        } else {
+          if (window.editor) window.editor.setValue("");
+        }
+      }
+
+      // --- Save File Content ---
+      function saveActiveFileContent() {
+        if (!activeTab) return;
+        const file = files.find((f) => f.name === activeTab);
+        if (file && window.editor) {
+          file.content = window.editor.getValue();
+        }
+      }
+
+      // --- Monaco Editor Setup ---
+      function setEditorLanguage(filename) {
+        if (!window.monaco || !window.editor) return;
+        let ext = filename.split(".").pop().toLowerCase();
+        let lang = "plaintext";
+        if (ext === "js") lang = "javascript";
+        else if (ext === "html") lang = "html";
+        else if (ext === "css") lang = "css";
+        else if (ext === "md") lang = "markdown";
+        window.monaco.editor.setModelLanguage(window.editor.getModel(), lang);
+      }
+
+      function setupMonaco() {
+        require.config({
+          paths: {
+            vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs",
+          },
+        });
+        require(["vs/editor/editor.main"], function () {
+          window.editor = monaco.editor.create(
+            document.getElementById("editor"),
+            {
+              value: "",
+              language: "plaintext",
+              theme: "vs-dark",
+              fontSize: 15,
+              fontFamily:
+                "'Fira Mono', 'monospace', 'Consolas', 'Menlo', 'monaco', 'monospace'",
+              automaticLayout: true,
+              minimap: { enabled: false },
+              scrollbar: { vertical: "auto", horizontal: "auto" },
+              lineNumbers: "on",
+            },
+          );
+          window.editor.onDidChangeModelContent(() => {
+            saveActiveFileContent();
+          });
+          // Open first file by default
+          openFile(files[0].name);
+        });
+      }
+
+      // --- Sidebar Panel Switching ---
+      const panels = {
+        explorer: document.getElementById("explorer"),
+        search: null,
+        scm: null,
+        run: null,
+        extensions: null,
+      };
+      function showPanel(panel) {
+        for (const key in panels) {
+          if (panels[key])
+            panels[key].style.display = key === panel ? "flex" : "none";
+        }
+      }
+      document.querySelectorAll(".sidebar .icon-btn").forEach((btn) => {
+        btn.onclick = function () {
+          document
+            .querySelectorAll(".sidebar .icon-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const panel = btn.getAttribute("data-panel");
+          showPanel(panel);
+        };
+      });
+
+      // --- Initial Render ---
+      renderExplorer();
+      renderTabs();
+      showPanel("explorer");
+      setupMonaco();
+
+      // --- Keyboard Shortcuts ---
+      document.addEventListener("keydown", (e) => {
+        // Ctrl+W: Close tab
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "w") {
+          if (activeTab) {
+            closeTab(activeTab);
+            e.preventDefault();
+          }
+        }
+        // Ctrl+Tab: Next tab
+        if ((e.ctrlKey || e.metaKey) && e.key === "Tab") {
+          if (openTabs.length > 1) {
+            let idx = openTabs.indexOf(activeTab);
+            setActiveTab(openTabs[(idx + 1) % openTabs.length]);
+            e.preventDefault();
+          }
+        }
+        // Ctrl+S: Save (noop, just prevents default)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+          e.preventDefault();
+          statusbar.textContent = "Saved!";
+          setTimeout(() => {
+            statusbar.textContent = "VSCode Clone — All in one HTML file";
+          }, 800);
+        }
+      });
+
+      // --- Responsive Layout Fix ---
+      window.addEventListener("resize", () => {
+        if (window.editor) window.editor.layout();
+      });
+    </script>
+  </body>
+</html>

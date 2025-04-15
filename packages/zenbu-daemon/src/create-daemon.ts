@@ -1,5 +1,6 @@
 import { serve } from "@hono/node-server";
 import { Env, Hono, MiddlewareHandler, type Context } from "hono";
+import { type Server as HttpServer, type Server } from "node:http";
 import { spawn, exec } from "node:child_process";
 import type {
   ChildProcessByStdio,
@@ -15,11 +16,14 @@ import type { Readable } from "node:stream";
 import { validator } from "hono/validator";
 import { cors } from "hono/cors";
 import pidusage from "pidusage";
+import { trpc } from "./trpc.js";
+import { injectWebSocket } from "./inject-websocket.js";
 
-// Store process stdout globally since we can't reliably attach it to the process object
 const processStdoutMap = new Map<number, string[]>();
 
 // don't share shim with plugin it breaks types for some reason, i think Env gets resolved differently per project for some reason i can't figure it out
+// okay figured ito ut its because type paths need to remove those or fix it at the config level however u would do that
+
 const shim = <T>(): MiddlewareHandler<
   Env,
   string,
@@ -196,13 +200,13 @@ function generateRandomName(): string {
  * yeah okay so then highest alpha is setting up a db to manage shit with
  * I think we just manage everything sensibly and not scope a local db (scope of the project has increased quite a bit)
  * but we should probably support project scoped db's? Maybe?
- * 
+ *
  * also todo I need to make a lil file explorer impl to find projects to start on
- * 
+ *
  * some validation after selecting them and how to get them setup (perhaps we automatically run a script on the project to set it up/ have a model transform it)
  * would be cool if we could have a "migrate to" to make it work
- * 
- * 
+ *
+ *
  * IOS devs do not have their devtools embedded into the app itself, that is potentially a bad constraint to have
  */
 const getProcessTitleMarker = (
@@ -377,22 +381,18 @@ function safeSpawn(
       return err("Failed to obtain PID immediately after spawning process.");
     }
 
-    // Initialize stdout array for this process
     processStdoutMap.set(pid, []);
 
-    // Capture stdout
     child.stdout.on("data", (data) => {
       const lines = data.toString().split("\n").filter(Boolean);
       const currentStdout = processStdoutMap.get(pid) || [];
       currentStdout.push(...lines);
-      // Keep last 1000 lines
       if (currentStdout.length > 1000) {
         currentStdout.splice(0, currentStdout.length - 1000);
       }
       processStdoutMap.set(pid, currentStdout);
     });
 
-    // Clean up stdout when process exits
     child.on("exit", () => {
       processStdoutMap.delete(pid);
     });
@@ -469,7 +469,6 @@ async function getRunningProjects(): Promise<Result<ProjectProcessInfo[]>> {
               HACK_PROJECT_PATH_FIX_ME_ASAP_THIS_SHOULD_NOT_BE_KEPT_I_THINK
             );
 
-            // Get stdout from our map
             const stdout = processStdoutMap.get(pid) || [];
 
             projects.push({ pid, name, port, cwd: projectPath, stdout });
@@ -757,17 +756,30 @@ async function assignProjectInstance(): Promise<Result<ProjectProcessInfo>> {
 
   console.log(`${logPrefix.daemon} Generated unique name: ${newProjectName}`);
   const startResult = await startDevServer(newProjectName);
+  // for some reason the drizzle types on the output can't be inferred through project boundary, ugh
+  // name:id 1:1 mapping for now,
 
   switch (startResult.kind) {
-    case "error":
+    case "error": {
       return err(
         `Failed to start new server '${newProjectName}': ${startResult.error}`
       );
-    case "ok":
+    }
+    case "ok": {
+      // don't block on failed backend creation, but should do roll back on fail (its an optimistic mutation)
+      console.log("goo goo");
+
+      const res = await trpc.project.createProject.mutate({
+        name: newProjectName,
+      });
+
+      console.log("the res", res);
+
       const newProjectInfo = startResult.value;
       activeProjectNames.add(newProjectName);
       setImmediate(ensureWarmInstance);
       return ok(newProjectInfo);
+    }
   }
 }
 
@@ -821,6 +833,18 @@ async function ensureWarmInstance() {
       `${logPrefix.daemon} Generated unique name for warm instance: ${warmName}`
     );
     const startResult = await startDevServer(warmName);
+
+    console.log("making it fr");
+
+    const res = await trpc.project.createProject
+      .mutate({
+        name: warmName,
+      })
+      .catch((e) => {
+        console.log("did i error?", e);
+      });
+
+    console.log("the res");
 
     switch (startResult.kind) {
       case "error":
@@ -947,46 +971,35 @@ async function runInitializeAndServe(app: Hono) {
   const initResult = await initialize();
 
   switch (initResult.kind) {
-    case "error":
-      console.error(
-        `${logPrefix.daemon} !!! Initialization failed: ${initResult.error}`
-      );
-      process.exit(1);
-      break;
+    case "error": {
+      return;
+    }
 
     case "ok":
-      const daemonPort = initResult.value;
-      try {
-        serve({ fetch: app.fetch, port: daemonPort }, (info) => {
-          const address =
-            info.address === "::" || info.address === "0.0.0.0"
-              ? "localhost"
-              : info.address;
-          const daemonUrl = `http://${address}:${info.port}`;
-          console.log(
-            `${logPrefix.daemon} ---> Daemon server listening on ${daemonUrl}`
-          );
-          console.log(
-            `${logPrefix.daemon} ---> Frontend UI accessible at: ${daemonUrl}/`
-          );
-        });
-      } catch (serveError: unknown) {
-        if (
-          serveError instanceof Error &&
-          "code" in serveError &&
-          serveError.code === "EADDRINUSE"
-        ) {
-          const portInUse = (serveError as any).port ?? daemonPort;
-          console.error(
-            `\n!!! DAEMON START FAILED: Port ${portInUse} is in use. !!!\n`
-          );
-        } else {
-          console.error(
-            `${logPrefix.daemon} !!! Failed to start Hono server: ${serveError instanceof Error ? serveError.message : String(serveError)}`
-          );
-        }
-        process.exit(1);
+      {
+        const port = initResult.value;
+        const hostname = "localhost";
+        const $server = serve(
+          { fetch: app.fetch, port, hostname }
+          // (info) => {
+          //   const address =
+          //     info.address === "::" || info.address === "0.0.0.0"
+          //       ? "localhost"
+          //       : info.address;
+          //   const daemonUrl = `http://${address}:${info.port}`;
+          //   console.log(
+          //     `${logPrefix.daemon} ---> Daemon server listening on ${daemonUrl}`
+          //   );
+          //   console.log(
+          //     `${logPrefix.daemon} ---> Frontend UI accessible at: ${daemonUrl}/`
+          //   );
+          // }
+        );
+
+        const server = $server.listen(port, hostname);
+        injectWebSocket(server as HttpServer);
       }
+
       break;
   }
 }

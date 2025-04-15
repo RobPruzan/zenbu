@@ -1,8 +1,9 @@
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "./ui/button";
-import { X, Badge } from "lucide-react";
+import { X } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
 
 interface Hint {
   key: string;

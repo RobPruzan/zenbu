@@ -2,16 +2,18 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Code, Server, Component, Layout, Command } from "lucide-react";
+import { Globe, Code, Server, Component, Layout } from "lucide-react";
 import { useChatStore } from "./chat-store";
+
+import { trpc } from "src/lib/trpc";
 import {
-  CommandInput,
-  CommandList,
+  Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
-} from "cmdk";
-import { trpc } from "src/lib/trpc";
+  CommandList,
+} from "./ui/command";
 
 const ProjectCommandContent = ({ onClose }: { onClose: () => void }) => {
   const [search, setSearch] = useState("");

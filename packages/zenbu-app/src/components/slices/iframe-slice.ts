@@ -1,18 +1,18 @@
 import { SliceCreator } from "../chat-store";
 
-
 export type IFrameSliceInitialState = {
-  url :string
+  url: string;
+  projectId: string;
 };
 export type IFrameSliceState = {
-  url: string
-}
-
+  url: string;
+  projectId: string;
+};
 
 export type IFrameSlice = {
   state: IFrameSliceInitialState;
   actions: {
-    setInspectorState: (state:Partial<IFrameSliceState> ) => void;
+    setInspectorState: (state: Partial<IFrameSliceState>) => void;
   };
 };
 

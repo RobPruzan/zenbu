@@ -18,7 +18,7 @@ export const baseClientMessageEventSchema = z.object({
 export type ClientMessageEvent = z.infer<
   typeof baseClientMessageEventSchema
 > & {
-  previousEvents: Array<ClientMessageEvent>;
+  previousEvents: Array<EventLogEvent>;
 };
 
 const clientMessageEventSchema: z.ZodType<ClientMessageEvent> =

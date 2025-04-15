@@ -1,6 +1,8 @@
 import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 
+console.log("do i run, wut is going on?");
+
 const TARGET_ORIGIN = "http://localhost:3000";
 
 // console.log("pls");
@@ -20,7 +22,7 @@ document.addEventListener("mousemove", (e) => {
   currentMouseOverElement = target;
   const rect = target.getBoundingClientRect();
 
-  // console.log('sending update');
+  // console.log("sending update");
 
   sendMessage({
     kind: "mouse-position-update",
@@ -100,11 +102,8 @@ const sendMessage = (message: ChildToParentMessage) => {
   window.parent.postMessage(message, TARGET_ORIGIN);
 };
 document.addEventListener("keydown", (e) => {
-
-
-
   if (e.metaKey && e.key === "p") {
-    e.preventDefault()
+    e.preventDefault();
     // if we want the parent frame to control this (not unconditionally do this here), we need to await a response from the parent iframe to determine how to do this, could cause a lost frame on every keydown which is quite unfortunate
   }
 
@@ -208,7 +207,6 @@ window.addEventListener("message", async (event) => {
 
     case "take-screenshot": {
       console.log("taking screenshot");
-      
 
       const dataUrl = await screenshot();
       // console.log("took screenshot", dataUrl);

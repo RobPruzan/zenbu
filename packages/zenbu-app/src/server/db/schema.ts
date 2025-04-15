@@ -1,7 +1,7 @@
 import { integer, sqliteTableCreator, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
 import { createTable } from "./utils";
-import { EventLogEvent } from "zenbu-plugin/src/ws/schemas";
+// import { EventLogEvent } from "zenbu-plugin/src/ws/schemas";
 
 const date = (name: string) => integer(name, { mode: "timestamp" });
 
@@ -22,9 +22,7 @@ export const projectChat = createTable("projectChat", {
   projectId: text("projectId")
     .notNull()
     .references(() => project.projectId),
-  events: text("events", { mode: "json" })
-    .$type<Array<EventLogEvent>>()
-    .notNull(),
+  events: text("events", { mode: "json" }).$type<Array<any>>().notNull(),
   createdAt: createdAtCol(),
 
   // hm this feels weird to make a schema for chat?

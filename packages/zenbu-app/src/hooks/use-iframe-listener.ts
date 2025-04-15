@@ -1,10 +1,11 @@
+import { useChatStore } from "src/components/chat-store";
 import { ParentToChildMessage } from "zenbu-devtools";
 
 export const useIFrameMessenger = () => {
+  const url = useChatStore((state) => state.iframe.state.url);
   const sendMessageToChild = (message: ParentToChildMessage) => {
-
     const iframe = document.getElementById(
-      "child-iframe"
+      "child-iframe",
     ) as HTMLIFrameElement | null;
 
     if (!iframe) {
@@ -12,12 +13,10 @@ export const useIFrameMessenger = () => {
     }
 
     if (!iframe || !iframe.contentWindow) {
-
       return;
     }
 
-
-    iframe.contentWindow.postMessage(message, "http://localhost:4200");
+    iframe.contentWindow.postMessage(message, url);
   };
 
   return sendMessageToChild;

@@ -120,17 +120,18 @@ export function DevtoolsOverlay() {
     const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
       // this acts as validation and why we can assert the event is the above type
       // we need to switch to runtime validation, we can't do this generally
-      if (
-        event.origin !== "http://localhost:4200" &&
-        !(
-          new URL(event.origin).port &&
-          parseInt(new URL(event.origin).port, 10) > 59000
-        )
-      ) {
-        // console.log("wrong origin");
+      // breaks if yo use react devtools
+      // if (
+      //   event.origin !== "http://localhost:4200" &&
+      //   !(
+      //     new URL(event.origin).port &&
+      //     parseInt(new URL(event.origin).port, 10) > 59000
+      //   )
+      // ) {
+      //   // console.log("wrong origin");
 
-        return;
-      }
+      //   return;
+      // }
 
       const data = event.data;
 
@@ -398,17 +399,18 @@ export const useMakeRequest = () => {
 
     const hotPromise = new Promise<ChildToParentMessage>((res, rej) => {
       const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
-        if (
-          event.origin !== "http://localhost:4200" &&
-          !(
-            new URL(event.origin).port &&
-            parseInt(new URL(event.origin).port, 10) > 59000
-          )
-        ) {
-          console.log("wrong orgiin", event);
+        // breaks if yo use react devtools
+        // if (
+        //   event.origin !== "http://localhost:4200" &&
+        //   !(
+        //     new URL(event.origin).port &&
+        //     parseInt(new URL(event.origin).port, 10) > 59000
+        //   )
+        // ) {
+        //   console.log("wrong orgiin", event);
 
-          return;
-        }
+        //   return;
+        // }
 
         if (event.data.id === messageId) {
           window.removeEventListener("message", handleMessage);
