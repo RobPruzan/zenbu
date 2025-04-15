@@ -198,6 +198,13 @@ export const getCommandItems = ({
     },
   },
   {
+    shortcut: "Install Dependency",
+    icon: <Store size={16} />,
+    onSelect: () => {
+      window.dispatchEvent(new CustomEvent("install-dependency"));
+    },
+  },
+  {
     shortcut: "Toggle Chat (Left)",
     icon: <MessageSquare size={16} />,
     onSelect: () => {
