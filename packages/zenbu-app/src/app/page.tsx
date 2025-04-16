@@ -357,12 +357,9 @@ export default function Home() {
 
         <div className="flex flex-1 items-center justify-center">
           <div className="max-w-2xl px-6 py-12 text-center">
-            <h1 className="mb-4 text-4xl font-bold tracking-tight">
+            {/* <h1 className="mb-4 text-4xl font-bold tracking-tight">
               Welcome to Zenbu
-            </h1>
-            <p className="mb-8 text-xl text-muted-foreground">
-              Your intelligent development environment
-            </p>
+            </h1> */}
 
             <div className="mx-auto max-w-md">
               <div className="mb-6 rounded-lg border border-border bg-card p-6">
