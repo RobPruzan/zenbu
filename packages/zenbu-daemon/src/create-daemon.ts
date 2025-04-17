@@ -214,6 +214,7 @@ const getProcessTitleMarker = (
   port: number,
   pid: number | string
 ): string => {
+  // why is the pid in it? We should just list, port can be cached there ig
   return `zenbu-daemon:project=${name}:assigned_port=${port}:pid=${pid}`;
 };
 
