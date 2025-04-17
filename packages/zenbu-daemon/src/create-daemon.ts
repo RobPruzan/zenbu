@@ -410,11 +410,12 @@ async function getRunningProjects(): Promise<Result<ProjectProcessInfo[]>> {
   const execResult = await safeExec(command);
 
   switch (execResult.kind) {
-    case "error":
+    case "error": {
       console.error(
         `${logPrefix.daemon} Error listing processes: ${execResult.error}`
       );
       return err(`Failed to list processes.`);
+    }
 
     case "ok":
       const { stdout } = execResult.value;

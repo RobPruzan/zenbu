@@ -8,6 +8,8 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0"
+    "@ai-sdk/openai": "^1.2.5",
+    "@anthropic-ai/sdk": "^0.39.0",
+    "ai": "^4.3.4"
   }
 }
