@@ -7,19 +7,17 @@
   },
   "main": "src/create-daemon.ts",
   "dependencies": {
-    "@effect/platform": "^0.80.10",
-    "@effect/platform-node": "^0.76.20",
     "@effect/platform-node-shared": "^0.30.20",
     "@hono/node-server": "^1.14.1",
     "@hono/zod-validator": "^0.4.3",
     "@trpc/client": "^11.0.0-rc.446",
     "@types/pidusage": "^2.0.5",
-    "effect": "^3.13.11",
+    "@types/ps-tree": "^1.1.6",
+    "@types/unzipper": "^0.10.11",
+    "cors": "^2.8.5",
     "extract-zip": "^2.0.1",
     "get-port": "^7.1.0",
-    "hono": "^4.7.4",
     "node-pty": "^1.0.0",
-    "pidusage": "^4.0.0",
     "socket.io": "^4.8.1",
     "superjson": "^2.2.1",
     "vitest": "^3.1.1",
@@ -28,7 +26,15 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@effect/platform": "^0.80.10",
+    "@effect/platform-node": "^0.76.20",
     "@types/node": "^20.11.17",
-    "tsx": "^4.7.1"
+    "effect": "^3.13.11",
+    "find-free-ports": "^3.1.1",
+    "hono": "^4.7.6",
+    "pidusage": "^4.0.0",
+    "ps-tree": "^1.2.0",
+    "tsx": "^4.7.1",
+    "unzipper": "^0.12.3"
   }
 }

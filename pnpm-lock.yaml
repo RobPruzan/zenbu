@@ -302,12 +302,6 @@ importers:
 
   packages/zenbu-daemon:
     dependencies:
-      '@effect/platform':
-        specifier: ^0.80.10
-        version: 0.80.10(effect@3.13.11)
-      '@effect/platform-node':
-        specifier: ^0.76.20
-        version: 0.76.20(@effect/cluster@0.29.20(@effect/platform@0.80.10(effect@3.13.11))(@effect/rpc@0.55.15(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/sql@0.33.10(@effect/experimental@0.44.10(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(@effect/rpc@0.55.15(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/sql@0.33.10(@effect/experimental@0.44.10(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(effect@3.13.11)
       '@effect/platform-node-shared':
         specifier: ^0.30.20
         version: 0.30.20(@effect/cluster@0.29.20(@effect/platform@0.80.10(effect@3.13.11))(@effect/rpc@0.55.15(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/sql@0.33.10(@effect/experimental@0.44.10(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(@effect/rpc@0.55.15(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/sql@0.33.10(@effect/experimental@0.44.10(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(effect@3.13.11)
@@ -323,24 +317,24 @@ importers:
       '@types/pidusage':
         specifier: ^2.0.5
         version: 2.0.5
-      effect:
-        specifier: ^3.13.11
-        version: 3.13.11
+      '@types/ps-tree':
+        specifier: ^1.1.6
+        version: 1.1.6
+      '@types/unzipper':
+        specifier: ^0.10.11
+        version: 0.10.11
+      cors:
+        specifier: ^2.8.5
+        version: 2.8.5
       extract-zip:
         specifier: ^2.0.1
         version: 2.0.1
       get-port:
         specifier: ^7.1.0
         version: 7.1.0
-      hono:
-        specifier: ^4.7.4
-        version: 4.7.6
       node-pty:
         specifier: ^1.0.0
         version: 1.0.0
-      pidusage:
-        specifier: ^4.0.0
-        version: 4.0.0
       socket.io:
         specifier: ^4.8.1
         version: 4.8.1
@@ -360,12 +354,36 @@ importers:
         specifier: ^3.24.2
         version: 3.24.2
     devDependencies:
+      '@effect/platform':
+        specifier: ^0.80.10
+        version: 0.80.10(effect@3.13.11)
+      '@effect/platform-node':
+        specifier: ^0.76.20
+        version: 0.76.20(@effect/cluster@0.29.20(@effect/platform@0.80.10(effect@3.13.11))(@effect/rpc@0.55.15(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/sql@0.33.10(@effect/experimental@0.44.10(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(@effect/rpc@0.55.15(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/sql@0.33.10(@effect/experimental@0.44.10(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(@effect/platform@0.80.10(effect@3.13.11))(effect@3.13.11))(effect@3.13.11)
       '@types/node':
         specifier: ^20.11.17
         version: 20.17.24
+      effect:
+        specifier: ^3.13.11
+        version: 3.13.11
+      find-free-ports:
+        specifier: ^3.1.1
+        version: 3.1.1
+      hono:
+        specifier: ^4.7.6
+        version: 4.7.6
+      pidusage:
+        specifier: ^4.0.0
+        version: 4.0.0
+      ps-tree:
+        specifier: ^1.2.0
+        version: 1.2.0
       tsx:
         specifier: ^4.7.1
         version: 4.19.3
+      unzipper:
+        specifier: ^0.12.3
+        version: 0.12.3
 
   packages/zenbu-devtools:
     dependencies:
@@ -3423,6 +3441,9 @@ packages:
   '@types/prop-types@15.7.14':
     resolution: {integrity: sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==}
 
+  '@types/ps-tree@1.1.6':
+    resolution: {integrity: sha512-PtrlVaOaI44/3pl3cvnlK+GxOM3re2526TJvPvh7W+keHIXdV4TE0ylpPBAcvFQCbGitaTXwL9u+RF7qtVeazQ==}
+
   '@types/puppeteer@7.0.4':
     resolution: {integrity: sha512-ja78vquZc8y+GM2al07GZqWDKQskQXygCDiu0e3uO0DMRKqE0MjrFBFmTulfPYzLB6WnL7Kl2tFPy0WXSpPomg==}
     deprecated: This is a stub types definition. puppeteer provides its own type definitions, so you do not need this installed.
@@ -3445,6 +3466,9 @@ packages:
 
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
+
+  '@types/unzipper@0.10.11':
+    resolution: {integrity: sha512-D25im2zjyMCcgL9ag6N46+wbtJBnXIr7SI4zHf9eJD2Dw2tEB5e+p5MYkrxKIVRscs5QV0EhtU9rgXSPx90oJg==}
 
   '@types/use-sync-external-store@0.0.6':
     resolution: {integrity: sha512-zFDAD+tlpf2r4asuHEj0XH6pY6i0g5NeAHPn+15wk3BV6JA69eERFXC1gyGThDkVa1zCyKr5jox1+2LbV/AMLg==}
@@ -3807,6 +3831,9 @@ packages:
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
 
+  bluebird@3.7.2:
+    resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
+
   boolean@3.2.0:
     resolution: {integrity: sha512-d0II/GO9uf9lfUHH2BQsjxzRJZBdsjgsBiW4BvhWk/3qoKwQFjIDVN19PfX8F2D/r9PCMTtLWjYVCFrpeYUzsw==}
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
@@ -4021,6 +4048,9 @@ packages:
 
   core-js@3.41.0:
     resolution: {integrity: sha512-SJ4/EHwS36QMJd6h/Rg+GyR4A5xE0FSI3eZ+iBVpfqf1x0eTSg1smWLHrA+2jQThZSh97fmSgFSU8B61nxosxA==}
+
+  core-util-is@1.0.3:
+    resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
   cors@2.8.5:
     resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
@@ -4342,6 +4372,12 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
+  duplexer2@0.1.4:
+    resolution: {integrity: sha512-asLFVfWWtJ90ZyOUHMqk7/S2w2guQKxUI2itj3d92ADHhxUSbCMGi1f1cBcJ7xM1To+pE/Khbwo1yuNbMEPKeA==}
+
+  duplexer@0.1.2:
+    resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}
+
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
@@ -4627,6 +4663,9 @@ packages:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
     engines: {node: '>=0.10.0'}
 
+  event-stream@3.3.4:
+    resolution: {integrity: sha512-QHpkERcGsR0T7Qm3HNJSyXKEEj8AHNxkY3PK8TS2KJvQ7NiSHe3DDpwVKKtoYprL/AreyzFBeIkBIWChAqn60g==}
+
   event-target-shim@5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
@@ -4714,6 +4753,9 @@ packages:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
     engines: {node: '>=8'}
 
+  find-free-ports@3.1.1:
+    resolution: {integrity: sha512-hQebewth9i5qkf0a0u06iFaxQssk5ZnPBBggsa1vk8zCYaZoz9IZXpoRLTbEOrYdqfrjvcxU00gYoCPgmXugKA==}
+
   find-my-way-ts@0.1.5:
     resolution: {integrity: sha512-4GOTMrpGQVzsCH2ruUn2vmwzV/02zF4q+ybhCIrw/Rkt3L8KWcycdC6aJMctJzwN4fXD4SD5F/4B9Sksh5rE0A==}
 
@@ -4767,6 +4809,9 @@ packages:
         optional: true
       react-dom:
         optional: true
+
+  from@0.1.7:
+    resolution: {integrity: sha512-twe20eF1OxVxp/ML/kq2p1uc6KvFK/+vs8WjEbeKmV2He22MKm7YF2ANIt+EOqhJ5L3K/SuuPhk0hWQDjOM23g==}
 
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
@@ -5161,6 +5206,9 @@ packages:
     resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
     engines: {node: '>=12.13'}
 
+  isarray@1.0.0:
+    resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
+
   isarray@2.0.5:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
 
@@ -5353,6 +5401,9 @@ packages:
 
   make-error@1.3.6:
     resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
+
+  map-stream@0.1.0:
+    resolution: {integrity: sha512-CkYQrPYZfWnu/DAmVCpTSX/xHpKZ80eKh2lAkyA6AJTef6bW+6JpbQZN5rofum7da+SyN1bi5ctTm+lTfcCW3g==}
 
   markdown-it@14.1.0:
     resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
@@ -5562,6 +5613,9 @@ packages:
     resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
     hasBin: true
 
+  node-int64@0.4.0:
+    resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
+
   node-pty@1.0.0:
     resolution: {integrity: sha512-wtBMWWS7dFZm/VgqElrTvtfMq4GzJ6+edFI0Y0zyzygUSZMgZdraDUMUhCIvkjhJjme15qWmbyJbtAx4ot4uZA==}
 
@@ -5696,6 +5750,9 @@ packages:
   pathval@2.0.0:
     resolution: {integrity: sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==}
     engines: {node: '>= 14.16'}
+
+  pause-stream@0.0.11:
+    resolution: {integrity: sha512-e3FBlXLmN/D1S+zHzanP4E/4Z60oFAa3O051qt1pxa7DEJWKAyil6upYVXCWadEnuoqa4Pkc9oUx9zsxYeRv8A==}
 
   pend@1.2.0:
     resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
@@ -5872,6 +5929,9 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
+  process-nextick-args@2.0.1:
+    resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
+
   progress@2.0.3:
     resolution: {integrity: sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==}
     engines: {node: '>=0.4.0'}
@@ -5946,6 +6006,11 @@ packages:
 
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
+
+  ps-tree@1.2.0:
+    resolution: {integrity: sha512-0VnamPPYHl4uaU/nSFeZZpR21QAWRz+sRv4iW9+v/GS/J5U5iZB5BNN6J0RMoOvdx2gWM2+ZFMIm58q24e4UYA==}
+    engines: {node: '>= 0.10'}
+    hasBin: true
 
   pump@3.0.2:
     resolution: {integrity: sha512-tUPXtzlGM8FE3P0ZL6DVs/3P58k9nk8/jZeQCurTJylQA8qFYzHFfhBJkuqyE0FifOsQ0uKWekiZ5g8wtr28cw==}
@@ -6120,6 +6185,9 @@ packages:
   read-cache@1.0.0:
     resolution: {integrity: sha512-Owdv/Ft7IjOgm/i0xvNDZ1LrRANRfew4b2prF3OWMQLxLfu3bS8FVhCsrSCMK4lR56Y9ya+AThoTpDCTxCmpRA==}
 
+  readable-stream@2.3.8:
+    resolution: {integrity: sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==}
+
   readable-stream@3.6.2:
     resolution: {integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==}
     engines: {node: '>= 6'}
@@ -6238,6 +6306,9 @@ packages:
   safe-array-concat@1.1.3:
     resolution: {integrity: sha512-AURm5f0jYEOydBj7VQlVvDrjeFgthDdEF5H1dP+6mNpoXOMo1quQqJ4wvJDyRZ9+pO3kGWoOdmV08cSv2aJV6Q==}
     engines: {node: '>=0.4'}
+
+  safe-buffer@5.1.2:
+    resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
 
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
@@ -6389,6 +6460,9 @@ packages:
   spawn-command@0.0.2:
     resolution: {integrity: sha512-zC8zGoGkmc8J9ndvml8Xksr1Amk9qBujgbF0JAIWO7kXr43w0h/0GJNM/Vustixu+YE8N/MTrQ7N31FvHUACxQ==}
 
+  split@0.3.3:
+    resolution: {integrity: sha512-wD2AeVmxXRBoX44wAycgjVpMhvbwdI2aZjCkvfNcH1YqHQvJVa1duWc73OyVGJUc05fhFaTZeQ/PYsrmyH0JVA==}
+
   sprintf-js@1.1.3:
     resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
 
@@ -6404,6 +6478,9 @@ packages:
   stdin-discarder@0.2.2:
     resolution: {integrity: sha512-UhDfHmA92YAlNnCfhmq0VeNL5bDbiZGg7sZ2IvPsXubGkiNa9EC+tUTsjBRsYUAz87btI6/1wf4XoVvQ3uRnmQ==}
     engines: {node: '>=18'}
+
+  stream-combiner@0.0.4:
+    resolution: {integrity: sha512-rT00SPnTVyRsaSz5zgSPma/aHSOic5U1prhYdRy5HS2kTZviFpmDgzilbtsJsxiroqACmayynDN/9VzIbX5DOw==}
 
   streamsearch@1.1.0:
     resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
@@ -6446,6 +6523,9 @@ packages:
   string.prototype.trimstart@1.0.8:
     resolution: {integrity: sha512-UXSH262CSZY1tfu3G3Secr6uGLCFVPMhIqHjlgCUtCCcgihYc/xKs9djMTMUOb2j1mVSeU8EU6NWc/iQKU6Gfg==}
     engines: {node: '>= 0.4'}
+
+  string_decoder@1.1.1:
+    resolution: {integrity: sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg==}
 
   string_decoder@1.3.0:
     resolution: {integrity: sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA==}
@@ -6737,6 +6817,9 @@ packages:
   unplugin@2.1.0:
     resolution: {integrity: sha512-us4j03/499KhbGP8BU7Hrzrgseo+KdfJYWcbcajCOqsAyb8Gk0Yn2kiUIcZISYCb1JFaZfIuG3b42HmguVOKCQ==}
     engines: {node: '>=18.12.0'}
+
+  unzipper@0.12.3:
+    resolution: {integrity: sha512-PZ8hTS+AqcGxsaQntl3IRBw65QrBI6lxzqDEL7IAo/XCEqRTKGfOX56Vea5TH9SZczRVxuzk1re04z/YjuYCJA==}
 
   update-browserslist-db@1.1.3:
     resolution: {integrity: sha512-UxhIZQ+QInVdunkDAaiazvvT/+fXL5Osr0JZlJulepYu6Jd7qJtDZjlur0emRlT71EN3ScPoE7gvsuIKKNavKw==}
@@ -9585,6 +9668,8 @@ snapshots:
 
   '@types/prop-types@15.7.14': {}
 
+  '@types/ps-tree@1.1.6': {}
+
   '@types/puppeteer@7.0.4(typescript@5.8.2)':
     dependencies:
       puppeteer: 23.11.1(typescript@5.8.2)
@@ -9620,11 +9705,15 @@ snapshots:
     dependencies:
       '@types/node': 20.17.24
 
+  '@types/unzipper@0.10.11':
+    dependencies:
+      '@types/node': 20.17.24
+
   '@types/use-sync-external-store@0.0.6': {}
 
   '@types/ws@8.18.0':
     dependencies:
-      '@types/node': 22.13.10
+      '@types/node': 20.17.24
 
   '@types/ws@8.5.14':
     dependencies:
@@ -10048,6 +10137,8 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
+  bluebird@3.7.2: {}
+
   boolean@3.2.0:
     optional: true
 
@@ -10289,6 +10380,8 @@ snapshots:
 
   core-js@3.41.0: {}
 
+  core-util-is@1.0.3: {}
+
   cors@2.8.5:
     dependencies:
       object-assign: 4.1.1
@@ -10492,6 +10585,12 @@ snapshots:
       call-bind-apply-helpers: 1.0.2
       es-errors: 1.3.0
       gopd: 1.2.0
+
+  duplexer2@0.1.4:
+    dependencies:
+      readable-stream: 2.3.8
+
+  duplexer@0.1.2: {}
 
   eastasianwidth@0.2.0: {}
 
@@ -11047,6 +11146,16 @@ snapshots:
 
   esutils@2.0.3: {}
 
+  event-stream@3.3.4:
+    dependencies:
+      duplexer: 0.1.2
+      from: 0.1.7
+      map-stream: 0.1.0
+      pause-stream: 0.0.11
+      split: 0.3.3
+      stream-combiner: 0.0.4
+      through: 2.3.8
+
   event-target-shim@5.0.1: {}
 
   eventemitter3@4.0.7: {}
@@ -11129,6 +11238,8 @@ snapshots:
     dependencies:
       to-regex-range: 5.0.1
 
+  find-free-ports@3.1.1: {}
+
   find-my-way-ts@0.1.5: {}
 
   find-up@5.0.0:
@@ -11181,6 +11292,8 @@ snapshots:
     optionalDependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+
+  from@0.1.7: {}
 
   fs-constants@1.0.0: {}
 
@@ -11609,6 +11722,8 @@ snapshots:
 
   is-what@4.1.16: {}
 
+  isarray@1.0.0: {}
+
   isarray@2.0.5: {}
 
   isexe@2.0.0: {}
@@ -11791,6 +11906,8 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.0
 
   make-error@1.3.6: {}
+
+  map-stream@0.1.0: {}
 
   markdown-it@14.1.0:
     dependencies:
@@ -11982,6 +12099,8 @@ snapshots:
       detect-libc: 2.0.3
     optional: true
 
+  node-int64@0.4.0: {}
+
   node-pty@1.0.0:
     dependencies:
       nan: 2.22.2
@@ -12147,6 +12266,10 @@ snapshots:
 
   pathval@2.0.0: {}
 
+  pause-stream@0.0.11:
+    dependencies:
+      through: 2.3.8
+
   pend@1.2.0: {}
 
   picocolors@1.1.1: {}
@@ -12250,6 +12373,8 @@ snapshots:
       prettier: 3.5.3
 
   prettier@3.5.3: {}
+
+  process-nextick-args@2.0.1: {}
 
   progress@2.0.3: {}
 
@@ -12378,6 +12503,10 @@ snapshots:
       - supports-color
 
   proxy-from-env@1.1.0: {}
+
+  ps-tree@1.2.0:
+    dependencies:
+      event-stream: 3.3.4
 
   pump@3.0.2:
     dependencies:
@@ -12620,6 +12749,16 @@ snapshots:
     dependencies:
       pify: 2.3.0
 
+  readable-stream@2.3.8:
+    dependencies:
+      core-util-is: 1.0.3
+      inherits: 2.0.4
+      isarray: 1.0.0
+      process-nextick-args: 2.0.1
+      safe-buffer: 5.1.2
+      string_decoder: 1.1.1
+      util-deprecate: 1.0.2
+
   readable-stream@3.6.2:
     dependencies:
       inherits: 2.0.4
@@ -12801,6 +12940,8 @@ snapshots:
       get-intrinsic: 1.3.0
       has-symbols: 1.1.0
       isarray: 2.0.5
+
+  safe-buffer@5.1.2: {}
 
   safe-buffer@5.2.1: {}
 
@@ -13015,6 +13156,10 @@ snapshots:
 
   spawn-command@0.0.2: {}
 
+  split@0.3.3:
+    dependencies:
+      through: 2.3.8
+
   sprintf-js@1.1.3: {}
 
   stable-hash@0.0.5: {}
@@ -13024,6 +13169,10 @@ snapshots:
   std-env@3.8.1: {}
 
   stdin-discarder@0.2.2: {}
+
+  stream-combiner@0.0.4:
+    dependencies:
+      duplexer: 0.1.2
 
   streamsearch@1.1.0: {}
 
@@ -13101,6 +13250,10 @@ snapshots:
       call-bind: 1.0.8
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
+
+  string_decoder@1.1.1:
+    dependencies:
+      safe-buffer: 5.1.2
 
   string_decoder@1.3.0:
     dependencies:
@@ -13463,6 +13616,14 @@ snapshots:
       acorn: 8.14.1
       webpack-virtual-modules: 0.6.2
     optional: true
+
+  unzipper@0.12.3:
+    dependencies:
+      bluebird: 3.7.2
+      duplexer2: 0.1.4
+      fs-extra: 11.3.0
+      graceful-fs: 4.2.11
+      node-int64: 0.4.0
 
   update-browserslist-db@1.1.3(browserslist@4.24.4):
     dependencies:
