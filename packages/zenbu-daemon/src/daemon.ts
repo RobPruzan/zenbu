@@ -102,11 +102,18 @@ const publishStartedProject = (
   Effect.gen(function* () {
     return null as unknown as ServerInfo;
   });
-
+const getProcessTitleMarker = (
+  name: string,
+  port: number,
+  pid: number | string
+): string => {
+  return `zenbu-daemon:project=${name}:assigned_port=${port}`;
+};
 const spawnProject = Effect.gen(function* () {
   const projectPath = yield* createProject;
   const serverProcess = yield* runProject(projectPath);
-  const serverInfo = yield* publishStartedProject(serverProcess); // do we want to do this, or just alert some reactive process manager that it needs to re-derive
+  const serverInfo = yield* publishStartedProject(serverProcess);
+  // do we want to do this, or just alert some reactive process manager that it needs to re-derive
   /**
    *  if we have server info I suppose we can just send that to client?
    *
@@ -137,7 +144,15 @@ const spawnProject = Effect.gen(function* () {
    *
    * we can attach a state to a project (that I guess is persisted?) so that when we startup we can re-up the projects without worry
    *
-   * will need to make sure to do that in  parallel
+   * will need to make sure to do that in parallel
+   *
+   * alright, whats next to actually start doing shit? I could actually create the process now, use the previous file a reference
+   *
+   * yes that's not a bad idea, but it's also not a bad idea to have a project ready to run in a local dir to make it quick
+   *
+   * i wont zip, just copy, i think zipping is stupid and made no sense
+   *
+   *
    */
 });
 
