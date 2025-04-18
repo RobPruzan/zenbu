@@ -12,17 +12,15 @@ export const makeRedisClient = () => {
     path: "../zenbu-redis/redis-data/redis.sock",
   });
 
-  return {
-    ...client,
-    set: client.set,
-    get: client.get,
-    
-    effect: {
-      get,
-      set,
-      del
-    },
+  const effectClient = {
+    get,
+    set,
+    del,
   };
+  // @ts-expect-error
+  client.effect = effectClient;
+
+  return client as typeof client & { effect: typeof effectClient };
 };
 
 export class NotFoundError extends Data.TaggedError("NotFoundError")<{}> {}
@@ -31,7 +29,7 @@ export const del = <K extends keyof RedisSchema>(key: K) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
     const res = yield* Effect.tryPromise(() => client.del(key));
-    return res
+    return res;
   });
 export const get = <K extends keyof RedisSchema>(key: K) =>
   Effect.gen(function* () {
