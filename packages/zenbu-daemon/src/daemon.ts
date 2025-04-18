@@ -10,6 +10,9 @@ import { FileSystem } from "@effect/platform";
 import { NodeFileSystem } from "@effect/platform-node";
 import { spawn } from "child_process";
 import getPort from "get-port";
+import { makeRedisClient } from "zenbu-redis";
+
+const redisClient = makeRedisClient();
 
 const PROJECTS_DIR = path.resolve(process.cwd(), "projects");
 const RUN_SERVER_COMMAND = ["node", "index.js"];
@@ -273,10 +276,11 @@ const publishStartedProject = (
     return null as unknown as ServerInfo;
   });
 
+// will have to use this when i read everything
 const parseProcessMarkerArgument = (markerArgument: string) =>
   Effect.gen(function* () {
     const match = markerArgument.match(
-      /zenbu-daemon:project=(.+):assigned_port=(\d+):pid=(.+)/
+      /zenbu-daemon:project=(.+):assigned_port=(\d+)/
     );
     if (!match) {
       yield* new GenericError();
@@ -294,8 +298,30 @@ const spawnProject = Effect.gen(function* () {
     name,
     projectPath,
   });
+
   // publishing is for alerting to create a new warm instance which we aren't doing yet I think?
   // wait no it was to start tracking it correctly even if it dies we can re-up it
+  /**
+   * yes this is some stuff we definitely need next:
+   * - read active projects
+   * - need to know if running or paused
+   * - connect to the project
+   *
+   *
+   * where do I want to sync this to?
+   *
+   * I could sync to redis?
+   *
+   *
+   * like I don't really care to sync this to a relational db, and if we need to setup
+   * redis anyways it works out
+   *
+   *
+   * probably should be a package with a bunch of functions to connect to it easily?
+   *
+   *
+   *
+   */
   const serverInfo = yield* publishStartedProject({ assignedPort, pid });
   // do we want to do this, or just alert some reactive process manager that it needs to re-derive
   /**

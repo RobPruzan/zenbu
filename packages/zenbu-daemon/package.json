@@ -23,6 +23,7 @@
     "vitest": "^3.1.1",
     "zenbu-app": "workspace:*",
     "zenbu-plugin": "workspace:*",
+    "zenbu-redis": "workspace:*",
     "zod": "^3.24.2"
   },
   "devDependencies": {
