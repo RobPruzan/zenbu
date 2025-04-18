@@ -13,6 +13,9 @@ import { spawn, exec } from "child_process";
 import getPort from "get-port";
 import { makeRedisClient, RedisContext } from "zenbu-redis";
 import { serve } from "@hono/node-server";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
+import { validator } from "hono/validator";
 
 const redisClient = makeRedisClient();
 
@@ -173,6 +176,92 @@ export const createServer = async () => {
         }
       }
     })
+    .post(
+      "/start-project",
+      zValidator(
+        "json",
+        z.object({
+          name: z.string(),
+        })
+      ),
+      async (opts) => {
+        const { name } = opts.req.valid("json");
+        const exit = await Effect.runPromiseExit(
+          Effect.gen(function* () {
+            yield* runProject({ name });
+            yield* redisClient.effect.set(name, "running");
+          })
+            .pipe(Effect.provide(NodeContext.layer))
+            .pipe(Effect.provideService(RedisContext, { client: redisClient }))
+        );
+
+        switch (exit._tag) {
+          case "Success": {
+            return opts.json({ success: true, project: exit.value });
+          }
+          case "Failure": {
+            const error = exit.cause.toJSON();
+            return opts.json({ error });
+          }
+        }
+      }
+    )
+    .post(
+      "/kill-project",
+      zValidator(
+        "json",
+        z.object({
+          name: z.string(),
+        })
+      ),
+      async (opts) => {
+        const { name } = opts.req.valid("json");
+        const exit = await Effect.runPromiseExit(
+          killProject(name)
+            .pipe(Effect.provide(NodeContext.layer))
+            .pipe(Effect.provideService(RedisContext, { client: redisClient }))
+        );
+
+        switch (exit._tag) {
+          case "Success": {
+            return opts.json({ success: true });
+          }
+          case "Failure": {
+            console.log("what", exit.cause);
+
+            const error = exit.cause.toJSON();
+            return opts.json({ error });
+          }
+        }
+      }
+    )
+    .post(
+      "/delete-project",
+      zValidator(
+        "json",
+        z.object({
+          name: z.string(),
+        })
+      ),
+      async (opts) => {
+        const { name } = opts.req.valid("json");
+        const exit = await Effect.runPromiseExit(
+          deleteProject(name)
+            .pipe(Effect.provide(NodeContext.layer))
+            .pipe(Effect.provideService(RedisContext, { client: redisClient }))
+        );
+
+        switch (exit._tag) {
+          case "Success": {
+            return opts.json({ success: true });
+          }
+          case "Failure": {
+            const error = exit.cause.toJSON();
+            return opts.json({ error });
+          }
+        }
+      }
+    )
     .post("/get-projects", async (opts) => {
       const exit = await Effect.runPromiseExit(
         getProjects.pipe(Effect.provide(NodeContext.layer))
@@ -247,13 +336,7 @@ const createProject = Effect.gen(function* () {
   return { name, projectPath };
 });
 
-const runProject = ({
-  projectPath,
-  name,
-}: {
-  projectPath: string;
-  name: string;
-}) =>
+const runProject = ({ name }: { name: string }) =>
   Effect.gen(function* () {
     // todo: just a stub for now, impl later
     // need to make sure to give the process a title for metadata so we can search in the future
@@ -270,7 +353,7 @@ const runProject = ({
     const actualCodePath = `projects/${name}`;
 
     const exists = yield* fs.exists(actualCodePath);
-    console.log("exists?", exists);
+    console.log("exists?", exists, actualCodePath);
 
     if (!exists) {
       return yield* new GenericError();
@@ -349,10 +432,10 @@ const restoreProjects = Effect.gen(function* () {
   const projects = yield* getProjects;
   const startedProjects = projects.map((project) => {
     return Effect.gen(function* () {
-      if (project.status === "running") {
+      if (project.status !== "running") {
         return;
       }
-      yield* runProject({ name: project.name, projectPath: project.cwd });
+      yield* runProject({ name: project.name });
       yield* redisClient.effect.set(project.name, "running");
     });
   });
@@ -383,7 +466,7 @@ type Project =
 
 // should be careful since its k:v can def have a memory leak if not paying attention/ tests
 const getProjects = Effect.gen(function* () {
-  const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep`;
+  const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep || true`;
 
   const fs = yield* FileSystem.FileSystem;
 
@@ -414,7 +497,7 @@ const getProjects = Effect.gen(function* () {
       const { name, port } = yield* parseProcessMarkerArgument(markerArgument);
 
       // todo: don't hard code
-      const projectPath = `projects/${name}/node-project`;
+      const projectPath = `projects/${name}`;
       // todo: return stdout
 
       return Option.some({ name, port, cwd: projectPath, pid });
@@ -440,7 +523,8 @@ const getProjects = Effect.gen(function* () {
     ...projects,
     ...killedProjects.map((name) => ({
       status: "killed" as const,
-      cwd: "",
+      // todo: don't hardcode here
+      cwd: `projects/${name}`,
       name,
     })),
   ];
@@ -452,7 +536,6 @@ const spawnProject = Effect.gen(function* () {
   const { name, projectPath } = yield* createProject;
   const _ = yield* runProject({
     name,
-    projectPath,
   });
 
   // publishing is for alerting to create a new warm instance which we aren't doing yet I think?
@@ -610,7 +693,25 @@ const deleteProject = (name: string) =>
     yield* killProject(name);
     const fs = yield* FileSystem.FileSystem;
     const project = yield* getProject(name);
-    const rmEffect = fs.remove(project.cwd);
+    console.log("cwd?", project.cwd, "<-", project);
+
+    const rmEffect = fs.remove(project.cwd, { recursive: true });
     const redisEffect = redisClient.effect.del(project.name);
     yield* Effect.all([rmEffect, redisEffect]);
   });
+
+const killAllProjects = Effect.gen(function* () {
+  const projects = yield* getProjects;
+  const runningProjects = projects.filter(
+    (project) => project.status === "running"
+  );
+
+  const killEffects = runningProjects.map((project) =>
+    Effect.gen(function* () {
+      process.kill(project.pid);
+      yield* redisClient.effect.set(project.name, "killed");
+    })
+  );
+
+  yield* Effect.all(killEffects);
+});
