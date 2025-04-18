@@ -1,6 +1,8 @@
-import { Effect, Context, Data } from "effect";
+import { Effect, Context, Data, identity } from "effect";
+import * as util from "node:util";
 
 import { Option } from "effect";
+import { Array as A } from "effect";
 import path from "node:path";
 import { Hono } from "hono";
 
@@ -8,9 +10,10 @@ import { cors } from "hono/cors";
 
 import { FileSystem } from "@effect/platform";
 import { NodeFileSystem } from "@effect/platform-node";
-import { spawn } from "child_process";
+import { spawn, exec } from "child_process";
 import getPort from "get-port";
 import { makeRedisClient } from "zenbu-redis";
+import { project } from "effect/Layer";
 
 const redisClient = makeRedisClient();
 
@@ -164,6 +167,15 @@ export interface User {
   id: string;
   name: string;
 }
+
+// todo: embed this logic so we never have collisions
+// while (attempts < MAX_PROJECT_NAME_GENERATION_ATTEMPTS && !nameIsUnique) {
+//   warmName = generateRandomName();
+//   nameIsUnique =
+//     !runningProjects.some((p) => p.name === warmName) &&
+//     !activeProjectNames.has(warmName);
+//   attempts++;
+// }
 const generateRandomName = () => {
   const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
   const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
@@ -260,20 +272,15 @@ export class ChildProcessError extends Data.TaggedError(
   "ChildProcessError"
 )<{}> {}
 
-function unreachable(x: never): never {
-  throw new Error(`This code should be unreachable, but got: ${x}`);
-}
-
 type ServerInfo = {
   pid: number;
   cwd: string;
   port: number;
 };
-const publishStartedProject = (
-  process: EffectReturnType<ReturnType<typeof runProject>>
-) =>
+const publishStartedProject = (name: string) =>
   Effect.gen(function* () {
-    return null as unknown as ServerInfo;
+    // this state is used so we know at startup how to restore state
+    redisClient.effect.set(name, "running");
   });
 
 // will have to use this when i read everything
@@ -283,18 +290,75 @@ const parseProcessMarkerArgument = (markerArgument: string) =>
       /zenbu-daemon:project=(.+):assigned_port=(\d+)/
     );
     if (!match) {
-      yield* new GenericError();
-      return;
+      return yield* new GenericError();
     }
     const port = parseInt(match[2], 10);
+    const name = match[1];
+
+    return { port, name };
   });
 const getProcessTitleMarker = (name: string, port: number): string => {
   return `zenbu-daemon:project=${name}:assigned_port=${port}`;
 };
 
+const execPromise = util.promisify(exec);
+
+const getProjects = Effect.gen(function* () {
+  const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep`;
+
+  const execResult = yield* Effect.tryPromise(() => execPromise(command));
+  const lines = execResult.stdout.trim().split("\n");
+
+  const projectOptions = lines.map((line) =>
+    Effect.gen(function* () {
+      if (!line) {
+        return Option.none();
+      }
+      const psPidMatch = line.trim().match(/^(\d+)\s+/);
+
+      if (!psPidMatch) {
+        return Option.none();
+      }
+
+      const pid = parseInt(psPidMatch[1], 10);
+      const markerIndex = line.indexOf("zenbu-daemon:project=");
+
+      if (markerIndex === -1) {
+        return Option.none();
+      }
+
+      const markerArgument = line.slice(markerIndex);
+      const { name, port } = yield* parseProcessMarkerArgument(markerArgument);
+
+      // todo: don't hard code
+      const projectPath = `projects/${name}/node-project`;
+      // todo: return stdout
+
+      return Option.some({ name, port, cwd: projectPath });
+    })
+  );
+
+  const projects = yield* Effect.all(projectOptions).pipe(
+    Effect.map((opts) => A.filterMap(opts, identity))
+  );
+
+  const withStatus = projects.map((project) =>
+    Effect.gen(function* () {
+      return {
+        ...project,
+        status: yield* redisClient.effect.get(project.name),
+      };
+    })
+  );
+
+  const projectsWithStatus = yield* Effect.all(withStatus);
+
+  return projectsWithStatus;
+});
+
 const spawnProject = Effect.gen(function* () {
   const { name, projectPath } = yield* createProject;
-  const { assignedPort, pid } = yield* runProject({
+  const _ = yield* runProject({
     name,
     projectPath,
   });
@@ -322,7 +386,7 @@ const spawnProject = Effect.gen(function* () {
    *
    *
    */
-  const serverInfo = yield* publishStartedProject({ assignedPort, pid });
+  const serverInfo = yield* publishStartedProject(name);
   // do we want to do this, or just alert some reactive process manager that it needs to re-derive
   /**
    *  if we have server info I suppose we can just send that to client?

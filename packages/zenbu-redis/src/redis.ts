@@ -1,9 +1,9 @@
 import Redis from "ioredis";
 import { config } from "dotenv";
-import { Context, Effect } from "effect";
+import { Context, Data, Effect } from "effect";
 config();
 
-export type RedisSchema = {};
+export type RedisSchema = Record<string, "running" | "paused" | "killed">;
 
 export const makeRedisClient = () => {
   const client = new Redis({
@@ -20,12 +20,16 @@ export const makeRedisClient = () => {
   };
 };
 
+export class NotFoundError extends Data.TaggedError("NotFoundError")<{}> {}
+
 export const get = <K extends keyof RedisSchema>(key: K) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
-
     const raw = yield* Effect.tryPromise(() => client.get(key));
-    return raw ? (JSON.parse(raw) as RedisSchema[K]) : null;
+    if (!raw) {
+      return yield* new NotFoundError();
+    }
+    return JSON.parse(raw) as RedisSchema[K];
   });
 
 export const set = <K extends keyof RedisSchema>(
