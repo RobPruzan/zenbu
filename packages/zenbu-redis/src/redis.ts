@@ -3,7 +3,8 @@ import { config } from "dotenv";
 import { Context, Data, Effect } from "effect";
 config();
 
-export type RedisSchema = Record<string, "running" | "paused" | "killed">;
+export type ProjectStatus ="running" | "paused" | "killed"
+export type RedisSchema = Record<string, ProjectStatus>;
 
 export const makeRedisClient = () => {
   const client = new Redis({

@@ -1,23 +1,20 @@
-import { Effect, Context, Data, identity } from "effect";
+import { Data, identity, Effect } from "effect";
 import * as util from "node:util";
 
 import { Option } from "effect";
 import { Array as A } from "effect";
-import path from "node:path";
 import { Hono } from "hono";
 
 import { cors } from "hono/cors";
 
 import { FileSystem } from "@effect/platform";
-import { NodeFileSystem } from "@effect/platform-node";
+import { NodeContext } from "@effect/platform-node";
 import { spawn, exec } from "child_process";
 import getPort from "get-port";
-import { makeRedisClient } from "zenbu-redis";
-import { project } from "effect/Layer";
+import { makeRedisClient, RedisContext } from "zenbu-redis";
 
 const redisClient = makeRedisClient();
 
-const PROJECTS_DIR = path.resolve(process.cwd(), "projects");
 const RUN_SERVER_COMMAND = ["node", "index.js"];
 const ADJECTIVES = [
   "funny",
@@ -141,32 +138,48 @@ const NOUNS = [
  *
  */
 
-export const createServer = () => {
+export const createServer = async () => {
+  await Effect.runPromise(
+    Effect.gen(function* () {
+      yield* restoreProjects;
+    })
+      .pipe(Effect.provide(NodeContext.layer))
+      .pipe(Effect.provideService(RedisContext, { client: redisClient }))
+  );
   const app = new Hono()
     .use("*", cors())
-    .post("/create-project", async (opts) => {
-      const runtimeUser = { id: "abc", name: "Alice" };
-
-      await Effect.runPromise(
-        program.pipe(Effect.provideService(UserContext, runtimeUser))
+    .post("/get-projects", async (opts) => {
+      const exit = await Effect.runPromiseExit(
+        getProjects.pipe(Effect.provide(NodeContext.layer))
       );
+
+      switch (exit._tag) {
+        case "Success": {
+          const projects = exit.value;
+          return opts.json({ projects });
+        }
+        case "Failure": {
+          const error = exit.cause.toJSON();
+          return opts.json({ error });
+        }
+      }
+    })
+    .post("/create-project", async (opts) => {
+      const exit = await Effect.runPromiseExit(
+        spawnProject.pipe(Effect.provide(NodeContext.layer))
+      );
+
+      switch (exit._tag) {
+        case "Success": {
+          return opts.json({ project: exit.value });
+        }
+        case "Failure": {
+          const error = exit.cause.toJSON();
+          return opts.json({ error });
+        }
+      }
     });
 };
-
-const program = Effect.gen(function* (_) {
-  const user = yield* _(UserContext);
-
-  const anotherUser = yield* programTwo;
-});
-
-const programTwo = Effect.gen(function* (_) {
-  const user = yield* _(UserContext);
-  return user;
-});
-export interface User {
-  id: string;
-  name: string;
-}
 
 // todo: embed this logic so we never have collisions
 // while (attempts < MAX_PROJECT_NAME_GENERATION_ATTEMPTS && !nameIsUnique) {
@@ -186,8 +199,6 @@ const generateRandomName = () => {
  *
  * okay was worth a shot to see o3 could one shot this, but apparently not it doesn't know the API's (I have a feeling it can do it since everything is quite modular?)
  */
-
-export const UserContext = Context.GenericTag<User>("UserContext");
 
 const createProject = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -223,7 +234,7 @@ const runProject = ({
     const exists = yield* fs.exists(actualCodePath);
 
     if (exists) {
-      yield* new GenericError();
+      return yield* new GenericError();
     }
 
     const markerArgument = getProcessTitleMarker(name, assignedPort);
@@ -303,8 +314,49 @@ const getProcessTitleMarker = (name: string, port: number): string => {
 
 const execPromise = util.promisify(exec);
 
+const restoreProjects = Effect.gen(function* () {
+  const projects = yield* getProjects;
+  const startedProjects = projects.map((project) => {
+    return Effect.gen(function* () {
+      if (project.status === "running") {
+        return;
+      }
+      yield* runProject({ name: project.name, projectPath: project.cwd });
+      yield* redisClient.effect.set(project.name, "running");
+    });
+  });
+
+  yield* Effect.all(startedProjects);
+});
+
+type Project =
+  | {
+      status: "running";
+      name: string;
+      port: number;
+      cwd: string;
+      pid: number;
+    }
+  | {
+      status: "paused";
+      name: string;
+      port: number;
+      cwd: string;
+      pid: number;
+    }
+  | {
+      status: "killed";
+      name: string;
+      cwd: string;
+    };
+
+// should be careful since its k:v can def have a memory leak if not paying attention/ tests
 const getProjects = Effect.gen(function* () {
   const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep`;
+
+  const fs = yield* FileSystem.FileSystem;
+
+  const projectNames = yield* fs.readDirectory("/projects");
 
   const execResult = yield* Effect.tryPromise(() => execPromise(command));
   const lines = execResult.stdout.trim().split("\n");
@@ -334,26 +386,35 @@ const getProjects = Effect.gen(function* () {
       const projectPath = `projects/${name}/node-project`;
       // todo: return stdout
 
-      return Option.some({ name, port, cwd: projectPath });
+      return Option.some({ name, port, cwd: projectPath, pid });
     })
   );
 
   const projects = yield* Effect.all(projectOptions).pipe(
-    Effect.map((opts) => A.filterMap(opts, identity))
+    Effect.map((opts) =>
+      A.filterMap(opts, identity).map((value) => ({
+        ...value,
+        // I think it must be running if there exist something from the PS, it may also be paused I should check in on that and see how to query that
+        status: "running" as const,
+      }))
+    )
   );
 
-  const withStatus = projects.map((project) =>
-    Effect.gen(function* () {
-      return {
-        ...project,
-        status: yield* redisClient.effect.get(project.name),
-      };
-    })
+  const killedProjects = projectNames.filter(
+    (projectName) =>
+      !projects.some((runningProject) => runningProject.name === projectName)
   );
 
-  const projectsWithStatus = yield* Effect.all(withStatus);
+  const allProjects: Array<Project> = [
+    ...projects,
+    ...killedProjects.map((name) => ({
+      status: "killed" as const,
+      cwd: "",
+      name,
+    })),
+  ];
 
-  return projectsWithStatus;
+  return allProjects;
 });
 
 const spawnProject = Effect.gen(function* () {
@@ -456,3 +517,19 @@ const restoreProjectState = Effect.gen(function* () {});
 - when the server is spawned for the first time ever, you must run pnpm install, and await till that's complete to run pnpm run dev (pnpm install && pnpm run dev)
 
  */
+process.on("beforeExit", async () => {
+  const effect = Effect.gen(function* () {
+    const projects = yield* getProjects;
+
+    const markProjectsKilled = projects.map((project) =>
+      Effect.gen(function* () {
+        yield* redisClient.effect.set(project.name, "killed");
+      })
+    );
+
+    yield* Effect.all(markProjectsKilled);
+  })
+    .pipe(Effect.provide(NodeContext.layer))
+    .pipe(Effect.provideService(RedisContext, { client: redisClient }));
+  const _ = await Effect.runPromiseExit(effect);
+});
