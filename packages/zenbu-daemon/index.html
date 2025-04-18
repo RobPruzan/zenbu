@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zenbu Daemon</title>
+    <style>
+      :root {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --accent: #bb86fc;
+        --danger: #cf6679;
+        --success: #03dac6;
+        --border: #333333;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--accent);
+      }
+
+      h2 {
+        font-size: 1.8rem;
+        margin: 1.5rem 0 1rem 0;
+        color: var(--accent);
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      button {
+        background-color: var(--accent);
+        color: #000;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      button:hover {
+        opacity: 0.85;
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .project-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+      }
+
+      .project-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1rem;
+        position: relative;
+      }
+
+      .project-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+        word-break: break-all;
+      }
+
+      .status {
+        display: inline-block;
+        padding: 0.3rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-bottom: 0.8rem;
+      }
+
+      .status.running {
+        background-color: var(--success);
+        color: #000;
+      }
+
+      .status.paused {
+        background-color: #ffd600;
+        color: #000;
+      }
+
+      .status.killed {
+        background-color: var(--danger);
+        color: #fff;
+      }
+
+      .project-details {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .project-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+
+      .project-actions button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+      }
+
+      .refresh-icon {
+        width: 16px;
+        height: 16px;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+
+      .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 200px;
+      }
+
+      .loading::after {
+        content: "";
+        width: 50px;
+        height: 50px;
+        border: 5px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spinner 0.8s linear infinite;
+      }
+
+      @keyframes spinner {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        padding: 1rem;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        max-width: 300px;
+      }
+
+      .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .toast.success {
+        border-left: 4px solid var(--success);
+      }
+
+      .toast.error {
+        border-left: 4px solid var(--danger);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Zenbu Project Manager</h1>
+
+    <div class="card">
+      <div class="toolbar">
+        <h2>Projects</h2>
+        <button id="refresh-btn">
+          <svg
+            class="refresh-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12C4.01 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z"
+              fill="currentColor"
+            />
+          </svg>
+          Refresh
+        </button>
+      </div>
+
+      <div id="project-container" class="loading"></div>
+    </div>
+
+    <div class="card">
+      <h2>Create New Project</h2>
+      <p style="margin-bottom: 1rem">
+        Click the button below to create a new project with a randomly generated
+        name.
+      </p>
+      <button id="create-project-btn">Create Project</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      // DOM Elements
+      const projectContainer = document.getElementById("project-container");
+      const refreshBtn = document.getElementById("refresh-btn");
+      const createProjectBtn = document.getElementById("create-project-btn");
+      const toast = document.getElementById("toast");
+
+      // API Functions
+      async function fetchProjects() {
+        try {
+          projectContainer.className = "loading";
+          const response = await fetch("/get-projects", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const data = await response.json();
+
+          if (data.error) {
+            showToast(
+              "Error fetching projects: " + JSON.stringify(data.error),
+              "error"
+            );
+            projectContainer.innerHTML = `<div class="empty-state">Error loading projects</div>`;
+            projectContainer.className = "project-list";
+            return;
+          }
+
+          renderProjects(data.projects);
+        } catch (error) {
+          showToast("Network error: " + error.message, "error");
+          projectContainer.innerHTML = `<div class="empty-state">Error connecting to server</div>`;
+          projectContainer.className = "project-list";
+        }
+      }
+
+      async function createProject() {
+        try {
+          createProjectBtn.disabled = true;
+          createProjectBtn.textContent = "Creating...";
+
+          const response = await fetch("/create-project", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const data = await response.json();
+
+          if (data.error) {
+            showToast(
+              "Error creating project: " + JSON.stringify(data.error),
+              "error"
+            );
+          } else {
+            showToast("Project created successfully!", "success");
+            fetchProjects();
+          }
+        } catch (error) {
+          showToast("Network error: " + error.message, "error");
+        } finally {
+          createProjectBtn.disabled = false;
+          createProjectBtn.textContent = "Create Project";
+        }
+      }
+
+      // Rendering Functions
+      function renderProjects(projects) {
+        projectContainer.className = "project-list";
+
+        if (!projects || projects.length === 0) {
+          projectContainer.innerHTML = `
+          <div class="empty-state">
+            No projects found. Create your first project!
+          </div>
+        `;
+          return;
+        }
+
+        const projectsHTML = projects
+          .map(
+            (project) => `
+        <div class="project-card">
+          <h3>${project.name}</h3>
+          <span class="status ${project.status}">${project.status}</span>
+          
+          ${
+            project.status !== "killed"
+              ? `
+            <div class="project-details">
+              <div>Port: ${project.port || "N/A"}</div>
+              <div>PID: ${project.pid || "N/A"}</div>
+              ${project.cwd ? `<div>Path: ${project.cwd}</div>` : ""}
+            </div>
+          `
+              : `
+            <div class="project-details">
+              <div>Status: Not running</div>
+              ${project.cwd ? `<div>Path: ${project.cwd}</div>` : ""}
+            </div>
+          `
+          }
+          
+          <div class="project-actions">
+            ${
+              project.status === "running"
+                ? `
+              <button class="pause-btn" data-name="${project.name}">Pause</button>
+              <button class="view-btn" data-port="${project.port}">View App</button>
+            `
+                : ""
+            }
+            
+            ${
+              project.status === "paused"
+                ? `
+              <button class="resume-btn" data-name="${project.name}">Resume</button>
+            `
+                : ""
+            }
+            
+            ${
+              project.status === "killed"
+                ? `
+              <button class="start-btn" data-name="${project.name}">Start</button>
+            `
+                : ""
+            }
+          </div>
+        </div>
+      `
+          )
+          .join("");
+
+        projectContainer.innerHTML = projectsHTML;
+
+        // Add event listeners to the action buttons
+        document.querySelectorAll(".view-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const port = btn.getAttribute("data-port");
+            window.open(`http://localhost:${port}`, "_blank");
+          });
+        });
+
+        // Note: The following buttons would need API endpoints to be implemented
+        document.querySelectorAll(".pause-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const name = btn.getAttribute("data-name");
+            showToast(
+              `Pause functionality not yet implemented for ${name}`,
+              "error"
+            );
+          });
+        });
+
+        document.querySelectorAll(".resume-btn, .start-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const name = btn.getAttribute("data-name");
+            showToast(
+              `Resume/Start functionality not yet implemented for ${name}`,
+              "error"
+            );
+          });
+        });
+      }
+
+      function showToast(message, type = "success") {
+        toast.textContent = message;
+        toast.className = `toast ${type} show`;
+
+        setTimeout(() => {
+          toast.className = "toast";
+        }, 3000);
+      }
+
+      // Event Listeners
+      refreshBtn.addEventListener("click", fetchProjects);
+      createProjectBtn.addEventListener("click", createProject);
+
+      // Initial load
+      document.addEventListener("DOMContentLoaded", fetchProjects);
+    </script>
+  </body>
+</html>

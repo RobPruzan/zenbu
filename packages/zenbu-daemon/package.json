@@ -2,7 +2,7 @@
   "name": "zenbu-daemon",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/daemon.ts",
     "test": "vitest"
   },
   "main": "src/create-daemon.ts",
