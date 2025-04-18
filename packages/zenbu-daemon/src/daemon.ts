@@ -19,6 +19,15 @@ import { validator } from "hono/validator";
 
 const redisClient = makeRedisClient();
 
+export const getCreatedAt = (name: string) =>
+  Effect.gen(function* () {
+    const res = yield* redisClient.effect.get(`${name}_createdAt`);
+    if (res.kind !== "createdAt") {
+      return yield* new RedisValidationError();
+    }
+    return res.createdAt;
+  });
+const execPromise = util.promisify(exec);
 const RUN_SERVER_COMMAND = ["node", "index.js"];
 const ADJECTIVES = [
   "funny",
@@ -124,6 +133,117 @@ const NOUNS = [
   "samurai",
   "pirate",
 ];
+
+const getProjects = Effect.gen(function* () {
+  const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep || true`;
+
+  const fs = yield* FileSystem.FileSystem;
+
+  const projectNames = yield* fs.readDirectory("projects");
+  console.log("the projects", projectNames);
+
+  const execResult = yield* Effect.tryPromise(() => execPromise(command));
+  const lines = execResult.stdout.trim().split("\n");
+
+  const projectOptions = lines.map((line) =>
+    Effect.gen(function* () {
+      if (!line) {
+        return Option.none();
+      }
+      const psPidMatch = line.trim().match(/^(\d+)\s+/);
+
+      if (!psPidMatch) {
+        return Option.none();
+      }
+
+      const pid = parseInt(psPidMatch[1], 10);
+      const markerIndex = line.indexOf("zenbu-daemon:project=");
+
+      if (markerIndex === -1) {
+        return Option.none();
+      }
+
+      const markerArgument = line.slice(markerIndex);
+      console.log("wut", markerArgument);
+
+      const { name, port, createdAt } =
+        yield* parseProcessMarkerArgument(markerArgument);
+
+      // todo: don't hard code
+      const projectPath = `projects/${name}`;
+      // todo: return stdout
+
+      return Option.some({ name, port, cwd: projectPath, pid, createdAt });
+    })
+  );
+
+  const projects = yield* Effect.all(projectOptions).pipe(
+    Effect.map((opts) =>
+      A.filterMap(opts, identity).map((value) => ({
+        ...value,
+        // I think it must be running if there exist something from the PS, it may also be paused I should check in on that and see how to query that
+        status: "running" as const,
+      }))
+    )
+  );
+
+  const killedProjects = projectNames.filter(
+    (projectName) =>
+      !projects.some((runningProject) => runningProject.name === projectName)
+  );
+
+  console.log("is it my goober?");
+
+  const killedProjectsMetaEffects = killedProjects.map((name) =>
+    Effect.gen(function* () {
+      return {
+        status: "killed" as const,
+        // todo: don't hardcode here
+        cwd: `projects/${name}`,
+        name,
+        createdAt: yield* getCreatedAt(name),
+      };
+    })
+  );
+  const killedProjectsMeta = yield* Effect.all(killedProjectsMetaEffects);
+  const allProjects: Array<Project> = [
+    ...projects,
+    ...killedProjectsMeta,
+    // ..),
+  ];
+
+  return allProjects;
+});
+const killAllProjects = Effect.gen(function* () {
+  const projects = yield* getProjects;
+  const runningProjects = projects.filter(
+    (project) => project.status === "running"
+  );
+
+  const killEffects = runningProjects.map((project) =>
+    Effect.gen(function* () {
+      process.kill(project.pid);
+      yield* redisClient.effect.set(project.name, {
+        kind: "status",
+        status: "killed",
+      });
+    })
+  );
+
+  yield* Effect.all(killEffects);
+});
+const nuke = () =>
+  Effect.runPromiseExit(
+    Effect.gen(function* () {
+      yield* killAllProjects;
+      yield* Effect.tryPromise(() => redisClient.flushdb());
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.remove("projects", { recursive: true });
+      yield* fs.makeDirectory("projects");
+    })
+      .pipe(Effect.provideService(RedisContext, { client: redisClient }))
+      .pipe(Effect.provide(NodeContext.layer))
+  );
 /**
  * so have some distinct tasks we know we want now:
  *
@@ -147,7 +267,7 @@ export const createServer = async () => {
 
   await Effect.runPromise(
     Effect.gen(function* () {
-      yield* restoreProjects;
+      // yield* restoreProjects;
     })
       .pipe(Effect.provide(NodeContext.layer))
       .pipe(Effect.provideService(RedisContext, { client: redisClient }))
@@ -188,8 +308,14 @@ export const createServer = async () => {
         const { name } = opts.req.valid("json");
         const exit = await Effect.runPromiseExit(
           Effect.gen(function* () {
-            yield* runProject({ name });
-            yield* redisClient.effect.set(name, "running");
+            // this will probably throw a nasty error if you use this incorrectly
+            const createdAt = yield* getCreatedAt(name);
+            const project = yield* runProject({ name, createdAt });
+            yield* redisClient.effect.set(name, {
+              kind: "status",
+              status: "running",
+            });
+            return project;
           })
             .pipe(Effect.provide(NodeContext.layer))
             .pipe(Effect.provideService(RedisContext, { client: redisClient }))
@@ -262,17 +388,29 @@ export const createServer = async () => {
         }
       }
     )
+    .post("/nuke", async (opts) => {
+      const exit = await nuke();
+
+      return opts.json({ success: true });
+    })
     .post("/get-projects", async (opts) => {
+      console.log("get projects request");
+
       const exit = await Effect.runPromiseExit(
-        getProjects.pipe(Effect.provide(NodeContext.layer))
+        getProjects
+          .pipe(Effect.provide(NodeContext.layer))
+          .pipe(Effect.provideService(RedisContext, { client: redisClient }))
       );
 
       switch (exit._tag) {
         case "Success": {
           const projects = exit.value;
+          console.log("returning", projects);
           return opts.json({ projects });
         }
         case "Failure": {
+          console.log("get fucked", exit.toJSON());
+
           const error = exit.cause.toJSON();
           return opts.json({ error });
         }
@@ -280,7 +418,9 @@ export const createServer = async () => {
     })
     .post("/create-project", async (opts) => {
       const exit = await Effect.runPromiseExit(
-        spawnProject.pipe(Effect.provide(NodeContext.layer))
+        spawnProject
+          .pipe(Effect.provide(NodeContext.layer))
+          .pipe(Effect.provideService(RedisContext, { client: redisClient }))
       );
 
       switch (exit._tag) {
@@ -317,6 +457,7 @@ export const createServer = async () => {
 //     !activeProjectNames.has(warmName);
 //   attempts++;
 // }
+
 const generateRandomName = () => {
   const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
   const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
@@ -334,10 +475,12 @@ const createProject = Effect.gen(function* () {
   const projectPath = `projects/${name}`;
   yield* fs.makeDirectory(projectPath);
   yield* fs.copy("templates/node-project", projectPath);
-  return { name, projectPath };
+  const createdAt = Date.now();
+  yield* setCreatedAt(name, createdAt);
+  return { name, projectPath, createdAt };
 });
 
-const runProject = ({ name }: { name: string }) =>
+const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
   Effect.gen(function* () {
     // todo: just a stub for now, impl later
     // need to make sure to give the process a title for metadata so we can search in the future
@@ -345,7 +488,7 @@ const runProject = ({ name }: { name: string }) =>
     const projects = yield* getProjects;
     const existing = projects.find(
       (project) => project.name === name && project.status === "running"
-    );
+    ) as RunningProject | undefined;
     if (existing) {
       return existing;
     }
@@ -368,7 +511,11 @@ const runProject = ({ name }: { name: string }) =>
       return yield* new GenericError();
     }
 
-    const markerArgument = getProcessTitleMarker(name, assignedPort);
+    const markerArgument = yield* getProcessTitleMarker({
+      name,
+      port: assignedPort,
+      createdAt,
+    });
     const args = [...RUN_SERVER_COMMAND.slice(1), markerArgument];
     const child = spawn(RUN_SERVER_COMMAND[0], args, {
       cwd: actualCodePath,
@@ -386,14 +533,15 @@ const runProject = ({ name }: { name: string }) =>
 
     // todo: forward stdout,stderr stream
 
-    return {
+    const runningProject: RunningProject = {
       pid,
       cwd: actualCodePath,
       name,
       port: assignedPort,
       status: "running",
-      // assignedPort,
-    } satisfies Project;
+      createdAt,
+    };
+    return runningProject;
   });
 
 export type EffectReturnType<T> =
@@ -408,6 +556,9 @@ export type EffectReturnType<T> =
  *
  */
 export class GenericError extends Data.TaggedError("GenericError")<{}> {}
+export class RedisValidationError extends Data.TaggedError(
+  "RedisValidationError"
+)<{}> {}
 export class ProjectNotFoundError extends Data.TaggedError(
   "ProjectNotFoundError"
 )<{}> {}
@@ -418,28 +569,48 @@ export class ChildProcessError extends Data.TaggedError(
 const publishStartedProject = (name: string) =>
   Effect.gen(function* () {
     // this state is used so we know at startup how to restore state
-    redisClient.effect.set(name, "running");
+    redisClient.effect.set(name, {
+      kind: "status",
+      status: "running",
+    });
   });
 
 // will have to use this when i read everything
 const parseProcessMarkerArgument = (markerArgument: string) =>
   Effect.gen(function* () {
     const match = markerArgument.match(
-      /zenbu-daemon:project=(.+):assigned_port=(\d+)/
+      /zenbu-daemon:project=(.+):assigned_port=(\d+):created_at=(\d+)/
     );
     if (!match) {
       return yield* new GenericError();
     }
     const port = parseInt(match[2], 10);
     const name = match[1];
+    const createdAt = parseInt(match[3], 10);
 
-    return { port, name };
+    return { port, name, createdAt };
   });
-const getProcessTitleMarker = (name: string, port: number): string => {
-  return `zenbu-daemon:project=${name}:assigned_port=${port}`;
-};
-
-const execPromise = util.promisify(exec);
+export const setCreatedAt = (name: string, createdAt: number) =>
+  Effect.gen(function* () {
+    yield* redisClient.effect.set(`${name}_createdAt`, {
+      createdAt,
+      kind: "createdAt",
+    });
+  });
+const getProcessTitleMarker = ({
+  createdAt,
+  name,
+  port,
+}: {
+  name: string;
+  port: number;
+  createdAt: number;
+}) =>
+  Effect.gen(function* () {
+    // const createdAt = Date.now();
+    // yield* setCreatedAt(name, createdAt);
+    return `zenbu-daemon:project=${name}:assigned_port=${port}:created_at=${createdAt}`;
+  });
 
 const restoreProjects = Effect.gen(function* () {
   const projects = yield* getProjects;
@@ -448,33 +619,41 @@ const restoreProjects = Effect.gen(function* () {
       if (project.status !== "running") {
         return;
       }
-      yield* runProject({ name: project.name });
-      yield* redisClient.effect.set(project.name, "running");
+      const createdAt = yield* getCreatedAt(project.name);
+      yield* runProject({ name: project.name, createdAt });
+      yield* redisClient.effect.set(project.name, {
+        kind: "status",
+        status: "running",
+      });
     });
   });
 
   yield* Effect.all(startedProjects);
 });
+export type RunningProject = {
+  status: "running";
+  name: string;
+  port: number;
+  cwd: string;
+  pid: number;
+  createdAt: number;
+};
 
 export type Project =
-  | {
-      status: "running";
-      name: string;
-      port: number;
-      cwd: string;
-      pid: number;
-    }
+  | RunningProject
   | {
       status: "paused";
       name: string;
       port: number;
       cwd: string;
       pid: number;
+      createdAt: number;
     }
   | {
       status: "killed";
       name: string;
       cwd: string;
+      createdAt: number;
     };
 
 /**
@@ -484,78 +663,18 @@ export type Project =
  */
 
 // should be careful since its k:v can def have a memory leak if not paying attention/ tests
-const getProjects = Effect.gen(function* () {
-  const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep || true`;
-
-  const fs = yield* FileSystem.FileSystem;
-
-  const projectNames = yield* fs.readDirectory("projects");
-
-  const execResult = yield* Effect.tryPromise(() => execPromise(command));
-  const lines = execResult.stdout.trim().split("\n");
-
-  const projectOptions = lines.map((line) =>
-    Effect.gen(function* () {
-      if (!line) {
-        return Option.none();
-      }
-      const psPidMatch = line.trim().match(/^(\d+)\s+/);
-
-      if (!psPidMatch) {
-        return Option.none();
-      }
-
-      const pid = parseInt(psPidMatch[1], 10);
-      const markerIndex = line.indexOf("zenbu-daemon:project=");
-
-      if (markerIndex === -1) {
-        return Option.none();
-      }
-
-      const markerArgument = line.slice(markerIndex);
-      const { name, port } = yield* parseProcessMarkerArgument(markerArgument);
-
-      // todo: don't hard code
-      const projectPath = `projects/${name}`;
-      // todo: return stdout
-
-      return Option.some({ name, port, cwd: projectPath, pid });
-    })
-  );
-
-  const projects = yield* Effect.all(projectOptions).pipe(
-    Effect.map((opts) =>
-      A.filterMap(opts, identity).map((value) => ({
-        ...value,
-        // I think it must be running if there exist something from the PS, it may also be paused I should check in on that and see how to query that
-        status: "running" as const,
-      }))
-    )
-  );
-
-  const killedProjects = projectNames.filter(
-    (projectName) =>
-      !projects.some((runningProject) => runningProject.name === projectName)
-  );
-
-  const allProjects: Array<Project> = [
-    ...projects,
-    ...killedProjects.map((name) => ({
-      status: "killed" as const,
-      // todo: don't hardcode here
-      cwd: `projects/${name}`,
-      name,
-    })),
-  ];
-
-  return allProjects;
-});
 
 const spawnProject = Effect.gen(function* () {
-  const { name } = yield* createProject;
+  console.log("spawning");
+
+  const { name, createdAt } = yield* createProject;
+  console.log("created", name);
+
   const project = yield* runProject({
     name,
+    createdAt,
   });
+  console.log("got prject", project);
 
   // publishing is for alerting to create a new warm instance which we aren't doing yet I think?
   // wait no it was to start tracking it correctly even if it dies we can re-up it
@@ -581,6 +700,8 @@ const spawnProject = Effect.gen(function* () {
    *
    */
   const serverInfo = yield* publishStartedProject(name);
+  console.log("published");
+
   return project;
   // do we want to do this, or just alert some reactive process manager that it needs to re-derive
   /**
@@ -657,7 +778,10 @@ process.on("beforeExit", async () => {
 
     const markProjectsKilled = projects.map((project) =>
       Effect.gen(function* () {
-        yield* redisClient.effect.set(project.name, "killed");
+        yield* redisClient.effect.set(project.name, {
+          kind: "status",
+          status: "killed",
+        });
       })
     );
 
@@ -704,7 +828,10 @@ const killProject = (name: string) =>
 
     process.kill(project.pid);
 
-    yield* redisClient.effect.set(project.name, "killed");
+    yield* redisClient.effect.set(project.name, {
+      kind: "status",
+      status: "killed",
+    });
   });
 
 // todo: migrate to passing around id's this is easy
@@ -718,22 +845,6 @@ const deleteProject = (name: string) =>
     const redisEffect = redisClient.effect.del(project.name);
     yield* Effect.all([rmEffect, redisEffect]);
   });
-
-const killAllProjects = Effect.gen(function* () {
-  const projects = yield* getProjects;
-  const runningProjects = projects.filter(
-    (project) => project.status === "running"
-  );
-
-  const killEffects = runningProjects.map((project) =>
-    Effect.gen(function* () {
-      process.kill(project.pid);
-      yield* redisClient.effect.set(project.name, "killed");
-    })
-  );
-
-  yield* Effect.all(killEffects);
-});
 
 /**
  *

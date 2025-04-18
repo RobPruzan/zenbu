@@ -15,13 +15,17 @@ import { useMakeRequest } from "src/components/devtools-overlay";
 
 const snapshot = { kind: "off" as const };
 
-export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
+export const IFrameWrapperTwo = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const refEventCatcher = useRef<HTMLDivElement | null>(null);
   // const { inspectorState, setInspectorState } = useInspectorStateContext();
-  const { inspector } = useChatStore();
+  // const { inspector } = useChatStore();
 
-  const { iframe } = useChatStore();
+  const iframe = useChatStore(state => state.iframe );
 
   // const makeRequest = useMakeRequest();
 
@@ -89,7 +93,7 @@ export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
           id={IFRAME_ID}
           key={lastUpdate}
           ref={iframeRef}
-          src={url}
+          src={iframe.state.url}
           style={{
             height: "100%",
             width: "100%",
@@ -102,5 +106,3 @@ export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const IFRAME_ID = "child-iframe";
-
-

@@ -13,7 +13,7 @@ export const daemonRouter = createTRPCRouter({
     // some abstraction for this pattern will probably be needed
     const exit = await Effect.runPromiseExit(
       Effect.gen(function* () {
-        const projects = yield* Effect.tryPromise(() =>
+        const { projects } = yield* Effect.tryPromise(() =>
           daemonRPC["get-projects"].$post().then((res) => res.json()),
         );
         return projects;
@@ -116,6 +116,10 @@ export const daemonRouter = createTRPCRouter({
         }
       }
     }),
+
+  nuke: publicProcedure.mutation(async () => {
+    await daemonRPC.nuke.$post();
+  }),
   startProject: publicProcedure
     .input(
       z.object({
@@ -141,7 +145,7 @@ export const daemonRouter = createTRPCRouter({
 
       switch (exit._tag) {
         case "Success": {
-          return exit.value;
+          return exit.value.project;
         }
         case "Failure": {
           throw new TRPCError({
