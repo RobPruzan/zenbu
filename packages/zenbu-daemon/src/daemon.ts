@@ -306,6 +306,7 @@ export const createServer = async () => {
       console.log(`Server is running on http://${host}:${info.port}`);
     }
   );
+  return app;
 };
 
 // todo: embed this logic so we never have collisions
@@ -342,8 +343,9 @@ const runProject = ({ name }: { name: string }) =>
     // need to make sure to give the process a title for metadata so we can search in the future
 
     const projects = yield* getProjects;
-    const existing =
-      projects.find((project) => project.name === name)?.status === "running";
+    const existing = projects.find(
+      (project) => project.name === name && project.status === "running"
+    );
     if (existing) {
       return existing;
     }
@@ -386,8 +388,12 @@ const runProject = ({ name }: { name: string }) =>
 
     return {
       pid,
-      assignedPort,
-    };
+      cwd: actualCodePath,
+      name,
+      port: assignedPort,
+      status: "running",
+      // assignedPort,
+    } satisfies Project;
   });
 
 export type EffectReturnType<T> =
@@ -450,7 +456,7 @@ const restoreProjects = Effect.gen(function* () {
   yield* Effect.all(startedProjects);
 });
 
-type Project =
+export type Project =
   | {
       status: "running";
       name: string;
@@ -470,6 +476,12 @@ type Project =
       name: string;
       cwd: string;
     };
+
+/**
+ *
+ * TODO WE NEED LOTS OF INVARIANTS, SOME OPERATIONS (LIKE RUN PROJECT) ARE IMPLEMENTED AS IDEMPOTENT EFFECTS
+ * SO IF THAT EVER IS NO LONGER THE CASE THEY WILL BREAK, THIS SHOULD BE CAUGHT BY AN INVARIANT
+ */
 
 // should be careful since its k:v can def have a memory leak if not paying attention/ tests
 const getProjects = Effect.gen(function* () {
@@ -540,8 +552,8 @@ const getProjects = Effect.gen(function* () {
 });
 
 const spawnProject = Effect.gen(function* () {
-  const { name, projectPath } = yield* createProject;
-  const _ = yield* runProject({
+  const { name } = yield* createProject;
+  const project = yield* runProject({
     name,
   });
 
@@ -569,6 +581,7 @@ const spawnProject = Effect.gen(function* () {
    *
    */
   const serverInfo = yield* publishStartedProject(name);
+  return project;
   // do we want to do this, or just alert some reactive process manager that it needs to re-derive
   /**
    *  if we have server info I suppose we can just send that to client?
@@ -728,3 +741,5 @@ const killAllProjects = Effect.gen(function* () {
  *
  * project starts are fast so I can do optimizations like prewarmed servers when I have something good to validate against it
  */
+
+export type DaemonAppType = Awaited<ReturnType<typeof createServer>>;
