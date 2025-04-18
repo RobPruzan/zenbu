@@ -5,7 +5,14 @@ import { cwd } from "process";
 config();
 
 export type ProjectStatus = "running" | "paused" | "killed";
-export type RedisSchema = Record<string, ProjectStatus>;
+export type RedisSchema = Record<
+  string,
+  | { kind: "status"; status: ProjectStatus }
+  | {
+      kind: "createdAt";
+      createdAt: number;
+    }
+>;
 
 export const makeRedisClient = () => {
   const client = new Redis({
@@ -23,7 +30,10 @@ export const makeRedisClient = () => {
   return client as typeof client & { effect: typeof effectClient };
 };
 
-export class NotFoundError extends Data.TaggedError("NotFoundError")<{}> {}
+export class NotFoundError extends Data.TaggedError("NotFoundError")<{
+  key: string;
+  list: Array<any>;
+}> {}
 
 export const del = <K extends keyof RedisSchema>(key: K) =>
   Effect.gen(function* () {
@@ -36,7 +46,10 @@ export const get = <K extends keyof RedisSchema>(key: K) =>
     const { client } = yield* RedisContext;
     const raw = yield* Effect.tryPromise(() => client.get(key));
     if (!raw) {
-      return yield* new NotFoundError();
+      return yield* new NotFoundError({
+        key,
+        list: yield* Effect.tryPromise(() => client.keys("*")),
+      });
     }
     return JSON.parse(raw) as RedisSchema[K];
   });
