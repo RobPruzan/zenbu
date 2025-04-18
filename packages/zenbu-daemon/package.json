@@ -5,7 +5,7 @@
     "dev": "tsx watch src/daemon.ts",
     "test": "vitest"
   },
-  "main": "src/create-daemon.ts",
+  "main": "src/daemon.ts",
   "dependencies": {
     "@effect/platform-node-shared": "^0.30.20",
     "@hono/node-server": "^1.14.1",

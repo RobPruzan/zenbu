@@ -3,86 +3,152 @@ import { createTRPCRouter, publicProcedure } from "../trpc";
 import { db } from "src/server/db";
 import * as Schema from "src/server/db/schema";
 import { iife } from "src/lib/utils";
+import { Project } from "zenbu-daemon";
+import { TRPCError } from "@trpc/server";
+import { Effect } from "effect";
+import { daemonRPC } from "src/app/rpc";
 
 export const daemonRouter = createTRPCRouter({
-  getProjects: publicProcedure.query(async ({ input }) => {
-    const jsonPromise = fetch("http://localhost:40000/projects").then((res) =>
-      res.json(),
-    );
-    const schema = z.object({
-      name: z.string(),
-      port: z.number(),
-      pid: z.number(),
-      cwd: z.string(),
-    });
-
-    const [json, projects] = await Promise.all([
-      jsonPromise,
-      db.select().from(Schema.project),
-    ]);
-
-    const data = z.array(schema).parse(json);
-    console.log("data vs projects", data, projects);
-
-    const withId = data.map((item) => ({
-      ...item,
-      id: iife(() => {
-        const project = projects.find((project) => project.name === item.name);
-        if (!project) {
-          return null;
-          // throw new Error(
-          //   "Invariant: must map perfectly, something went wrong upstream",
-          // );
-        }
-
-        return project.projectId;
+  getProjects: publicProcedure.query(async () => {
+    // some abstraction for this pattern will probably be needed
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const projects = yield* Effect.tryPromise(() =>
+          daemonRPC["get-projects"].$post().then((res) => res.json()),
+        );
+        return projects;
       }),
-    }));
-    return withId.filter((i) => !!i.id);
+    );
+
+    switch (exit._tag) {
+      case "Success": {
+        return exit.value;
+      }
+      case "Failure": {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: exit.toString(),
+        });
+      }
+    }
   }),
 
-  createProject: publicProcedure.mutation(async ({ ctx }) => {
-    console.log("creating project?");
+  createProject: publicProcedure.mutation(async () => {
+    const exit = await Effect.runPromiseExit(
+      Effect.gen(function* () {
+        const { project } = yield* Effect.tryPromise(() =>
+          daemonRPC["create-project"].$post().then((res) => res.json()),
+        );
+        return project;
+      }),
+    );
 
-    const startTime = performance.now();
-
-    const json = await fetch("http://localhost:40000/projects", {
-      method: "POST",
-    }).then((res) => res.json());
-
-    const schema = z.object({
-      name: z.string(),
-      port: z.number(),
-      pid: z.number(),
-      cwd: z.string(),
-    });
-
-    const data = schema.parse(json);
-
-    const endTime = performance.now();
-    console.log(`Project creation took ${endTime - startTime}ms`);
-
-    return data;
+    switch (exit._tag) {
+      case "Success": {
+        return exit.value;
+      }
+      case "Failure": {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: exit.toString(),
+        });
+      }
+    }
   }),
   deleteProject: publicProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async (opts) => {
-      const json = await fetch(
-        `http://localhost:40000/projects/${opts.input.name}`,
-        {
-          method: "DELETE",
-        },
-      ).then((res) => res.json());
-      const schema = z.object({
-        name: z.string(),
-        port: z.number(),
-        pid: z.number(),
-        cwd: z.string(),
-      });
-      const data = schema.parse(json);
-      return data;
+      const exit = await Effect.runPromiseExit(
+        Effect.gen(function* () {
+          yield* Effect.tryPromise(() =>
+            daemonRPC["delete-project"]
+              .$post({
+                json: {
+                  name: opts.input.name,
+                },
+              })
+              .then((res) => res.json()),
+          );
+          return Schema.project;
+        }),
+      );
+
+      switch (exit._tag) {
+        case "Success": {
+          return { success: true };
+        }
+        case "Failure": {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: exit.toString(),
+          });
+        }
+      }
     }),
-  resumeProject: publicProcedure.input(z.object({})).mutation(() => {
-    // once we impl resuming and dead/alive states
-  }),
+
+  killProject: publicProcedure
+    .input(z.object({ name: z.string() }))
+    .mutation(async (opts) => {
+      const exit = await Effect.runPromiseExit(
+        Effect.gen(function* () {
+          yield* Effect.tryPromise(() =>
+            daemonRPC["kill-project"]
+              .$post({
+                json: {
+                  name: opts.input.name,
+                },
+              })
+              .then((res) => res.json()),
+          );
+          return Schema.project;
+        }),
+      );
+
+      switch (exit._tag) {
+        case "Success": {
+          return { success: true };
+        }
+        case "Failure": {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: exit.toString(),
+          });
+        }
+      }
+    }),
+  startProject: publicProcedure
+    .input(
+      z.object({
+        name: z.string(),
+      }),
+    )
+    .mutation(async (opts) => {
+      // some abstraction for this pattern will probably be needed
+      const exit = await Effect.runPromiseExit(
+        Effect.gen(function* () {
+          const projects = yield* Effect.tryPromise(() =>
+            daemonRPC["start-project"]
+              .$post({
+                json: {
+                  name: opts.input.name,
+                },
+              })
+              .then((res) => res.json()),
+          );
+          return projects;
+        }),
+      );
+
+      switch (exit._tag) {
+        case "Success": {
+          return exit.value;
+        }
+        case "Failure": {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: exit.toString(),
+          });
+        }
+      }
+    }),
 });

@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { Data, identity, Effect } from "effect";
 import { eq } from "drizzle-orm";
 import { db } from "src/server/db";
 import { firstRecordAssert, firstRecord } from "src/server/db/utils";
@@ -6,6 +7,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import * as Schema from "src/server/db/schema";
 import { eventLogEventSchema } from "zenbu-plugin/src/ws/schemas";
+import { daemonRPC } from "src/app/rpc";
 // import * as Schema from "../db/schema.ts"
 // import { db } from "src/server/";
 
@@ -35,30 +37,6 @@ export const chatRouter = createTRPCRouter({
       }
 
       return project.events;
-    }),
-  createProject: publicProcedure
-    .input(
-      z.object({
-        name: z.string(),
-      }),
-    )
-    .mutation(async (opts) => {
-      const project = await db
-        .insert(Schema.project)
-        .values({
-          name: opts.input.name,
-        })
-        .returning()
-        .then(firstRecordAssert);
-
-      const projectChat = await db.insert(Schema.projectChat).values({
-        projectId: project.projectId,
-        events: [],
-      });
-      return {
-        project,
-        projectChat,
-      };
     }),
   persistEvent: publicProcedure
     .input(
