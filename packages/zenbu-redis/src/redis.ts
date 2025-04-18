@@ -1,17 +1,18 @@
 import Redis from "ioredis";
 import { config } from "dotenv";
 import { Context, Data, Effect } from "effect";
+import { cwd } from "process";
 config();
 
 export type ProjectStatus = "running" | "paused" | "killed";
 export type RedisSchema = Record<string, ProjectStatus>;
+console.log("wat", cwd());
 
 export const makeRedisClient = () => {
   const client = new Redis({
-    host: process.env.REDIS_HOST || "127.0.0.1",
-    port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
-    password: process.env.REDIS_PASSWORD,
+    path: "../zenbu-redis/redis-data/redis.sock",
   });
+
   return {
     ...client,
     set: client.set,
@@ -48,5 +49,3 @@ export const set = <K extends keyof RedisSchema>(
 export const RedisContext = Context.GenericTag<{
   client: ReturnType<typeof makeRedisClient>;
 }>("RedisContext");
-
-
