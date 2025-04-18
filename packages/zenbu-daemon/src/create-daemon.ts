@@ -406,7 +406,6 @@ function safeSpawn(
   }
 }
 
-
 async function getRunningProjects(): Promise<Result<ProjectProcessInfo[]>> {
   const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep`;
   const execResult = await safeExec(command);
