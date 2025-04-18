@@ -131,7 +131,7 @@ const ProjectCommandContent = ({ onClose }: { onClose: () => void }) => {
   );
 
   return (
-    <Command className="rounded-lg border border-border/40 bg-background shadow-2xl backdrop-blur">
+    <Command className="rounded-lg border  bg-background shadow-2xl backdrop-blur">
       <CommandInput
         placeholder="Search projects..."
         value={search}
@@ -194,7 +194,7 @@ export function ProjectCommandPalette({
       <Suspense
         fallback={
           <div
-            className="rounded-lg border border-border/40 bg-background p-4 shadow-2xl backdrop-blur"
+            className="rounded-lg border  bg-background p-4 shadow-2xl backdrop-blur"
             style={{ height: "343px", width: "640px" }}
           >
             <div className="flex flex-col space-y-2">

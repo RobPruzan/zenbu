@@ -177,7 +177,7 @@ export default function BottomPanelInner({
   }, [isOpen]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden border-t border-border/40 bg-background backdrop-blur-sm relative">
+    <div className="flex h-full flex-col overflow-hidden border-t  bg-background backdrop-blur-sm relative">
       <Button
         variant="ghost"
         size="icon"

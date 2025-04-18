@@ -386,7 +386,7 @@ export const ScreenshotTool = () => {
         }}
         className="absolute top-2 left-1/2 transform -translate-x-1/2"
       >
-        <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-background/95 p-2 shadow-lg backdrop-blur">
+        <div className="flex items-center gap-2 rounded-lg border  bg-background/95 p-2 shadow-lg backdrop-blur">
           <HoverCard openDelay={200}>
             <HoverCardTrigger asChild>
               <Button
@@ -462,7 +462,7 @@ export const ScreenshotTool = () => {
 
 const SuccessfulScreenshot = ({ onDismiss }: { onDismiss: () => void }) => {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border/40 bg-background/95 p-2 shadow-lg backdrop-blur">
+    <div className="flex flex-col gap-2 rounded-lg border  bg-background/95 p-2 shadow-lg backdrop-blur">
       <div className="flex items-center gap-4">
         <span className="text-sm font-medium">Screenshot captured!</span>
         <Button

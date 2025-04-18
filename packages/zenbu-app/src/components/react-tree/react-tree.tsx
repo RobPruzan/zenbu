@@ -39,7 +39,7 @@ export function ReactTree({ onClose }: ReactTreeProps) {
     if (!component.props && !component.state && !component.context) return null;
 
     return (
-      <div className="ml-6 mt-1 space-y-2 border-l-2 border-border/40 pl-2 text-xs">
+      <div className="ml-6 mt-1 space-y-2 border-l-2  pl-2 text-xs">
         {component.props && Object.keys(component.props).length > 0 && (
           <div className="space-y-1">
             <div className="font-medium text-purple-400">Props</div>
@@ -143,7 +143,7 @@ export function ReactTree({ onClose }: ReactTreeProps) {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b border-border/40 px-2 py-1.5">
+      <div className="flex items-center justify-between border-b  px-2 py-1.5">
         <div className="relative flex w-full items-center gap-1.5">
           <Search className="absolute left-2 h-3.5 w-3.5 text-muted-foreground" />
           <input

@@ -269,7 +269,7 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-1 border-b border-border/40 px-2 py-1">
+      <div className="flex items-center gap-1 border-b  px-2 py-1">
         <Button
           variant="ghost"
           size="icon"
