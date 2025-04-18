@@ -227,52 +227,6 @@
         color: #999;
       }
 
-      .toast-container {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .toast {
-        background-color: var(--card-bg);
-        color: var(--text-color);
-        padding: 1rem;
-        border-radius: 4px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        max-width: 300px;
-        animation: slide-in 0.3s ease forwards;
-        position: relative;
-      }
-
-      .toast.success {
-        border-left: 4px solid var(--success);
-      }
-
-      .toast.error {
-        border-left: 4px solid var(--danger);
-      }
-
-      .toast-close {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: none;
-        border: none;
-        color: var(--text-color);
-        font-size: 18px;
-        padding: 2px 6px;
-        cursor: pointer;
-        opacity: 0.7;
-      }
-
-      .toast-close:hover {
-        opacity: 1;
-      }
-
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -329,28 +283,6 @@
         justify-content: flex-end;
         gap: 0.75rem;
       }
-
-      @keyframes slide-in {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-
-      @keyframes slide-out {
-        from {
-          transform: translateX(0);
-          opacity: 1;
-        }
-        to {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-      }
     </style>
   </head>
   <body>
@@ -387,8 +319,6 @@
       <button id="create-project-btn">Create Project</button>
     </div>
 
-    <div id="toast-container" class="toast-container"></div>
-
     <div id="confirm-modal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -409,7 +339,6 @@
       const projectContainer = document.getElementById("project-container");
       const refreshBtn = document.getElementById("refresh-btn");
       const createProjectBtn = document.getElementById("create-project-btn");
-      const toastContainer = document.getElementById("toast-container");
       const confirmModal = document.getElementById("confirm-modal");
       const modalTitle = document.getElementById("modal-title");
       const modalBody = document.getElementById("modal-body");
@@ -440,10 +369,6 @@
           const data = await response.json();
 
           if (data.error) {
-            showToast(
-              "Error fetching projects: " + JSON.stringify(data.error),
-              "error"
-            );
             projectContainer.innerHTML = `<div class="empty-state">Error loading projects</div>`;
             projectContainer.className = "project-list";
             return;
@@ -451,7 +376,6 @@
 
           renderProjects(data.projects);
         } catch (error) {
-          showToast("Network error: " + error.message, "error");
           projectContainer.innerHTML = `<div class="empty-state">Error connecting to server</div>`;
           projectContainer.className = "project-list";
         } finally {
@@ -489,17 +413,11 @@
 
           const data = await response.json();
 
-          if (data.error) {
-            showToast(
-              "Error creating project: " + JSON.stringify(data.error),
-              "error"
-            );
-          } else {
-            showToast("Project created successfully!", "success");
+          if (!data.error) {
             await fetchProjects();
           }
         } catch (error) {
-          showToast("Network error: " + error.message, "error");
+          // Handle error silently
         } finally {
           createProjectBtn.textContent = "Create Project";
           createProjectBtn.disabled = false;
@@ -529,19 +447,13 @@
           const data = await response.json();
 
           if (data.error) {
-            showToast(
-              "Error killing project: " + JSON.stringify(data.error),
-              "error"
-            );
             buttonElement.textContent = originalButtonText;
             buttonElement.disabled = false;
           } else {
-            showToast(`Project ${name} killed successfully!`, "success");
             // Don't re-enable the button - instead update the whole list
             await fetchProjects();
           }
         } catch (error) {
-          showToast("Network error: " + error.message, "error");
           buttonElement.textContent = originalButtonText;
           buttonElement.disabled = false;
         } finally {
@@ -571,19 +483,13 @@
           const data = await response.json();
 
           if (data.error) {
-            showToast(
-              "Error deleting project: " + JSON.stringify(data.error),
-              "error"
-            );
             buttonElement.textContent = originalButtonText;
             buttonElement.disabled = false;
           } else {
-            showToast(`Project ${name} deleted successfully!`, "success");
             // Don't re-enable the button - instead update the whole list
             await fetchProjects();
           }
         } catch (error) {
-          showToast("Network error: " + error.message, "error");
           buttonElement.textContent = originalButtonText;
           buttonElement.disabled = false;
         } finally {
@@ -613,19 +519,13 @@
           const data = await response.json();
 
           if (data.error) {
-            showToast(
-              "Error starting project: " + JSON.stringify(data.error),
-              "error"
-            );
             buttonElement.textContent = originalButtonText;
             buttonElement.disabled = false;
           } else {
-            showToast(`Project ${name} started successfully!`, "success");
             // Don't re-enable the button - instead update the whole list
             await fetchProjects();
           }
         } catch (error) {
-          showToast("Network error: " + error.message, "error");
           buttonElement.textContent = originalButtonText;
           buttonElement.disabled = false;
         } finally {
@@ -634,26 +534,6 @@
       }
 
       // Confirmation modal
-      function showConfirmation(title, message, confirmCallback) {
-        modalTitle.textContent = title;
-        modalBody.textContent = message;
-
-        // Store the callback
-        modalConfirm.onclick = () => {
-          confirmCallback();
-          hideConfirmation();
-        };
-
-        // Show the modal
-        confirmModal.classList.add("active");
-
-        // Set up cancel action
-        modalCancel.onclick = hideConfirmation;
-      }
-
-      function hideConfirmation() {
-        confirmModal.classList.remove("active");
-      }
 
       // Rendering Functions
       function renderProjects(projects) {
@@ -741,23 +621,14 @@
           btn.addEventListener("click", (e) => {
             const name = btn.getAttribute("data-name");
 
-            showConfirmation(
-              "Kill Project",
-              `Are you sure you want to kill project "${name}"? This will stop the server but keep files.`,
-              () => killProject(name, btn)
-            );
+            killProject(name, btn);
           });
         });
 
         document.querySelectorAll(".delete-btn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
             const name = btn.getAttribute("data-name");
-
-            showConfirmation(
-              "Delete Project",
-              `Are you sure you want to delete project "${name}"? This will permanently delete all files!`,
-              () => deleteProject(name, btn)
-            );
+            deleteProject(name, btn);
           });
         });
 
@@ -765,20 +636,14 @@
         document.querySelectorAll(".pause-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
             const name = btn.getAttribute("data-name");
-            showToast(
-              `Pause functionality not yet implemented for ${name}`,
-              "error"
-            );
+            // Functionality not implemented
           });
         });
 
         document.querySelectorAll(".resume-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
             const name = btn.getAttribute("data-name");
-            showToast(
-              `Resume functionality not yet implemented for ${name}`,
-              "error"
-            );
+            // Functionality not implemented
           });
         });
 
@@ -786,42 +651,9 @@
         document.querySelectorAll(".start-btn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
             const name = btn.getAttribute("data-name");
-            showConfirmation(
-              "Start Project",
-              `Are you sure you want to start project "${name}"?`,
-              () => startProject(name, btn)
-            );
+            startProject(name, btn);
           });
         });
-      }
-
-      function showToast(message, type = "success") {
-        const toast = document.createElement("div");
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
-          ${message}
-          <button class="toast-close">&times;</button>
-        `;
-
-        toastContainer.appendChild(toast);
-
-        // Close button
-        const closeBtn = toast.querySelector(".toast-close");
-        closeBtn.addEventListener("click", () => {
-          removeToast(toast);
-        });
-
-        // Auto close after 5 seconds
-        setTimeout(() => removeToast(toast), 5000);
-      }
-
-      function removeToast(toast) {
-        toast.style.animation = "slide-out 0.3s forwards";
-        setTimeout(() => {
-          if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-          }
-        }, 300);
       }
 
       // Event Listeners
