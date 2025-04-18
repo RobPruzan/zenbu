@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="http://localhost:42069"> </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Node Server</title>
+</head>
+<body>
+    <h1>Hello from the Node.js server!</h1>
+    <p>This is the index.html file being served.</p>
+</body>
+</html>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+    
+    h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: #ffffff;
+    }
+    
+    p {
+        font-size: 1.25rem;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+    }
+    
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .card {
+        padding: 1.5rem;
+        border: 1px solid #333;
+        border-radius: 10px;
+        background-color: #1e1e1e;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    
+    .card:hover {
+        color: #64b5f6;
+        border-color: #64b5f6;
+    }
+    
+    .card h2 {
+        margin: 0 0 1rem 0;
+        font-size: 1.5rem;
+        color: #bbdefb;
+    }
+    
+    .card p {
+        margin: 0;
+        font-size: 1.25rem;
+        line-height: 1.5;
+    }
+    
+    .logo {
+        height: 1em;
+        margin-left: 0.5rem;
+    }
+
+    a {
+        color: #64b5f6;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    code {
+        background-color: #2d2d2d;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+
+    footer {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #333;
+        text-align: center;
+    }
+</style>
+
+<div class="container">
+    <main>
+        <h1>Welcome to <a href="https://nextjs.org">Next.js!</a></h1>
+        
+        <p>
+            Get started by editing <code>pages/index.js</code>
+        </p>
+        
+        <div class="grid">
+            <a href="https://nextjs.org/docs" class="card">
+                <h2>Documentation &rarr;</h2>
+                <p>Find in-depth information about Next.js features and API.</p>
+            </a>
+            
+            <a href="https://nextjs.org/learn" class="card">
+                <h2>Learn &rarr;</h2>
+                <p>Learn about Next.js in an interactive course with quizzes!</p>
+            </a>
+            
+            <a href="https://github.com/vercel/next.js/tree/master/examples" class="card">
+                <h2>Examples &rarr;</h2>
+                <p>Discover and deploy boilerplate example Next.js projects.</p>
+            </a>
+            
+            <a href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app" class="card">
+                <h2>Deploy &rarr;</h2>
+                <p>Instantly deploy your Next.js site to a public URL with Vercel.</p>
+            </a>
+        </div>
+    </main>
+    
+    <footer>
+        <a
+            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Powered by <span class="logo">Vercel</span>
+        </a>
+    </footer>
+</div>

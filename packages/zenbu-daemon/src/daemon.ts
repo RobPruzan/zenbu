@@ -1,5 +1,7 @@
-import { Effect, Context } from "effect";
+import { Effect, Context, Data } from "effect";
 
+import { Option } from "effect";
+import path from "node:path";
 import { Hono } from "hono";
 
 import { cors } from "hono/cors";
@@ -7,7 +9,114 @@ import { cors } from "hono/cors";
 import { FileSystem } from "@effect/platform";
 import { NodeFileSystem } from "@effect/platform-node";
 import { spawn } from "child_process";
+import getPort from "get-port";
 
+const PROJECTS_DIR = path.resolve(process.cwd(), "projects");
+const RUN_SERVER_COMMAND = ["node", "index.js"];
+const ADJECTIVES = [
+  "funny",
+  "silly",
+  "quick",
+  "happy",
+  "bright",
+  "calm",
+  "eager",
+  "jolly",
+  "kind",
+  "lively",
+  "zesty",
+  "witty",
+  "dandy",
+  "groovy",
+  "nimble",
+  "brave",
+  "clever",
+  "dapper",
+  "elegant",
+  "fierce",
+  "gentle",
+  "humble",
+  "iconic",
+  "jazzy",
+  "keen",
+  "loyal",
+  "mighty",
+  "noble",
+  "optimal",
+  "peppy",
+  "quirky",
+  "radiant",
+  "smooth",
+  "tender",
+  "unique",
+  "vibrant",
+  "wise",
+  "xenial",
+  "youthful",
+  "zealous",
+  "ancient",
+  "bold",
+  "cosmic",
+  "dazzling",
+  "enchanted",
+  "fluffy",
+  "glowing",
+  "heroic",
+  "intrepid",
+  "jovial",
+];
+const NOUNS = [
+  "penguin",
+  "wall",
+  "cat",
+  "dog",
+  "river",
+  "cloud",
+  "star",
+  "moon",
+  "apple",
+  "banana",
+  "robot",
+  "puffin",
+  "comet",
+  "galaxy",
+  "meerkat",
+  "tiger",
+  "unicorn",
+  "volcano",
+  "walrus",
+  "xylophone",
+  "yeti",
+  "zebra",
+  "asteroid",
+  "bison",
+  "cactus",
+  "dolphin",
+  "eagle",
+  "falcon",
+  "giraffe",
+  "hedgehog",
+  "iguana",
+  "jaguar",
+  "koala",
+  "lemur",
+  "mammoth",
+  "narwhal",
+  "octopus",
+  "panther",
+  "quokka",
+  "raccoon",
+  "squirrel",
+  "toucan",
+  "viper",
+  "wombat",
+  "phoenix",
+  "dragon",
+  "wizard",
+  "ninja",
+  "samurai",
+  "pirate",
+];
 /**
  * so have some distinct tasks we know we want now:
  *
@@ -52,7 +161,12 @@ export interface User {
   id: string;
   name: string;
 }
-
+const generateRandomName = () => {
+  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+  const suffix = Math.floor(Math.random() * 900) + 100;
+  return `${adj}-${noun}-${suffix}`;
+};
 /**
  *
  * okay was worth a shot to see o3 could one shot this, but apparently not it doesn't know the API's (I have a feeling it can do it since everything is quite modular?)
@@ -61,20 +175,68 @@ export interface User {
 export const UserContext = Context.GenericTag<User>("UserContext");
 
 const createProject = Effect.gen(function* () {
-  return "i guess a path?";
+  const fs = yield* FileSystem.FileSystem;
+  const name = generateRandomName();
+  const projectPath = `projects/${name}`;
+  yield* fs.makeDirectory(projectPath);
+  yield* fs.copy("templates/node-project", projectPath);
+  return { name, projectPath };
 });
 
-const runProject = (projectPath: string) =>
+const runProject = ({
+  projectPath,
+  name,
+}: {
+  projectPath: string;
+  name: string;
+}) =>
   Effect.gen(function* () {
     // todo: just a stub for now, impl later
     // need to make sure to give the process a title for metadata so we can search in the future
-    const process = spawn("pnpm run dev");
 
-    return process;
+    const assignedPort = yield* Effect.tryPromise(() => getPort());
+
+    /**
+     * whats the dir?
+     * projects/<name>/node-project?
+     */
+
+    // todo: don't hard code node-project, or forward slashes for directories
+    const fs = yield* FileSystem.FileSystem;
+    const actualCodePath = `projects/${name}/node-project`;
+
+    const exists = yield* fs.exists(actualCodePath);
+
+    if (exists) {
+      yield* new GenericError();
+    }
+
+    const markerArgument = getProcessTitleMarker(name, assignedPort);
+    const args = [...RUN_SERVER_COMMAND.slice(1), markerArgument];
+    const child = spawn(RUN_SERVER_COMMAND[0], args, {
+      cwd: actualCodePath,
+      stdio: ["ignore", "pipe", "pipe"],
+      detached: true,
+      // do we want to forward env? Maybe? Maybe not?
+      env: { ...process.env, PORT: assignedPort.toString() }, // port gets red by the inner process, needs to be able to read process forwarded from parent process
+    });
+
+    // surprised we can access this synchronously ngl
+    const pid = child.pid;
+    if (!pid) {
+      return yield* new ChildProcessError();
+    }
+
+    // todo: forward stdout,stderr stream
+
+    return {
+      pid,
+      assignedPort,
+    };
   });
 
 type EffectReturnType<T> =
-  T extends Effect.Effect<infer R, never, never> ? R : never;
+  T extends Effect.Effect<infer R, any, any> ? R : never;
 
 const start = (pid: number) => {};
 const pause = (pid: number) => {};
@@ -90,6 +252,14 @@ const kill = (pid: number) => {};
  *
  *
  */
+export class GenericError extends Data.TaggedError("GenericError")<{}> {}
+export class ChildProcessError extends Data.TaggedError(
+  "ChildProcessError"
+)<{}> {}
+
+function unreachable(x: never): never {
+  throw new Error(`This code should be unreachable, but got: ${x}`);
+}
 
 type ServerInfo = {
   pid: number;
@@ -102,17 +272,31 @@ const publishStartedProject = (
   Effect.gen(function* () {
     return null as unknown as ServerInfo;
   });
-const getProcessTitleMarker = (
-  name: string,
-  port: number,
-  pid: number | string
-): string => {
+
+const parseProcessMarkerArgument = (markerArgument: string) =>
+  Effect.gen(function* () {
+    const match = markerArgument.match(
+      /zenbu-daemon:project=(.+):assigned_port=(\d+):pid=(.+)/
+    );
+    if (!match) {
+      yield* new GenericError();
+      return;
+    }
+    const port = parseInt(match[2], 10);
+  });
+const getProcessTitleMarker = (name: string, port: number): string => {
   return `zenbu-daemon:project=${name}:assigned_port=${port}`;
 };
+
 const spawnProject = Effect.gen(function* () {
-  const projectPath = yield* createProject;
-  const serverProcess = yield* runProject(projectPath);
-  const serverInfo = yield* publishStartedProject(serverProcess);
+  const { name, projectPath } = yield* createProject;
+  const { assignedPort, pid } = yield* runProject({
+    name,
+    projectPath,
+  });
+  // publishing is for alerting to create a new warm instance which we aren't doing yet I think?
+  // wait no it was to start tracking it correctly even if it dies we can re-up it
+  const serverInfo = yield* publishStartedProject({ assignedPort, pid });
   // do we want to do this, or just alert some reactive process manager that it needs to re-derive
   /**
    *  if we have server info I suppose we can just send that to client?
