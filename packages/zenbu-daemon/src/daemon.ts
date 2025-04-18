@@ -12,8 +12,11 @@ import { NodeContext } from "@effect/platform-node";
 import { spawn, exec } from "child_process";
 import getPort from "get-port";
 import { makeRedisClient, RedisContext } from "zenbu-redis";
+import { serve } from "@hono/node-server";
 
 const redisClient = makeRedisClient();
+console.log('redis client set?', redisClient.set);
+
 
 const RUN_SERVER_COMMAND = ["node", "index.js"];
 const ADJECTIVES = [
@@ -139,6 +142,8 @@ const NOUNS = [
  */
 
 export const createServer = async () => {
+  console.log("Starting server...");
+
   await Effect.runPromise(
     Effect.gen(function* () {
       yield* restoreProjects;
@@ -148,6 +153,28 @@ export const createServer = async () => {
   );
   const app = new Hono()
     .use("*", cors())
+    .get("/", async (opts) => {
+      const exit = await Effect.runPromiseExit(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const file = yield* fs.readFileString("index.html");
+          return file;
+        }).pipe(Effect.provide(NodeContext.layer))
+      );
+
+      switch (exit._tag) {
+        case "Success": {
+          return new Response(exit.value, {
+            headers: {
+              ["Content-type"]: "text/html",
+            },
+          });
+        }
+        case "Failure": {
+          return opts.json({ error: exit.cause.toJSON() });
+        }
+      }
+    })
     .post("/get-projects", async (opts) => {
       const exit = await Effect.runPromiseExit(
         getProjects.pipe(Effect.provide(NodeContext.layer))
@@ -179,6 +206,19 @@ export const createServer = async () => {
         }
       }
     });
+
+  const port = 40_000;
+  const host = "localhost";
+  const $server = serve(
+    {
+      fetch: app.fetch,
+      port,
+      hostname: host,
+    },
+    (info) => {
+      console.log(`Server is running on http://${host}:${info.port}`);
+    }
+  );
 };
 
 // todo: embed this logic so we never have collisions
@@ -229,11 +269,13 @@ const runProject = ({
 
     // todo: don't hard code node-project, or forward slashes for directories
     const fs = yield* FileSystem.FileSystem;
-    const actualCodePath = `projects/${name}/node-project`;
+    const actualCodePath = `projects/${name}`;
 
     const exists = yield* fs.exists(actualCodePath);
+    console.log('exists?', exists);
+    
 
-    if (exists) {
+    if (!exists) {
       return yield* new GenericError();
     }
 
@@ -356,7 +398,7 @@ const getProjects = Effect.gen(function* () {
 
   const fs = yield* FileSystem.FileSystem;
 
-  const projectNames = yield* fs.readDirectory("/projects");
+  const projectNames = yield* fs.readDirectory("projects");
 
   const execResult = yield* Effect.tryPromise(() => execPromise(command));
   const lines = execResult.stdout.trim().split("\n");
@@ -533,3 +575,5 @@ process.on("beforeExit", async () => {
     .pipe(Effect.provideService(RedisContext, { client: redisClient }));
   const _ = await Effect.runPromiseExit(effect);
 });
+
+createServer();
