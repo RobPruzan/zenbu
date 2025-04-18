@@ -214,7 +214,7 @@ const getProcessTitleMarker = (
   port: number,
   pid: number | string
 ): string => {
-  // why is the pid in it? We should just list, port can be cached there ig
+  // why is the pid in it? We should just list, port can be cached there
   return `zenbu-daemon:project=${name}:assigned_port=${port}:pid=${pid}`;
 };
 
@@ -405,6 +405,7 @@ function safeSpawn(
     );
   }
 }
+
 
 async function getRunningProjects(): Promise<Result<ProjectProcessInfo[]>> {
   const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep`;
