@@ -341,6 +341,13 @@ const runProject = ({ name }: { name: string }) =>
     // todo: just a stub for now, impl later
     // need to make sure to give the process a title for metadata so we can search in the future
 
+    const projects = yield* getProjects;
+    const existing =
+      projects.find((project) => project.name === name)?.status === "running";
+    if (existing) {
+      return existing;
+    }
+
     const assignedPort = yield* Effect.tryPromise(() => getPort());
 
     /**
@@ -693,7 +700,6 @@ const deleteProject = (name: string) =>
     yield* killProject(name);
     const fs = yield* FileSystem.FileSystem;
     const project = yield* getProject(name);
-    console.log("cwd?", project.cwd, "<-", project);
 
     const rmEffect = fs.remove(project.cwd, { recursive: true });
     const redisEffect = redisClient.effect.del(project.name);
@@ -715,3 +721,10 @@ const killAllProjects = Effect.gen(function* () {
 
   yield* Effect.all(killEffects);
 });
+
+/**
+ *
+ * er I don't really care about pausing/resuming for now that's just an optimization
+ *
+ * project starts are fast so I can do optimizations like prewarmed servers when I have something good to validate against it
+ */
