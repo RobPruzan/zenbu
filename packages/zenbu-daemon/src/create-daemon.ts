@@ -998,7 +998,6 @@ async function runInitializeAndServe(app: Hono) {
           //   );
           // }
         );
-
         const server = $server.listen(port, hostname);
         injectWebSocket(server as HttpServer);
       }
