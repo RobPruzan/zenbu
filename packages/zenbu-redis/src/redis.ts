@@ -6,7 +6,6 @@ config();
 
 export type ProjectStatus = "running" | "paused" | "killed";
 export type RedisSchema = Record<string, ProjectStatus>;
-console.log("wat", cwd());
 
 export const makeRedisClient = () => {
   const client = new Redis({
@@ -17,15 +16,23 @@ export const makeRedisClient = () => {
     ...client,
     set: client.set,
     get: client.get,
+    
     effect: {
       get,
       set,
+      del
     },
   };
 };
 
 export class NotFoundError extends Data.TaggedError("NotFoundError")<{}> {}
 
+export const del = <K extends keyof RedisSchema>(key: K) =>
+  Effect.gen(function* () {
+    const { client } = yield* RedisContext;
+    const res = yield* Effect.tryPromise(() => client.del(key));
+    return res
+  });
 export const get = <K extends keyof RedisSchema>(key: K) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;

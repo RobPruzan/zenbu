@@ -15,8 +15,6 @@ import { makeRedisClient, RedisContext } from "zenbu-redis";
 import { serve } from "@hono/node-server";
 
 const redisClient = makeRedisClient();
-console.log('redis client set?', redisClient.set);
-
 
 const RUN_SERVER_COMMAND = ["node", "index.js"];
 const ADJECTIVES = [
@@ -272,8 +270,7 @@ const runProject = ({
     const actualCodePath = `projects/${name}`;
 
     const exists = yield* fs.exists(actualCodePath);
-    console.log('exists?', exists);
-    
+    console.log("exists?", exists);
 
     if (!exists) {
       return yield* new GenericError();
@@ -303,14 +300,8 @@ const runProject = ({
     };
   });
 
-type EffectReturnType<T> =
+export type EffectReturnType<T> =
   T extends Effect.Effect<infer R, any, any> ? R : never;
-
-const start = (pid: number) => {};
-const pause = (pid: number) => {};
-const resume = (path: string) => {};
-// i guess killing is pausing? But there could be a semantic difference? right yes u should be able to pause a process without killing it
-const kill = (pid: number) => {};
 
 /**
  *  we will want some process manager with stop/start/resume/pause
@@ -321,15 +312,13 @@ const kill = (pid: number) => {};
  *
  */
 export class GenericError extends Data.TaggedError("GenericError")<{}> {}
+export class ProjectNotFoundError extends Data.TaggedError(
+  "ProjectNotFoundError"
+)<{}> {}
 export class ChildProcessError extends Data.TaggedError(
   "ChildProcessError"
 )<{}> {}
 
-type ServerInfo = {
-  pid: number;
-  cwd: string;
-  port: number;
-};
 const publishStartedProject = (name: string) =>
   Effect.gen(function* () {
     // this state is used so we know at startup how to restore state
@@ -577,3 +566,51 @@ process.on("beforeExit", async () => {
 });
 
 createServer();
+
+/**
+ *
+ *
+ * just for debugging it would be nice if I could delete projects nicely, probably quite simple just a few compositions
+ *
+ * oops I should have a kill then compose a delete
+ *
+ */
+const getProject = (name: string) =>
+  Effect.gen(function* () {
+    const projects = yield* getProjects;
+
+    const project = projects.find((project) => project.name === name);
+
+    if (!project) {
+      return yield* new ProjectNotFoundError();
+    }
+    return project;
+  });
+
+const killProject = (name: string) =>
+  Effect.gen(function* () {
+    /**
+     * technically doing a get projects then filtering is the same wrapper operation I can do
+     */
+
+    const project = yield* getProject(name);
+
+    if (project.status !== "running") {
+      return;
+    }
+
+    process.kill(project.pid);
+
+    yield* redisClient.effect.set(project.name, "killed");
+  });
+
+// todo: migrate to passing around id's this is easy
+const deleteProject = (name: string) =>
+  Effect.gen(function* () {
+    yield* killProject(name);
+    const fs = yield* FileSystem.FileSystem;
+    const project = yield* getProject(name);
+    const rmEffect = fs.remove(project.cwd);
+    const redisEffect = redisClient.effect.del(project.name);
+    yield* Effect.all([rmEffect, redisEffect]);
+  });
