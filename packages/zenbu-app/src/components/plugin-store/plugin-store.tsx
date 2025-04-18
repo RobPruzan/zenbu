@@ -18,7 +18,8 @@ const mockPlugins: Plugin[] = [
   {
     id: "1",
     name: "Advanced Tables",
-    description: "Enhance table formatting and manipulation with powerful features.",
+    description:
+      "Enhance table formatting and manipulation with powerful features.",
     author: "Tony Grosinger",
     downloads: 542890,
     stars: 1245,
@@ -80,24 +81,31 @@ export function PluginStore({ isOpen, onClose }: PluginStoreProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "installed">("all");
 
-  const filteredPlugins = mockPlugins.filter(plugin => {
-    const matchesSearch = plugin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         plugin.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filter === "all" || (filter === "installed" && plugin.isInstalled);
+  const filteredPlugins = mockPlugins.filter((plugin) => {
+    const matchesSearch =
+      plugin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      plugin.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      filter === "all" || (filter === "installed" && plugin.isInstalled);
     return matchesSearch && matchesFilter;
   });
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-5xl h-[80vh] flex flex-col p-0">
-        <div className="flex items-center justify-between border-b border-border/40 p-4">
+        <div className="flex items-center justify-between border-b  p-4">
           <div className="text-lg font-semibold">Plugin Store</div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onClose}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="flex items-center gap-4 border-b border-border/40 p-4">
+        <div className="flex items-center gap-4 border-b  p-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -132,12 +140,14 @@ export function PluginStore({ isOpen, onClose }: PluginStoreProps) {
             {filteredPlugins.map((plugin) => (
               <div
                 key={plugin.id}
-                className="group rounded-lg border border-border/40 p-4 hover:border-border transition-colors"
+                className="group rounded-lg border  p-4 hover:border-border transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-medium">{plugin.name}</h3>
-                    <p className="text-sm text-muted-foreground">{plugin.author}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {plugin.author}
+                    </p>
                   </div>
                   <Button
                     variant={plugin.isInstalled ? "outline" : "default"}
@@ -167,4 +177,4 @@ export function PluginStore({ isOpen, onClose }: PluginStoreProps) {
       </DialogContent>
     </Dialog>
   );
-} 
+}

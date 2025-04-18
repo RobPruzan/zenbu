@@ -377,7 +377,7 @@ const Toolbar = ({
   return (
     <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-[1000000]">
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-background/95 p-2 shadow-lg backdrop-blur">
+        <div className="flex items-center gap-2 rounded-lg border  bg-background/95 p-2 shadow-lg backdrop-blur">
           <RadioGroup defaultValue="screen" className="flex gap-4">
             <div className="flex items-center gap-2">
               <RadioGroupItem value="screen" id="r1" />
@@ -449,13 +449,13 @@ const Toolbar = ({
         </div>
 
         {showRecordingsList && recordings.length > 0 && (
-          <div className="w-[400px] rounded-lg border border-border/40 bg-background/95 p-2 shadow-lg backdrop-blur">
+          <div className="w-[400px] rounded-lg border  bg-background/95 p-2 shadow-lg backdrop-blur">
             <ScrollArea className="h-[300px]">
               <div className="flex flex-col gap-2">
                 {recordings.map((recording) => (
                   <div
                     key={recording.id}
-                    className="group relative overflow-hidden rounded-md border border-border/40 bg-background/50 p-2 hover:border-border"
+                    className="group relative overflow-hidden rounded-md border  bg-background/50 p-2 hover:border-border"
                   >
                     <div className="mb-2 flex items-start justify-between">
                       <div>

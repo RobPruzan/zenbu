@@ -276,7 +276,7 @@ export const ChatTextArea = () => {
   return (
     <div className="w-full">
       {contextItems.length > 0 && (
-        <div className="px-2 py-2 border-b border-border/40 overflow-x-auto">
+        <div className="px-2 py-2 border-b  overflow-x-auto">
           <div className="flex items-center gap-2">
             {contextItems.map((item, index) =>
               iife(() => {
@@ -285,12 +285,12 @@ export const ChatTextArea = () => {
                     return (
                       <div
                         key={index}
-                        className="flex flex-col relative items-center gap-1 text-muted-foreground text-xs font-light border border-border/40 px-1.5 py-1 rounded-md bg-accent/5"
+                        className="flex flex-col relative items-center gap-1 text-muted-foreground text-xs font-light border  px-1.5 py-1 rounded-md bg-accent/5"
                       >
                         <div className="flex gap-x-1 absolute -top-1 -right-1">
                           <button
                             onClick={() => removeItem(index)}
-                            className="h-4 w-4 rounded-full bg-background/80 border border-border/40 hover:bg-accent/20 text-foreground"
+                            className="h-4 w-4 rounded-full bg-background/80 border  hover:bg-accent/20 text-foreground"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -309,12 +309,12 @@ export const ChatTextArea = () => {
                     return (
                       <div
                         key={index}
-                        className="flex flex-col relative items-center gap-1 text-muted-foreground text-xs font-light border border-border/40 px-1.5 py-1 rounded-md bg-accent/5"
+                        className="flex flex-col relative items-center gap-1 text-muted-foreground text-xs font-light border  px-1.5 py-1 rounded-md bg-accent/5"
                       >
                         <div className="flex gap-x-1 absolute -top-1 -right-1">
                           <button
                             onClick={() => removeItem(index)}
-                            className="h-4 w-4 rounded-full bg-background/80 border border-border/40 hover:bg-accent/20 text-foreground"
+                            className="h-4 w-4 rounded-full bg-background/80 border  hover:bg-accent/20 text-foreground"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -333,7 +333,7 @@ export const ChatTextArea = () => {
                     return (
                       <div
                         key={index}
-                        className="flex items-center gap-1.5 text-muted-foreground text-xs font-light border border-border/40 px-2 py-1 rounded-md bg-accent/5"
+                        className="flex items-center gap-1.5 text-muted-foreground text-xs font-light border  px-2 py-1 rounded-md bg-accent/5"
                       >
                         <span>{item.name}</span>
                         <button

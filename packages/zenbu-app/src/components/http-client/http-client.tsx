@@ -49,7 +49,7 @@ export function HttpClient({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <div className="flex items-center gap-2 border-b border-border/40 px-3 py-2">
+      <div className="flex items-center gap-2 border-b  px-3 py-2">
         <Button
           variant="ghost"
           size="sm"
@@ -63,8 +63,8 @@ export function HttpClient({ onBack }: { onBack: () => void }) {
 
       <div className="flex flex-1">
         {/* Left sidebar */}
-        <div className="w-[240px] border-r border-border/40 flex flex-col">
-          <div className="p-3 border-b border-border/40">
+        <div className="w-[240px] border-r  flex flex-col">
+          <div className="p-3 border-b ">
             <Button className="w-full justify-start gap-2 text-xs" size="sm">
               <Save className="h-3.5 w-3.5" />
               New Request
@@ -105,7 +105,7 @@ export function HttpClient({ onBack }: { onBack: () => void }) {
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Request section */}
-          <div className="border-b border-border/40 p-3 space-y-3">
+          <div className="border-b  p-3 space-y-3">
             <div className="flex items-center gap-2">
               <div className="flex items-center">
                 <Button
@@ -113,7 +113,7 @@ export function HttpClient({ onBack }: { onBack: () => void }) {
                   size="sm"
                   className={cn(
                     "h-8 px-3 gap-2 text-xs font-medium rounded-r-none",
-                    "border border-r-0 border-border/40",
+                    "border border-r-0 ",
                   )}
                 >
                   {selectedMethod}
@@ -124,7 +124,7 @@ export function HttpClient({ onBack }: { onBack: () => void }) {
                   placeholder="Enter request URL"
                   className={cn(
                     "h-8 px-3 text-xs bg-transparent",
-                    "border border-border/40 rounded-r-md",
+                    "border  rounded-r-md",
                     "focus:outline-none focus:ring-1 focus:ring-accent",
                     "flex-1 min-w-[400px]",
                   )}
@@ -164,7 +164,7 @@ export function HttpClient({ onBack }: { onBack: () => void }) {
               </button>
             </div>
 
-            <div className="rounded-md border border-border/40 bg-accent/5 h-[120px] p-2">
+            <div className="rounded-md border  bg-accent/5 h-[120px] p-2">
               <pre className="text-xs font-mono text-muted-foreground">
                 {`{
   "name": "John Doe",
@@ -176,7 +176,7 @@ export function HttpClient({ onBack }: { onBack: () => void }) {
 
           {/* Response section */}
           <div className="flex-1 flex flex-col">
-            <div className="border-b border-border/40 px-3 py-2 flex items-center justify-between">
+            <div className="border-b  px-3 py-2 flex items-center justify-between">
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-green-500" />

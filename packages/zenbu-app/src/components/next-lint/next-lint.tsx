@@ -63,7 +63,7 @@ const mockIssues: NextLintIssue[] = [
 export function NextLint() {
   return (
     <div className="flex h-full w-[320px] flex-col overflow-hidden bg-background">
-      <div className="flex items-center justify-between border-b border-border/40 px-3 py-2">
+      <div className="flex items-center justify-between border-b  px-3 py-2">
         <div className="flex items-center gap-2">
           <Zap className="h-4 w-4 text-foreground" />
           <h2 className="text-sm font-semibold">Performance</h2>
@@ -99,7 +99,7 @@ export function NextLint() {
             {mockIssues.map((issue) => (
               <div
                 key={issue.id}
-                className="group relative rounded-lg border border-border/40 bg-card p-2.5 hover:border-border"
+                className="group relative rounded-lg border  bg-card p-2.5 hover:border-border"
               >
                 <div className="mb-1.5 flex items-start justify-between">
                   <div className="flex items-center gap-2">

@@ -6,6 +6,8 @@ import {
   Plus,
   Check,
   Copy,
+  PanelLeftClose,
+  PanelRightClose,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "src/lib/utils";
@@ -25,10 +27,10 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
   };
 
   return (
-    <div className="relative z-10 border-b border-border/40 bg-background/80 backdrop-blur-xl">
+    <div className="relative z-10 border-b bg-background/80 backdrop-blur-xl">
       <div className="flex gap-x-1 items-center justify-between h-12 px-3">
         <div className="flex-1" />
-        <div className="flex items-center bg-accent/5 border border-border/40 rounded-full h-7 w-[280px] px-3 group relative">
+        <div className="flex items-center bg-accent/5 border rounded-full h-7 w-[280px] px-3 group relative">
           <span
             className="font-light text-[11px] text-muted-foreground cursor-pointer "
             onClick={handleCopy}
@@ -56,12 +58,12 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
             size="sm"
             className={cn(
               "h-8 w-8 p-0 rounded-full",
-              "bg-accent/5 border border-border/40",
+              "bg-accent/5 border",
               "text-muted-foreground hover:text-foreground",
               "hover:bg-accent/10 transition-all duration-300",
             )}
           >
-            <PanelRightOpen className="h-3.5 w-3.5" />
+            <PanelRightClose className="h-3.5 w-3.5" />
           </Button>
           <Button
             onClick={() => {
@@ -93,7 +95,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
             size="sm"
             className={cn(
               "h-8 w-8 p-0 rounded-full",
-              "bg-accent/5 border border-border/40",
+              "bg-accent/5 border",
               "text-muted-foreground hover:text-foreground",
               "hover:bg-accent/10 transition-all duration-300",
             )}
@@ -130,7 +132,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
             size="sm"
             className={cn(
               "h-8 w-8 p-0 rounded-full",
-              "bg-accent/5 border border-border/40",
+              "bg-accent/5 border",
               "text-muted-foreground hover:text-foreground",
               "hover:bg-accent/10 transition-all duration-300",
             )}

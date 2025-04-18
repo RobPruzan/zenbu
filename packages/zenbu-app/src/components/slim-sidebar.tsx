@@ -112,7 +112,7 @@ export function SlimSidebar({ className }: SlimSidebarProps) {
     <TooltipProvider>
       <div
         className={cn(
-          "flex w-12 flex-col gap-1 border-r border-border/40 bg-background p-2",
+          "flex w-12 flex-col gap-1 border-r  bg-background p-2",
           className,
         )}
       >

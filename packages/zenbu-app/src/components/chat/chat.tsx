@@ -321,20 +321,20 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
         )} */}
 
         <div className="px-4 pb-4 relative z-10 w-full">
-          <div className="rounded-lg backdrop-blur-xl bg-accent/5 border border-border/40 shadow-lg overflow-hidden w-full transition-all duration-300 hover:shadow-xl">
+          <div className="rounded-lg backdrop-blur-xl bg-accent/5 border  shadow-lg overflow-hidden w-full transition-all duration-300 hover:shadow-xl">
             <div className="flex flex-col text-xs">
               <div className="relative min-h-[50px] w-full bg-background/5">
                 <ChatTextArea />
               </div>
 
-              <div className="flex items-center justify-end px-4 py-2 border-t border-border/40 bg-accent/5">
+              <div className="flex items-center justify-end px-4 py-2 border-t  bg-accent/5">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={scheduleTask}
                     disabled={!chatControls.state.input.trim()}
                     className={cn(
                       "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
-                      "bg-accent/10 border border-border/40 hover:bg-accent/20 text-foreground",
+                      "bg-accent/10 border  hover:bg-accent/20 text-foreground",
                       "transition-all duration-300",
                       !chatControls.state.input.trim() &&
                         "opacity-50 cursor-not-allowed",
@@ -348,7 +348,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                     disabled={!chatControls.state.input.trim()}
                     className={cn(
                       "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
-                      "bg-accent/10 border border-border/40 hover:bg-accent/20 text-foreground",
+                      "bg-accent/10 border  hover:bg-accent/20 text-foreground",
                       "transition-all duration-300",
                       !chatControls.state.input.trim() &&
                         "opacity-50 cursor-not-allowed",

@@ -9,7 +9,7 @@ export function UserMessage({ message }: { message: ChatMessage }) {
     <div className="group mb-6 max-w-full">
       <div
         className={cn(
-          "rounded-xl bg-accent/5 backdrop-blur-xl border border-border/40",
+          "rounded-xl bg-accent/5 backdrop-blur-xl border ",
           "shadow-sm overflow-hidden max-w-full",
           "transform hover:translate-y-[-1px] transition-all duration-300",
           "hover:shadow-md hover:border-border/60",

@@ -3,6 +3,7 @@
 import {
   Folder,
   Loader2,
+  MessageCircleIcon,
   Pause,
   Play,
   Plus,
@@ -19,6 +20,7 @@ import { IFrameWrapperTwo } from "./iframe-wrapper-2";
 import { useState } from "react";
 import { cn, iife } from "src/lib/utils";
 import { Project } from "zenbu-daemon";
+import { Chat } from "src/components/chat/chat";
 
 export default function Home() {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
@@ -30,6 +32,8 @@ export default function Home() {
 
   const [showProjectsSidebar, setShowProjectsSidebar] =
     useState<boolean>(false);
+
+  const [showChatSidebar, setShowChatSidebar] = useState(false);
   const firstProject = projects.at(0);
 
   if (!firstProject) {
@@ -96,20 +100,40 @@ export default function Home() {
         }}
       >
         <div className="h-full  bg-background flex border-r">
-          <Button
-            onClick={() => {
-              setShowProjectsSidebar((prev) => !prev);
-            }}
-            variant={"ghost"}
-            className="rounded-none"
-          >
-            <Folder size={4} />
-          </Button>
+          <div className="flex flex-col">
+            <Button
+              onClick={() => {
+                setShowProjectsSidebar((prev) => !prev);
+              }}
+              variant={"ghost"}
+              className="rounded-none"
+            >
+              <Folder size={4} />
+            </Button>
+            <Button
+              onClick={() => {
+                setShowChatSidebar((prev) => !prev);
+              }}
+              variant={"ghost"}
+              className="rounded-none"
+            >
+              <MessageCircleIcon size={4} />
+            </Button>
+          </div>
           {showProjectsSidebar && <ProjectsSidebar />}
         </div>
         <IFrameWrapperTwo>
           <></>
         </IFrameWrapperTwo>
+        {showChatSidebar && (
+          <div className="h-full  bg-background flex border-l">
+            <Chat
+              onCloseChat={() => {
+                setShowChatSidebar(false);
+              }}
+            />
+          </div>
+        )}
       </ChatInstanceContext.Provider>
     </main>
   );
