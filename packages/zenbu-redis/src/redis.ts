@@ -60,7 +60,6 @@ export const set = <K extends keyof RedisSchema>(
 ) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
-
     return client.set(key, JSON.stringify(value));
   });
 

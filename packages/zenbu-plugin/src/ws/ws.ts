@@ -104,8 +104,6 @@ export const injectWebSocket = (server: HttpServer) => {
       origin: "*", // narrow later
       methods: ["GET", "POST"],
     },
-    // pingInterval: 2000,
-    // pingTimeout: 2000,
     transports: ["websocket"],
   });
 

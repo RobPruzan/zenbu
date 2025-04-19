@@ -136,12 +136,8 @@ const NOUNS = [
 
 const getProjects = Effect.gen(function* () {
   const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep || true`;
-
   const fs = yield* FileSystem.FileSystem;
-
   const projectNames = yield* fs.readDirectory("projects");
-  console.log("the projects", projectNames);
-
   const execResult = yield* Effect.tryPromise(() => execPromise(command));
   const lines = execResult.stdout.trim().split("\n");
 
@@ -192,8 +188,6 @@ const getProjects = Effect.gen(function* () {
       !projects.some((runningProject) => runningProject.name === projectName)
   );
 
-  console.log("is it my goober?");
-
   const killedProjectsMetaEffects = killedProjects.map((name) =>
     Effect.gen(function* () {
       return {
@@ -206,11 +200,7 @@ const getProjects = Effect.gen(function* () {
     })
   );
   const killedProjectsMeta = yield* Effect.all(killedProjectsMetaEffects);
-  const allProjects: Array<Project> = [
-    ...projects,
-    ...killedProjectsMeta,
-    // ..),
-  ];
+  const allProjects: Array<Project> = [...projects, ...killedProjectsMeta];
 
   return allProjects;
 });
@@ -244,30 +234,12 @@ const nuke = () =>
       .pipe(Effect.provideService(RedisContext, { client: redisClient }))
       .pipe(Effect.provide(NodeContext.layer))
   );
-/**
- * so have some distinct tasks we know we want now:
- *
- * - some crud operations over managing servers
- * - a nice server to see all the servers up and perform the crud actions on (debug site)
- * - do I want to always keep servers up/ re-up all servers? Or do it lazy so when you click it, it spins up again and cold starts?
- * - cause we can just really aggressively prefetch and it would be the same cost
- *  - so do you always dynamically request the URL from the daemon anytime you click it? That seems like high latency
- *  - hm maybe not you can just cache it I suppose
- * - we have some simple ops like unzipping safely, running the dev server, process stats stuff that I can reference from the dog shit implementation
- * - what's entrypoint? Well I suppose a server where you want to take an action, then recursively implement each sub functionality yippy skippy
- *
- * hono server time
- *
- * right so we don't actually need an entrypoint effect script, why was that for some reason hard before?
- *
- */
 
 export const createServer = async () => {
   console.log("Starting server...");
-
   await Effect.runPromise(
     Effect.gen(function* () {
-      // yield* restoreProjects;
+      yield* restoreProjects;
     })
       .pipe(Effect.provide(NodeContext.layer))
       .pipe(Effect.provideService(RedisContext, { client: redisClient }))
@@ -390,8 +362,7 @@ export const createServer = async () => {
     )
     .post("/nuke", async (opts) => {
       const exit = await nuke();
-
-      return opts.json({ success: true });
+      return opts.json({ exit: exit.toJSON() });
     })
     .post("/get-projects", async (opts) => {
       console.log("get projects request");
@@ -446,6 +417,7 @@ export const createServer = async () => {
       console.log(`Server is running on http://${host}:${info.port}`);
     }
   );
+  // will inject websocket into this server
   return app;
 };
 
@@ -464,10 +436,6 @@ const generateRandomName = () => {
   const suffix = Math.floor(Math.random() * 900) + 100;
   return `${adj}-${noun}-${suffix}`;
 };
-/**
- *
- * okay was worth a shot to see o3 could one shot this, but apparently not it doesn't know the API's (I have a feeling it can do it since everything is quite modular?)
- */
 
 const createProject = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -484,7 +452,6 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
   Effect.gen(function* () {
     // todo: just a stub for now, impl later
     // need to make sure to give the process a title for metadata so we can search in the future
-
     const projects = yield* getProjects;
     const existing = projects.find(
       (project) => project.name === name && project.status === "running"
@@ -494,11 +461,6 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
     }
 
     const assignedPort = yield* Effect.tryPromise(() => getPort());
-
-    /**
-     * whats the dir?
-     * projects/<name>/node-project?
-     */
 
     // todo: don't hard code node-project, or forward slashes for directories
     const fs = yield* FileSystem.FileSystem;
@@ -547,14 +509,6 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
 export type EffectReturnType<T> =
   T extends Effect.Effect<infer R, any, any> ? R : never;
 
-/**
- *  we will want some process manager with stop/start/resume/pause
- *
- *
- * or we can just make it functions that are called on data, that makes is serializable too which is quite nice
- *
- *
- */
 export class GenericError extends Data.TaggedError("GenericError")<{}> {}
 export class RedisValidationError extends Data.TaggedError(
   "RedisValidationError"
@@ -575,7 +529,6 @@ const publishStartedProject = (name: string) =>
     });
   });
 
-// will have to use this when i read everything
 const parseProcessMarkerArgument = (markerArgument: string) =>
   Effect.gen(function* () {
     const match = markerArgument.match(
@@ -607,8 +560,6 @@ const getProcessTitleMarker = ({
   createdAt: number;
 }) =>
   Effect.gen(function* () {
-    // const createdAt = Date.now();
-    // yield* setCreatedAt(name, createdAt);
     return `zenbu-daemon:project=${name}:assigned_port=${port}:created_at=${createdAt}`;
   });
 
@@ -665,113 +616,19 @@ export type Project =
 // should be careful since its k:v can def have a memory leak if not paying attention/ tests
 
 const spawnProject = Effect.gen(function* () {
-  console.log("spawning");
-
   const { name, createdAt } = yield* createProject;
-  console.log("created", name);
 
   const project = yield* runProject({
     name,
     createdAt,
   });
-  console.log("got prject", project);
 
   // publishing is for alerting to create a new warm instance which we aren't doing yet I think?
   // wait no it was to start tracking it correctly even if it dies we can re-up it
-  /**
-   * yes this is some stuff we definitely need next:
-   * - read active projects
-   * - need to know if running or paused
-   * - connect to the project
-   *
-   *
-   * where do I want to sync this to?
-   *
-   * I could sync to redis?
-   *
-   *
-   * like I don't really care to sync this to a relational db, and if we need to setup
-   * redis anyways it works out
-   *
-   *
-   * probably should be a package with a bunch of functions to connect to it easily?
-   *
-   *
-   *
-   */
-  const serverInfo = yield* publishStartedProject(name);
-  console.log("published");
-
+  yield* publishStartedProject(name);
   return project;
-  // do we want to do this, or just alert some reactive process manager that it needs to re-derive
-  /**
-   *  if we have server info I suppose we can just send that to client?
-   *
-   * I mean this can be pretty simple why did we over complicate it so much before it literally did like nothing? I guess u could delete projects but that should be a small amount of effort over the abstraction
-   *
-   *
-   * a function i definitely want is to resume servers, or is it just start? Or I guess resume is more of a high level thing that means pausing them and
-   * and them being dead?
-   *
-   * like if you start a project maybe you can make it idempotent, or would it be easier if we knew the state of the system and routes the correct function
-   * to a given environment at any moment?
-   *
-   * may make it tricky cause you want to be careful relying on something being in a certain state, because we don't control the underlying process we either
-   * have to make potentially an expensive sys call/bash call, or sync which will be bug prone
-   *
-   * so I guess i'd rather make start server idempotent? That way starting a server just does nothing if already started....
-   * uh wait what if you want to start a server, but a new instance and not re-use, now u have all this weird config and unique semantics
-   *
-   * while we can have initServer
-   *
-   * and start server, where start server is called in initServer and requires a path and it will run it
-   *
-   * if it's already running it will just error, so in the future if we want to spawn a new server [halt] it should actually be startProject not start server
-   *
-   * so u spawn a project, which creates a project, runs it, then publishes it
-   *
-   * you can run a project if you want a new project path, which you need to do at startup
-   *
-   * we can attach a state to a project (that I guess is persisted?) so that when we startup we can re-up the projects without worry
-   *
-   * will need to make sure to do that in parallel
-   *
-   * alright, whats next to actually start doing shit? I could actually create the process now, use the previous file a reference
-   *
-   * yes that's not a bad idea, but it's also not a bad idea to have a project ready to run in a local dir to make it quick
-   *
-   * i wont zip, just copy, i think zipping is stupid and made no sense
-   *
-   *
-   */
 });
 
-const restoreProjectState = Effect.gen(function* () {});
-
-// const
-
-/**
- *
- * okay vibe time what are we doing next
- *
- *
- * i guess we would like to create a server, well what is the spec i defined i don't need to rewrite it
- * 
- * 
- * - can reference a directory of zip projects that it can use to start the project
-- needs to unzip that in another dir
-- needs to run that server, and provide the url it's running at (it needs to find an active port, and pass the PORT as an env to the start command
-- because these projects are on disk, when the server starts up they wont be started, but the projects wont exist, so those projects are semantically paused, and we need to be able to resume
-- process state should be derived from the os, meaning we give the process a title with metadata so we can always query the OS for info about the process, if it ever dies, some state about it changes, its in the OS hands and we are reading so its safe. If we stored that info in memory we have to handle sync (which is bug prone)
-- this needs to be long lasting, and we interface it with a hono server with endpoints for actions you can perform
-- we should have background processes that background other servers, if they haven't been opened for 6 hours, they should be paused (but not deleted)
-- when listing projects, we should always see all projects, and their status
-- we should have the ability to read the stdout/pstat of all the processes (like cpu %/memory) , and the stdout is so we can read the full server log at any point when querying (can't just dynamically query it, need to always be reading and manually maintaining the stdout stream in memory)
-- it would be nice to know subprocesses that the process we spawned (via the dev command for the zip file we unzipped) has, but that should not be maintained in memory, there should be a function we can query over a process to determine its subprocesses (and info about them)
-- for each zip file, you can assume unzipping it will create a directory called "project", inside of it running pnpm run dev is a valid way to start the server, but you must make sure its run from the context of that direcotry, if u run it in the wrong context it will trigger install of my monorepo
-- when the server is spawned for the first time ever, you must run pnpm install, and await till that's complete to run pnpm run dev (pnpm install && pnpm run dev)
-
- */
 process.on("beforeExit", async () => {
   const effect = Effect.gen(function* () {
     const projects = yield* getProjects;
@@ -794,14 +651,6 @@ process.on("beforeExit", async () => {
 
 createServer();
 
-/**
- *
- *
- * just for debugging it would be nice if I could delete projects nicely, probably quite simple just a few compositions
- *
- * oops I should have a kill then compose a delete
- *
- */
 const getProject = (name: string) =>
   Effect.gen(function* () {
     const projects = yield* getProjects;
@@ -845,12 +694,5 @@ const deleteProject = (name: string) =>
     const redisEffect = redisClient.effect.del(project.name);
     yield* Effect.all([rmEffect, redisEffect]);
   });
-
-/**
- *
- * er I don't really care about pausing/resuming for now that's just an optimization
- *
- * project starts are fast so I can do optimizations like prewarmed servers when I have something good to validate against it
- */
 
 export type DaemonAppType = Awaited<ReturnType<typeof createServer>>;
