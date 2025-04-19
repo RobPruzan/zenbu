@@ -443,6 +443,11 @@ const createProject = Effect.gen(function* () {
   const projectPath = `projects/${name}`;
   yield* fs.makeDirectory(projectPath);
   yield* fs.copy("templates/node-project", projectPath);
+  const existing = yield* fs.readFileString(`${projectPath}/index.html`);
+  yield* fs.writeFileString(
+    `${projectPath}/index.html`,
+    existing.replace("REPLACE ME", name)
+  );
   const createdAt = Date.now();
   yield* setCreatedAt(name, createdAt);
   return { name, projectPath, createdAt };

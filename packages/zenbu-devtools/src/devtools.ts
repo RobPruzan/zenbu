@@ -1,7 +1,17 @@
 import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 
-console.log("do i run, wut is going on?");
+console.log("bro mode cock");
+
+window.addEventListener("load", () => {
+  console.log("loaded, sending message");
+
+  setTimeout(() => {
+    sendMessage({
+      kind: "load",
+    });
+  }, 200);
+});
 
 const TARGET_ORIGIN = "http://localhost:3000";
 
@@ -31,6 +41,9 @@ document.addEventListener("mousemove", (e) => {
 });
 
 export type ChildToParentMessage =
+  | {
+      kind: "load";
+    }
   | {
       kind: "console";
       data: any[];
