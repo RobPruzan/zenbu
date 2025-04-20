@@ -1,6 +1,13 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
-import { Component, Suspense, useEffect, useRef, useState } from "react";
+import {
+  Component,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import DevTools from "../components/devtools";
 import { BetterDrawing } from "./better-drawing";
@@ -17,6 +24,20 @@ import {
   Store,
   SplitSquareHorizontal,
   Smartphone,
+  PlusCircle,
+  Loader2,
+  Folder,
+  GitBranch,
+  AlertCircle,
+  Scan,
+  PanelBottom,
+  DownloadCloudIcon,
+  Activity,
+  TerminalSquare,
+  Network,
+  Atom,
+  FlaskConical,
+  Plus,
 } from "lucide-react";
 import { TopBarContent } from "./top-bar-content";
 
@@ -335,8 +356,12 @@ export default function Home() {
   // should fetch projects, by default read the first one
   // i guess it would also be good to always spawn on the last project user was on, that feels more like a local state thing
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
-  const project = projects.at(0);
-  const createProjectMutation = trpc.daemon.createProject.useMutation();
+
+  const createProjectMutation = trpc.daemon.createProject.useMutation({
+    meta: {
+      noInvalidate: true,
+    },
+  });
   const startProjectMutation = trpc.daemon.startProject.useMutation();
   const firstRunningProject = projects.find(
     (project) => project.status === "running",
@@ -344,18 +369,140 @@ export default function Home() {
 
   const firstProject = projects.at(0);
 
+  const utils = trpc.useUtils();
+
   if (!firstProject) {
     return (
-      <div>
-        lil bro u have no projects
-        <Button
-          variant={"outline"}
-          onClick={() => {
-            createProjectMutation.mutate();
-          }}
-        >
-          Create Project
-        </Button>
+      <div className="flex h-screen flex-col bg-background text-foreground">
+        <CommandPalette
+          items={[
+            {
+              shortcut: "Create Next App",
+              icon: <Plus size={16} />,
+              onSelect: async () => {
+                const newProject = await createProjectMutation.mutateAsync();
+                const checkUrlReady = () => {
+                  const hiddenIframe = document.createElement("iframe");
+                  hiddenIframe.style.display = "none";
+                  hiddenIframe.src = `http://localhost:${newProject.port}`;
+                  hiddenIframe.onload = () => {
+                    setTimeout(() => {
+                      utils.daemon.getProjects.setData(undefined, (prev) =>
+                        !prev ? [newProject] : [...prev, newProject],
+                      );
+                    }, 20);
+                    if (document.documentElement.contains(hiddenIframe)) {
+                      document.documentElement.removeChild(hiddenIframe);
+                    }
+                  };
+                  hiddenIframe.onerror = () => {
+                    if (document.documentElement.contains(hiddenIframe)) {
+                      document.documentElement.removeChild(hiddenIframe);
+                    }
+                    setTimeout(checkUrlReady, 10);
+                  };
+                  document.documentElement.appendChild(hiddenIframe);
+                };
+                checkUrlReady();
+              },
+            },
+
+            {
+              shortcut: "Create Expo App",
+              icon: <Atom size={16} />,
+              onSelect: () => {},
+            },
+
+            {
+              shortcut: "Active Ports",
+              icon: <Network size={16} />,
+              onSelect: () => {},
+            },
+            {
+              shortcut: "Terminal",
+              icon: <TerminalSquare />,
+              onSelect: () => {},
+            },
+            {
+              shortcut: "Experiment",
+              icon: <FlaskConical />,
+              onSelect: () => {},
+            },
+          ]}
+        />
+        <div className="mx-auto flex h-full w-full max-w-[850px] flex-col px-8 py-20">
+          <div className="mb-8">
+            <h1 className="mb-1 text-[32px] font-light tracking-tight">
+              Zenbu
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Local Development Environment
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <h2 className="mb-4 text-sm font-medium text-muted-foreground">
+                Start
+              </h2>
+              <div className="grid gap-2">
+                <Button
+                  variant="ghost"
+                  className="h-auto w-full justify-start px-4 py-3"
+                  onClick={async () => {
+                    const newProject =
+                      await createProjectMutation.mutateAsync();
+                    utils.daemon.getProjects.setData(undefined, (prev) =>
+                      !prev ? [newProject] : [...prev, newProject],
+                    );
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <PlusCircle className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm">New Project</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-auto w-full justify-start px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <Folder className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm">Open Folder...</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-auto w-full justify-start px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <GitBranch className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm">Clone Git Repository...</span>
+                  </div>
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="mb-4 text-sm font-medium text-muted-foreground">
+                Recent
+              </h2>
+              <div className="rounded-lg border bg-card/40 p-6 text-center text-sm text-muted-foreground">
+                <Terminal
+                  className="mx-auto mb-3 h-8 w-8 opacity-40"
+                  strokeWidth={1.5}
+                />
+                <p>No recent folders</p>
+                <p className="mt-4 text-xs">
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+                    <span className="text-xs">⌘</span>K
+                  </kbd>{" "}
+                  to show all commands
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -504,7 +651,11 @@ export default function Home() {
                         </div>
                       }
                     >
-                      <ProjectsSidebar />
+                      <ProjectsSidebar
+                        onNuke={() => {
+                          setLeftSidebar({ component: null, position: "left" });
+                        }}
+                      />
                     </Suspense>
                   ) : leftSidebar.component === "reactTree" ? (
                     <ReactTree
@@ -619,7 +770,7 @@ export default function Home() {
                           {mobileSplit ? (
                             <div className="relative mx-auto h-[852px] w-[393px] flex-shrink-0 overflow-hidden rounded-[40px] border-[10px] border-black bg-black shadow-xl">
                               <div className="h-full w-full overflow-hidden rounded-[30px]">
-                                <IFrameWrapper>
+                                <IFrameWrapper mobile>
                                   <></>
                                   {/* <BetterToolbar />
                                   <DevtoolsOverlay /> */}
@@ -629,9 +780,7 @@ export default function Home() {
                           ) : (
                             <div className="flex h-full flex-col">
                               <IFrameWrapper>
-                                <p className="p-4 text-sm text-muted-foreground">
-                                  Second iframe area
-                                </p>
+                            
                                 <BetterToolbar />
                                 <DevtoolsOverlay />
                               </IFrameWrapper>
@@ -790,6 +939,15 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
     },
   });
   const iframe = useChatStore((state) => state.iframe);
+  const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
+  const project = projects.at(0);
+  useLayoutEffect(() => {
+    if (project && !iframe.state.url && project.status === "running") {
+      iframe.actions.setInspectorState({
+        url: `http://localhost:${project.port}`,
+      });
+    }
+  }, []);
 
   const utils = trpc.useUtils();
 

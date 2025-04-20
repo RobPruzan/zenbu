@@ -3,9 +3,9 @@ import { ParentToChildMessage } from "zenbu-devtools";
 
 export const useIFrameMessenger = () => {
   const url = useChatStore((state) => state.iframe.state.url);
-  const sendMessageToChild = (message: ParentToChildMessage) => {
+  const sendMessageToChild = (message: ParentToChildMessage, options?: Partial<{mobile:true}>) => {
     const iframe = document.getElementById(
-      "child-iframe",
+     options?.mobile ? "mobile-iframe" : "child-iframe",
     ) as HTMLIFrameElement | null;
 
     if (!iframe) {
@@ -16,7 +16,7 @@ export const useIFrameMessenger = () => {
       return;
     }
 
-    iframe.contentWindow.postMessage(message, url);
+    iframe.contentWindow.postMessage(message, "*");
   };
 
   return sendMessageToChild;

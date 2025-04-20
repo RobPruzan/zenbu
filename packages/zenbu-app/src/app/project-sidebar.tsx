@@ -19,7 +19,7 @@ import {
   TooltipTrigger,
 } from "src/components/ui/tooltip";
 
-export const ProjectsSidebar = () => {
+export const ProjectsSidebar = ({onNuke}: {onNuke: () => void}) => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
   const createProjectMutation = trpc.daemon.createProject.useMutation();
   const nukeMutation = trpc.daemon.nuke.useMutation();
@@ -54,7 +54,10 @@ export const ProjectsSidebar = () => {
                   size="icon"
                   variant="ghost"
                   className="h-6 w-6"
-                  onClick={() => nukeMutation.mutate()}
+                  onClick={() => {
+                    onNuke()
+ nukeMutation.mutate()
+                  }}
                 >
                   {nukeMutation.isPending ? (
                     <Loader2 className="h-3 w-3 animate-spin" />

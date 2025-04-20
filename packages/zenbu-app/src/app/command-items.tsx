@@ -170,11 +170,16 @@ export const getCommandItems = ({
   createProjectLoading: boolean;
 }) => [
   {
-    shortcut: "New Project",
+    shortcut: "Create Next App",
     icon: <Plus size={16} />,
     onSelect: () => {
       onCreateProject();
     },
+  },
+  {
+    shortcut: "React Scan Outlines",
+    icon: <Scan size={16} />,
+    onSelect: () => {},
   },
   {
     shortcut: "Toggle Terminal",
@@ -182,6 +187,23 @@ export const getCommandItems = ({
     onSelect: () => {
       window.dispatchEvent(new Event("toggle-bottom-panel"));
     },
+  },
+  {
+    shortcut: "Network",
+    icon: <DownloadCloudIcon size={16} />,
+    onSelect: () => {
+      actions.setRoute(state.activeRoute === "network" ? "off" : "network");
+    },
+  },
+  {
+    shortcut: "Server Tracing",
+    icon: <Activity size={16} />,
+    onSelect: () => {},
+  },
+  {
+    shortcut: "Terminal",
+    icon: <TerminalSquare />,
+    onSelect: () => {},
   },
   {
     shortcut: "Cloudflare Tunnel",
@@ -307,13 +329,7 @@ export const getCommandItems = ({
       actions.setRoute(state.activeRoute === "console" ? "off" : "console");
     },
   },
-  {
-    shortcut: "Network",
-    icon: <DownloadCloudIcon size={16} />,
-    onSelect: () => {
-      actions.setRoute(state.activeRoute === "network" ? "off" : "network");
-    },
-  },
+
   {
     shortcut: "Performance",
     icon: <Gauge size={16} />,
@@ -349,11 +365,7 @@ export const getCommandItems = ({
     icon: <FlaskConical />,
     onSelect: () => {},
   },
-  {
-    shortcut: "Terminal",
-    icon: <TerminalSquare />,
-    onSelect: () => {},
-  },
+
   {
     shortcut: "CPU Usage",
     icon: <Cpu size={16} />,
@@ -426,11 +438,6 @@ export const getCommandItems = ({
     onSelect: () => {},
   },
   {
-    shortcut: "React Scan Outlines",
-    icon: <Scan size={16} />,
-    onSelect: () => {},
-  },
-  {
     shortcut: "Profile Interactions",
     icon: <MousePointer size={16} />,
     onSelect: () => {},
@@ -445,11 +452,7 @@ export const getCommandItems = ({
     icon: <ServerCrash size={16} />,
     onSelect: () => {},
   },
-  {
-    shortcut: "Server Tracing",
-    icon: <Activity size={16} />,
-    onSelect: () => {},
-  },
+
   {
     shortcut: "Record Area",
     icon: <VideoIcon size={16} />,

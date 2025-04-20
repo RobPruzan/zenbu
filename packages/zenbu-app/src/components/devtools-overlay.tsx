@@ -67,9 +67,31 @@ export function DevtoolsOverlay() {
   const lastThrottleTimeRef = useRef<number>(0);
   const lastElementRef = useRef<Element | null>(null);
 
+  const sendMessage = useIFrameMessenger();
   const { socket } = useEventWS();
   const makeRequest = useMakeRequest();
   const { inspector, eventLog, chatControls } = useChatStore();
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent<ChildToParentMessage>) => {
+      if (e.data.kind === "sync-action") {
+        const iframe = document.getElementById("iframe") as HTMLIFrameElement;
+        sendMessage(
+          {
+            from: e.data.from,
+            kind: "sync-action",
+            selector: e.data.selector,
+          },
+          { mobile: true },
+        );
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -102,7 +124,6 @@ export function DevtoolsOverlay() {
       cancelAnimationFrame(rafId);
     };
   }, [inspector.state.kind]);
-  const sendMessage = useIFrameMessenger();
   const { setMessages, setInput } = useChatContext();
   // why did i do this again? I definitely had a reason
   const store = ChatInstanceContext.useContext();

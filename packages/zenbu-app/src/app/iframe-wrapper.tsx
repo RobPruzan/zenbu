@@ -15,7 +15,7 @@ import { useMakeRequest } from "src/components/devtools-overlay";
 
 const snapshot = { kind: "off" as const };
 
-export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
+export const IFrameWrapper = ({ children, mobile=false }: { children: React.ReactNode , mobile?:boolean}) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const refEventCatcher = useRef<HTMLDivElement | null>(null);
   // const { inspectorState, setInspectorState } = useInspectorStateContext();
@@ -86,7 +86,7 @@ export const IFrameWrapper = ({ children }: { children: React.ReactNode }) => {
       <div className="relative w-full h-full">
         {children}
         <iframe
-          id={IFRAME_ID}
+          id={mobile ? "mobile-iframe" : IFRAME_ID }
           key={lastUpdate}
           ref={iframeRef}
           // src="http://localhost:4200"

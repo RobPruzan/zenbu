@@ -41,6 +41,7 @@ document.addEventListener("mousemove", (e) => {
 });
 
 export type ChildToParentMessage =
+  | { kind: "sync-action"; selector: string; from: string }
   | {
       kind: "load";
     }
@@ -75,6 +76,11 @@ export type ChildToParentMessage =
   | { kind: "keydown"; key: string; metaKey: boolean; ctrlKey: boolean };
 
 export type ParentToChildMessage =
+  | {
+      kind: "sync-action";
+      from: string;
+      selector: string;
+    }
   | {
       kind: "clicked-element-info-request";
       id: string;
@@ -129,10 +135,78 @@ document.addEventListener("keydown", (e) => {
 });
 
 const iife = <T>(f: () => T): T => f();
+function getSelector(el: HTMLElement) {
+  if (!el || el.nodeType !== 1) return "";
 
+  // if it has an ID, escape and return
+  if (el.id) {
+    return `#${CSS.escape(el.id)}`;
+  }
+
+  // build tag + escaped classes
+  let selector = el.tagName.toLowerCase();
+  for (let cls of el.classList) {
+    selector += `.${CSS.escape(cls)}`;
+  }
+
+  // check uniqueness among siblings
+  const parent = el.parentElement;
+  if (parent) {
+    const matches = parent.querySelectorAll(selector);
+    if (matches.length > 1) {
+      const index = [...parent.children].indexOf(el) + 1;
+      selector += `:nth-child(${index})`;
+    }
+
+    const parentSelector = getSelector(parent);
+    if (parentSelector) {
+      selector = parentSelector + " > " + selector;
+    }
+  }
+
+  return selector;
+}
+
+// usage in an event handler:
 // todo: need RPC to share store between parent and child
 
+const pageId = nanoid();
+
+function getFirstButtonAncestor(
+  element: HTMLElement
+): HTMLButtonElement | null {
+  let current: HTMLElement | null = element;
+
+  while (current) {
+    if (current.tagName.toLowerCase() === "button") {
+      return current as HTMLButtonElement;
+    }
+    current = current.parentElement;
+  }
+
+  return null;
+}
+function getFirstElementWithId(element: HTMLElement): HTMLElement | null {
+  let current: HTMLElement | null = element;
+
+  while (current) {
+    if (current.id) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+
+  return null;
+}
+
 const blockClick = (shouldHandle: boolean) => async (e: MouseEvent) => {
+  console.log("sending click", e.target);
+
+  sendMessage({
+    kind: "sync-action",
+    from: pageId,
+    selector: getFirstElementWithId(e.target as HTMLElement)!.id,
+  });
   if ((await getState()).kind !== "inspecting") {
     return;
   }
@@ -197,6 +271,23 @@ window.addEventListener("message", async (event) => {
   const data = event.data as ParentToChildMessage;
 
   switch (data.kind) {
+    case "sync-action": {
+      if (pageId === data.from) {
+        return;
+      }
+      const element = document.getElementById(data.selector) as HTMLElement;
+      const clickEl = getFirstButtonAncestor(element);
+      if (!clickEl) {
+        console.log("no element for", data.selector);
+
+        return;
+      }
+
+      console.log("clicking", clickEl);
+
+      clickEl?.click();
+      return;
+    }
     case "start-recording": {
       stopRecording = record({
         recordCanvas: true,
@@ -276,6 +367,7 @@ const genId = () => {
 // import workerUrl from 'modern-screenshot/worker?url'
 import { createContext, destroyContext, domToPng } from "modern-screenshot";
 import {} from "modern-screenshot/worker";
+import { nanoid } from "nanoid";
 
 var __WORKER_CODE__ = "";
 
