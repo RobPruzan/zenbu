@@ -113,6 +113,7 @@ export const createServer = async () => {
         },
       });
     })
+// waidaminute
     .post("/video/upload", async (opts) => {
       // uh is it any different from image upload? form data get the bytes write? I suppose..
 
