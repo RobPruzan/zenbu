@@ -123,7 +123,10 @@ const sendMessage = (message: ChildToParentMessage) => {
 document.addEventListener("keydown", (e) => {
   if (e.metaKey && e.key === "p") {
     e.preventDefault();
-    // if we want the parent frame to control this (not unconditionally do this here), we need to await a response from the parent iframe to determine how to do this, could cause a lost frame on every keydown which is quite unfortunate
+    // if we want the parent frame to control this (not unconditionally do this
+    // here), we need to await a response from the parent iframe to determine
+    // how to do this, could cause a lost frame on every keydown which is quite
+    // unfortunate
   }
 
   sendMessage({
@@ -135,37 +138,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 const iife = <T>(f: () => T): T => f();
-function getSelector(el: HTMLElement) {
-  if (!el || el.nodeType !== 1) return "";
 
-  // if it has an ID, escape and return
-  if (el.id) {
-    return `#${CSS.escape(el.id)}`;
-  }
-
-  // build tag + escaped classes
-  let selector = el.tagName.toLowerCase();
-  for (let cls of el.classList) {
-    selector += `.${CSS.escape(cls)}`;
-  }
-
-  // check uniqueness among siblings
-  const parent = el.parentElement;
-  if (parent) {
-    const matches = parent.querySelectorAll(selector);
-    if (matches.length > 1) {
-      const index = [...parent.children].indexOf(el) + 1;
-      selector += `:nth-child(${index})`;
-    }
-
-    const parentSelector = getSelector(parent);
-    if (parentSelector) {
-      selector = parentSelector + " > " + selector;
-    }
-  }
-
-  return selector;
-}
 
 // usage in an event handler:
 // todo: need RPC to share store between parent and child
