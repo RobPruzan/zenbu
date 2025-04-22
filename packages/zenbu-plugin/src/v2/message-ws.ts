@@ -13,6 +13,28 @@ import { FileState, GoogleAIFileManager } from "@google/generative-ai/server";
 type ClientEvent = {
   message: string;
 };
+import { CoreMessage, DataContent, Message } from "ai";
+export type ChatEvent = {
+  message: CoreMessage;
+  /**
+   * need to remember some of the problems i had
+   *
+   *
+   *
+   *
+   * i can just back reference and read the code to extract some shit
+   *
+   *
+   * sure why not
+   *
+   *
+   * right i already know those scale and have some level of type safety
+   *
+   * er what type do i want to use
+   */
+
+  timestamp: number;
+};
 
 const redisClient = makeRedisClient();
 

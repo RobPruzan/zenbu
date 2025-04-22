@@ -10,6 +10,7 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "../db";
+import { makeRedisClient } from "../../../../zenbu-redis/src/redis";
 
 /**
  * 1. CONTEXT
@@ -26,6 +27,7 @@ import { db } from "../db";
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   return {
     db,
+    redis: makeRedisClient({ tcp: true }),
     ...opts,
   };
 };
@@ -37,7 +39,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-const t = initTRPC.context<typeof createTRPCContext>().create({
+export const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
@@ -102,4 +104,5 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
+// export const publicProcedure = t.procedure.use(timingMiddleware);
+export const publicProcedure = t.procedure;

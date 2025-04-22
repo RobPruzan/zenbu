@@ -222,8 +222,8 @@ const killAllProjects = Effect.gen(function* () {
 
   yield* Effect.all(killEffects);
 });
-const nuke = () =>
-  Effect.runPromiseExit(
+const nuke = async () => {
+  const program = Effect.match(
     Effect.gen(function* () {
       yield* killAllProjects;
       yield* Effect.tryPromise(() => redisClient.flushdb());
@@ -232,8 +232,32 @@ const nuke = () =>
       yield* fs.makeDirectory("projects");
     })
       .pipe(Effect.provideService(RedisContext, { client: redisClient }))
-      .pipe(Effect.provide(NodeContext.layer))
+      .pipe(Effect.provide(NodeContext.layer)),
+    {
+      onSuccess: () => {
+        return { success: true };
+      },
+      onFailure: (error) => {
+        switch (error._tag) {
+          case "UnknownException": {
+          }
+          case "NotFoundError": {
+          }
+          case "GenericError": {
+          }
+          case "SystemError": {
+          }
+          case "RedisValidationError": {
+          }
+          case "BadArgument": {
+          }
+        }
+      },
+    }
   );
+ return await Effect.runPromise(program);
+
+};
 
 export const createServer = async () => {
   console.log("Starting server...");

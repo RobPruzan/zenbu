@@ -2,8 +2,19 @@ import Redis from "ioredis";
 import { config } from "dotenv";
 import { Context, Data, Effect } from "effect";
 import { cwd } from "process";
+import {ChatEvent } from "zenbu-plugin/src/v2/message-ws"
+
 config();
 
+/**
+ *
+ *
+ * okay ill definitely need a new kind lets just do it
+ */
+
+
+
+// need to start typing this for the chat entries
 export type ProjectStatus = "running" | "paused" | "killed";
 export type RedisSchema = Record<
   string,
@@ -12,12 +23,21 @@ export type RedisSchema = Record<
       kind: "createdAt";
       createdAt: number;
     }
+  | {
+      kind: "chat-event";
+      event: ChatEvent
+    }
 >;
 
-export const makeRedisClient = () => {
-  const client = new Redis({
-    path: "../zenbu-redis/redis-data/redis.sock",
-  });
+export const makeRedisClient = (opts?: { tcp?: boolean }) => {
+  const client = opts?.tcp
+    ? new Redis({
+        host: process.env.REDIS_HOST || "localhost",
+        port: parseInt(process.env.REDIS_PORT || "6379"),
+      })
+    : new Redis({
+        path: "../zenbu-redis/redis-data/redis.sock",
+      });
 
   const effectClient = {
     get,
