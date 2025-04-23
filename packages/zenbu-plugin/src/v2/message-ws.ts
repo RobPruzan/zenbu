@@ -22,7 +22,7 @@ import { server_eventsToMessage } from "./server-utils";
 import { nanoid } from "nanoid";
 import { iife } from "src/tools/message-runtime";
 import { write } from "node:console";
-type AsyncIterableStream<T> = AsyncIterable<T> & ReadableStream<T>;
+// type AsyncIterableStream<T> = AsyncIterable<T> & ReadableStream<T>;
 
 const redisClient = makeRedisClient();
 
@@ -164,79 +164,79 @@ export const injectWebSocket = (server: HttpServer) => {
             const { fullStream } = streamText({
               model: openai("gpt-4.1"),
               abortSignal: abortController.signal,
-              // messages: [
-              //   // {
-              //   //   role: 'tool',
-              //   //   content: [{
+              messages: [
+                // {
+                //   role: 'tool',
+                //   content: [{
 
-              //   //   }]
-              //   // },
-              //   {
-              //     role: "system",
-              //     content: "i need a system prompt for this sexy ass lil model",
-              //   } satisfies CoreMessage,
+                //   }]
+                // },
+                {
+                  role: "system",
+                  content: "i need a system prompt for this sexy ass lil model",
+                } satisfies CoreMessage,
 
-              //   ...messages,
-              // ],
-              // toolCallStreaming: true,
-              // tools: {
-              //   /**
-              //    * write code tool will be any time the model wants to write code, it asks
-              //    * the model to do it for it
-              //    *
-              //    * we must store previous chat messages of course, will need to give that in a good
-              //    * format
-              //    *
-              //    * I'm not gonna play any weird hacks with accumulating result in local variable,
-              //    * everything just gets written to redis
-              //    */
-              //   writeCode: tool({
-              //     description:
-              //       "Request a coder model to make the edit you want",
-              //     args: {},
-              //     parameters: z.object({
-              //       goal: z.string(),
-              //       path: z.string(),
-              //     }),
-              //     execute: async ({ goal, path }) => {
-              //       const exit = await Effect.runPromiseExit(
-              //         Effect.gen(function* () {
-              //           const { client } = yield* RedisContext;
-              //           const fs = yield* FileSystem.FileSystem;
-              //           const exists = yield* fs.exists(path);
-              //           if (!exists) {
-              //             // i wonder if we should just provide the models the internal errors and let it iterate?
-              //             yield* new InvariantError({
-              //               reason: "todo not implemented",
-              //             });
-              //           }
+                ...messages,
+              ],
+              toolCallStreaming: true,
+              tools: {
+                /**
+                 * write code tool will be any time the model wants to write code, it asks
+                 * the model to do it for it
+                 *
+                 * we must store previous chat messages of course, will need to give that in a good
+                 * format
+                 *
+                 * I'm not gonna play any weird hacks with accumulating result in local variable,
+                 * everything just gets written to redis
+                 */
+                writeCode: tool({
+                  description:
+                    "Request a coder model to make the edit you want",
+                  args: {},
+                  parameters: z.object({
+                    goal: z.string(),
+                    path: z.string(),
+                  }),
+                  execute: async ({ goal, path }) => {
+                    const exit = await Effect.runPromiseExit(
+                      Effect.gen(function* () {
+                        const { client } = yield* RedisContext;
+                        const fs = yield* FileSystem.FileSystem;
+                        const exists = yield* fs.exists(path);
+                        if (!exists) {
+                          // i wonder if we should just provide the models the internal errors and let it iterate?
+                          yield* new InvariantError({
+                            reason: "todo not implemented",
+                          });
+                        }
 
-              //           // const events = yield* client.effect.getChatEvents(roomId);
-              //           // const messages = yield* server_eventsToMessage(events);
+                        // const events = yield* client.effect.getChatEvents(roomId);
+                        // const messages = yield* server_eventsToMessage(events);
 
-              //           yield* writeCode({
-              //             requestId: event.requestId,
-              //             roomId,
-              //             path,
-              //           });
-              //         })
-              //           .pipe(
-              //             Effect.provideService(RedisContext, {
-              //               client: redisClient,
-              //             })
-              //           )
-              //           .pipe(Effect.provide(NodeContext.layer))
-              //           .pipe(
-              //             Effect.provideService(ProjectContext, {
-              //               path: "fake path for now",
-              //               typecheckCommand: "tsc",
-              //             })
-              //           )
-              //       );
-              //       return;
-              //     },
-              //   }),
-              // },
+                        yield* writeCode({
+                          requestId: event.requestId,
+                          roomId,
+                          path,
+                        });
+                      })
+                        .pipe(
+                          Effect.provideService(RedisContext, {
+                            client: redisClient,
+                          })
+                        )
+                        .pipe(Effect.provide(NodeContext.layer))
+                        .pipe(
+                          Effect.provideService(ProjectContext, {
+                            path: "fake path for now",
+                            typecheckCommand: "tsc",
+                          })
+                        )
+                    );
+                    return;
+                  },
+                }),
+              },
             });
 
 
@@ -245,43 +245,42 @@ export const injectWebSocket = (server: HttpServer) => {
 
 
             const _ = new Promise(async (res) => {
-              for await (const obj of fullStream) {
-                obj
+              for await (const obj of fullStream as AsyncIterable<TextStreamPart<{stupid: any}>>) {
               }
             })
 
 
-            // const stream = Stream.fromAsyncIterable<
-            // Inner ,
-            //   ModelError
-            // >(fullStream, (e) => new ModelError({ error: e }));
+            const stream = Stream.fromAsyncIterable<
+              AsyncIterable<TextStreamPart<{ stupidLanguage:any}>> ,
+              ModelError
+            >(fullStream, (e) => new ModelError({ error: e }));
             
 
-            // const result = yield* stream.pipe(
-            //   Stream.runForEach((chunk) =>
-            //     Effect.gen(function* () {
-            //       const { client } = yield* RedisContext;
-            //       chunk.
+            const result = yield* stream.pipe(
+              Stream.runForEach((chunk) =>
+                Effect.gen(function* () {
+                  const { client } = yield* RedisContext;
+                  chunk.
 
-            //       // chunk.type === 'tool-result'
-            //       // const chunkText = chunkToText(chunk);
-            //       // if (!chunkText) {
-            //       //   return;
-            //       // }
-            //       client.effect.pushChatEvent(roomId, {
-            //         kind: "model-message",
-            //         associatedRequestId: event.requestId,
-            //         id: nanoid(),
-            //         timestamp: Date.now(),
-            //         // text: chunkText,
-            //       });
-            //       /**
-            //        *
-            //        * yes, write that shi to redis
-            //        */
-            //     })
-            //   )
-            // );
+                  // chunk.type === 'tool-result'
+                  const chunkText = chunkToText(chunk);
+                  if (!chunkText) {
+                    return;
+                  }
+                  client.effect.pushChatEvent(roomId, {
+                    kind: "model-message",
+                    associatedRequestId: event.requestId,
+                    id: nanoid(),
+                    timestamp: Date.now(),
+                    text: chunkText,
+                  });
+                  /**
+                   *
+                   * yes, write that shi to redis
+                   */
+                })
+              )
+            );
           })
             .pipe(Effect.provideService(RedisContext, { client: redisClient }))
             .pipe(Effect.provide(NodeContext.layer))
@@ -291,10 +290,13 @@ export const injectWebSocket = (server: HttpServer) => {
   });
 };
 
-export const chunkToText = (chunk: TextStreamPart<ToolSet>) => {
+export const chunkToText = (chunk: TextStreamPart<{stupid:any}>) => {
   switch (chunk.type) {
     case "reasoning": {
       return chunk.textDelta;
+    }
+    case 'tool-result': {
+      return chunk.
     }
 
     case "text-delta": {
