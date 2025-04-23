@@ -255,8 +255,7 @@ const nuke = async () => {
       },
     }
   );
- return await Effect.runPromise(program);
-
+  return await Effect.runPromiseExit(program);
 };
 
 export const createServer = async () => {

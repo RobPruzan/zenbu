@@ -2,7 +2,7 @@ import Redis from "ioredis";
 import { config } from "dotenv";
 import { Context, Data, Effect } from "effect";
 import { cwd } from "process";
-import {ChatEvent } from "zenbu-plugin/src/v2/message-ws"
+import { RedisValidationError } from "../../zenbu-daemon/src/daemon";
 
 config();
 
@@ -12,9 +12,27 @@ config();
  * okay ill definitely need a new kind lets just do it
  */
 
-
-
 // need to start typing this for the chat entries
+
+export type ModelEvent = {
+  text: string;
+  timestamp: number;
+  kind: "model-message";
+  id: string;
+  associatedRequestId: string;
+};
+
+export type ClientEvent = {
+  id: string;
+  kind: "user-message";
+  context: Array<
+    { kind: "image"; filePath: string } | { kind: "video"; filePath: string }
+  >;
+  text: string;
+  timestamp: number;
+  requestId: string;
+};
+export type PartialEvent = ClientEvent | ModelEvent;
 export type ProjectStatus = "running" | "paused" | "killed";
 export type RedisSchema = Record<
   string,
@@ -24,10 +42,23 @@ export type RedisSchema = Record<
       createdAt: number;
     }
   | {
-      kind: "chat-event";
-      event: ChatEvent
+      kind: "chat-events";
+      events: Array<PartialEvent>;
+    }
+  | {
+      kind: "video-cache";
+      data: string;
+      mimeType: string;
     }
 >;
+
+export const makeVideoCacheKey = ({ path }: { path: string }) => {
+  return `${path}_video_cache`;
+};
+
+export const makeChatEventsKey = ({ roomId }: { roomId: string }) => {
+  return `${roomId}_chat-events`;
+};
 
 export const makeRedisClient = (opts?: { tcp?: boolean }) => {
   const client = opts?.tcp
@@ -43,6 +74,12 @@ export const makeRedisClient = (opts?: { tcp?: boolean }) => {
     get,
     set,
     del,
+    getOrElse,
+    /**
+     * NO NO STOP COUPLING REDIS TO CHAT NO STOP NOO
+     */
+    pushChatEvent,
+    getChatEvents,
   };
   // @ts-expect-error
   client.effect = effectClient;
@@ -60,6 +97,19 @@ export const del = <K extends keyof RedisSchema>(key: K) =>
     const { client } = yield* RedisContext;
     const res = yield* Effect.tryPromise(() => client.del(key));
     return res;
+  });
+
+export const getOrElse = <K extends keyof RedisSchema, T>(
+  key: K,
+  orElse: () => T
+) =>
+  Effect.gen(function* () {
+    const { client } = yield* RedisContext;
+    const raw = yield* Effect.tryPromise(() => client.get(key));
+    if (!raw) {
+      return orElse();
+    }
+    return JSON.parse(raw) as RedisSchema[K];
   });
 export const get = <K extends keyof RedisSchema>(key: K) =>
   Effect.gen(function* () {
@@ -80,7 +130,44 @@ export const set = <K extends keyof RedisSchema>(
 ) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
-    return client.set(key, JSON.stringify(value));
+    return yield* Effect.tryPromise(() =>
+      client.set(key, JSON.stringify(value))
+    );
+  });
+
+const getChatEvents = (roomId: string) =>
+  Effect.gen(function* () {
+    const { client } = yield* RedisContext;
+    const key = makeChatEventsKey({ roomId });
+    const previous = yield* client.effect
+      .get(key)
+      .pipe(Effect.match({ onSuccess: (data) => data, onFailure: () => null }));
+    if (!previous) {
+      return [];
+    }
+    if (previous.kind !== "chat-events") {
+      return yield* new RedisValidationError();
+    }
+
+    return previous.events;
+  });
+
+export const pushChatEvent = (roomId: string, event: PartialEvent) =>
+  Effect.gen(function* () {
+    const { client } = yield* RedisContext;
+    const key = makeChatEventsKey({ roomId });
+    const previous = yield* client.effect.get(key);
+    if (!previous) {
+      return yield* Effect.tryPromise(() =>
+        client.set(key, JSON.stringify([event]))
+      );
+    }
+    if (previous.kind !== "chat-events") {
+      return yield* new RedisValidationError();
+    }
+    return yield* Effect.tryPromise(() =>
+      client.set(key, JSON.stringify([...previous.events, event]))
+    );
   });
 
 export const RedisContext = Context.GenericTag<{

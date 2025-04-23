@@ -2,39 +2,26 @@ import { openai } from "@ai-sdk/openai";
 import { streamText, TextStreamPart, tool, ToolSet } from "ai";
 import { type Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
-import { z } from "zod";
-import { makeRedisClient, RedisContext } from "../../../zenbu-redis/src/redis";
+import { effect, z } from "zod";
+import {
+  ClientEvent,
+  makeChatEventsKey,
+  makeRedisClient,
+  makeVideoCacheKey,
+  RedisContext,
+} from "../../../zenbu-redis/src/redis";
 import { Context, Data, Effect, Stream } from "effect";
 import { NodeContext } from "@effect/platform-node";
 
 import { FileSystem } from "@effect/platform";
 import { FileState, GoogleAIFileManager } from "@google/generative-ai/server";
 
-type ClientEvent = {
-  message: string;
-};
 import { CoreMessage, DataContent, Message } from "ai";
-export type ChatEvent = {
-  message: CoreMessage;
-  /**
-   * need to remember some of the problems i had
-   *
-   *
-   *
-   *
-   * i can just back reference and read the code to extract some shit
-   *
-   *
-   * sure why not
-   *
-   *
-   * right i already know those scale and have some level of type safety
-   *
-   * er what type do i want to use
-   */
-
-  timestamp: number;
-};
+import { RedisValidationError } from "../../../zenbu-daemon/src/daemon";
+import { server_eventsToMessage } from "./server-utils";
+import { nanoid } from "nanoid";
+import { iife } from "src/tools/message-runtime";
+import { write } from "node:console";
 
 const redisClient = makeRedisClient();
 
@@ -129,84 +116,183 @@ export const injectWebSocket = (server: HttpServer) => {
      * do image/vide upload again
      *  - this time the video upload will not be retarded
      * `
+     *
+     *
+     *
+     * im dumb i forgot i wanted this to be decoupled
+     *
+     *
+     * i guess its fine for now, i just need a router pretty simple
      */
-    socket.on("message", async ({ event }: { event: ClientEvent }) => {
-      const _ = Effect.runPromiseExit(
-        Effect.gen(function* () {
-          if (activeStreamController.kind === "active") {
-            activeStreamController.abortController.abort();
-          }
-          const abortController = new AbortController();
-          const { client } = yield* RedisContext;
-          /**
-           * persistence yay
-           */
-          const { fullStream } = streamText({
-            model: openai("gpt-4.1"),
-            abortSignal: abortController.signal,
-            toolCallStreaming: true,
-            tools: {
-              /**
-               * write code tool will be any time the model wants to write code, it asks
-               * the model to do it for it
-               *
-               * we must store previous chat messages of course, will need to give that in a good
-               * format
-               *
-               * I'm not gonna play any weird hacks with accumulating result in local variable,
-               * everything just gets written to redis
-               */
-              writeCode: tool({
-                execute: async ({ goal }) => {
-                  const exit = await Effect.runPromiseExit(
-                    Effect.gen(function* () {
-                      const { client } = yield* RedisContext;
-                      /**
-                       * blah blah get chat history so we can feed to model
-                       */
-                      const chatHistory = null!;
-                    }).pipe(
-                      Effect.provideService(RedisContext, {
-                        client: redisClient,
-                      })
-                    )
-                  );
-                  return;
-                },
-                description: "Request a coder model to make the edit you want",
-                args: {},
-                parameters: z.object({
-                  goal: z.string(),
-                }),
-              }),
-            },
-          });
+    // ug i should make this project id im being lazy, project name is basically a stupid id rn
+    socket.on(
+      "message",
+      async ({ event }: { event: ClientEvent; projectName: string }) => {
+        const _ = Effect.runPromiseExit(
+          Effect.gen(function* () {
+            if (activeStreamController.kind === "active") {
+              activeStreamController.abortController.abort();
+            }
+            const abortController = new AbortController();
+            const { client } = yield* RedisContext;
 
-          const stream = Stream.fromAsyncIterable<
-            TextStreamPart<ToolSet>,
-            ModelError
-          >(fullStream, (e) => new ModelError({ error: e }));
+            const record = yield* client.effect.get(
+              makeChatEventsKey({ roomId })
+            );
+            if (record.kind !== "chat-events") {
+              return yield* new RedisValidationError();
+            }
+            /**
+             * persistence yay
+             */
 
-          const result = yield* stream.pipe(
-            Stream.runForEach((chunk) =>
-              Effect.gen(function* () {
-                const { client } = yield* RedisContext;
+            // lowkey i should mock the ai sdk maybe?
+
+            yield* client.effect.pushChatEvent(roomId, event);
+            const events = yield* client.effect.getChatEvents(roomId);
+            const messages = yield* server_eventsToMessage(events);
+
+            const { fullStream } = streamText({
+              model: openai("gpt-4.1"),
+              abortSignal: abortController.signal,
+              messages: [
+                {
+                  role: "system",
+                  content: "i need a system prompt for this sexy ass lil model",
+                } satisfies CoreMessage,
+
+                ...messages,
+              ],
+              toolCallStreaming: true,
+              tools: {
                 /**
+                 * write code tool will be any time the model wants to write code, it asks
+                 * the model to do it for it
                  *
-                 * yes, write that shi to redis
+                 * we must store previous chat messages of course, will need to give that in a good
+                 * format
+                 *
+                 * I'm not gonna play any weird hacks with accumulating result in local variable,
+                 * everything just gets written to redis
                  */
-              })
-            )
-          );
-        }).pipe(Effect.provideService(RedisContext, { client: redisClient }))
-      );
-    });
+                writeCode: tool({
+                  execute: async ({ goal, path }) => {
+                    const exit = await Effect.runPromiseExit(
+                      Effect.gen(function* () {
+                        const { client } = yield* RedisContext;
+                        const fs = yield* FileSystem.FileSystem;
+                        const exists = yield* fs.exists(path);
+                        if (!exists) {
+                          // i wonder if we should just provide the models the internal errors and let it iterate?
+                          yield* new InvariantError({
+                            reason: "todo not implemented",
+                          });
+                        }
+
+                        // const events = yield* client.effect.getChatEvents(roomId);
+                        // const messages = yield* server_eventsToMessage(events);
+
+                        yield* writeCode({
+                          requestId: event.requestId,
+                          roomId,
+                          path,
+                        });
+                      })
+                        .pipe(
+                          Effect.provideService(RedisContext, {
+                            client: redisClient,
+                          })
+                        )
+                        .pipe(Effect.provide(NodeContext.layer))
+                        .pipe(
+                          Effect.provideService(ProjectContext, {
+                            path: "fake path for now",
+                            typecheckCommand: "tsc",
+                          })
+                        )
+                    );
+                    return;
+                  },
+                  description:
+                    "Request a coder model to make the edit you want",
+                  args: {},
+                  parameters: z.object({
+                    goal: z.string(),
+                    path: z.string(),
+                  }),
+                }),
+              },
+            });
+
+            const stream = Stream.fromAsyncIterable<
+              TextStreamPart<ToolSet>,
+              ModelError
+            >(fullStream, (e) => new ModelError({ error: e }));
+
+            const result = yield* stream.pipe(
+              Stream.runForEach((chunk) =>
+                Effect.gen(function* () {
+                  const { client } = yield* RedisContext;
+
+                  const chunkText = chunkToText(chunk);
+                  if (!chunkText) {
+                    return;
+                  }
+                  client.effect.pushChatEvent(roomId, {
+                    kind: "model-message",
+                    associatedRequestId: event.requestId,
+                    id: nanoid(),
+                    timestamp: Date.now(),
+                    text: chunkText,
+                  });
+                  /**
+                   *
+                   * yes, write that shi to redis
+                   */
+                })
+              )
+            );
+          })
+            .pipe(Effect.provideService(RedisContext, { client: redisClient }))
+            .pipe(Effect.provide(NodeContext.layer))
+        );
+      }
+    );
   });
+};
+
+export const chunkToText = (chunk: TextStreamPart<ToolSet>) => {
+  switch (chunk.type) {
+    case "reasoning": {
+      return chunk.textDelta;
+    }
+    case "text-delta": {
+      return chunk.textDelta;
+    }
+    case "tool-call-delta": {
+      return chunk.argsTextDelta;
+    }
+    default: {
+      return null;
+    }
+  }
 };
 
 export const getGeminiVideoURL = (path: string) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
+
+    const record = yield* client.effect.getOrElse(
+      makeVideoCacheKey({ path }),
+      () => null
+    );
+
+    if (record && record.kind !== "video-cache") {
+      return yield* new RedisValidationError();
+    }
+    if (record) {
+      return record;
+    }
 
     /**
      * need a quick cache lookup on the path in redis
@@ -248,12 +334,23 @@ export const getGeminiVideoURL = (path: string) =>
       data: geminiFile.file.uri,
       mimeType: geminiFile.file.mimeType,
     };
+
+    yield* redisClient.effect.set(makeVideoCacheKey({ path }), {
+      ...data,
+      kind: "video-cache",
+    });
     return data;
   });
 export class ModelError extends Data.TaggedError("GenericError")<{
   error: any;
 }> {}
-
+export class TypecheckError extends Data.TaggedError("TypecheckError")<{
+  errorString: string;
+}> {}
+export class InvariantError extends Data.TaggedError("InvariantError")<{
+  reason?: string;
+  context?: unknown;
+}> {}
 const parseModelResult = (outputWithCode: string) =>
   Effect.gen(function* () {
     /**
@@ -263,19 +360,47 @@ const parseModelResult = (outputWithCode: string) =>
     return "parsed code";
   });
 
-const serverEventsToMessages = (events: any) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const redis = yield* RedisContext;
-  });
-
-const writeCode = () =>
+// todo: make args context
+const writeCode = ({
+  requestId,
+  roomId,
+  path,
+}: {
+  roomId: string;
+  requestId: string;
+  path: string;
+}) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
     /**
      * read that shit from redis
      */
-    const { fullStream, text } = streamText({ model: openai("gpt-4.1") });
+
+    const events = yield* client.effect.getChatEvents(roomId);
+    const messages = yield* server_eventsToMessage(events);
+    const { fullStream, text } = streamText({
+      messages: [
+        {
+          role: "system",
+          content: "mhm yeah such a good system prompt to write code",
+        },
+        ...messages,
+      ],
+      tools: {
+        reapply: tool({
+          parameters: z.object({}),
+          execute: async () => {
+            const effect = Effect.gen(function* () {
+              yield* new InvariantError({ reason: "not implemented yet shi" });
+            });
+            const exit = Effect.runPromiseExit(effect);
+          },
+          description:
+            "If the apply model didn't apply, your code change right, call this and a smarter model will retry",
+        }),
+      },
+      model: openai("gpt-4.1"),
+    });
 
     const stream = Stream.fromAsyncIterable<
       TextStreamPart<ToolSet>,
@@ -286,6 +411,19 @@ const writeCode = () =>
       Stream.runForEach((chunk) =>
         Effect.gen(function* () {
           const { client } = yield* RedisContext;
+
+          const chunkText = chunkToText(chunk);
+          if (!chunkText) {
+            return chunkText;
+          }
+
+          yield* client.effect.pushChatEvent(roomId, {
+            kind: "model-message",
+            associatedRequestId: requestId,
+            id: nanoid(),
+            timestamp: Date.now(),
+            text: chunkText,
+          });
           /**
            *
            * yes, write that shi to redis
@@ -295,6 +433,27 @@ const writeCode = () =>
     );
 
     const finalText = yield* Effect.tryPromise(() => text);
+    const code = yield* parseModelResult(finalText).pipe(
+      Effect.match({
+        onSuccess: (value) => value,
+        onFailure: () => {
+          // realistically we want to recurse, todo for now
+          return null;
+        },
+      })
+    );
+    if (!code) {
+      return yield* new InvariantError({
+        reason: "bad code output retry not implemented",
+      });
+    }
+
+    const _ = yield* applyCode({
+      code,
+      path,
+      roomId,
+    });
+
     /**
      *
      * need to, in order:
@@ -310,36 +469,95 @@ const writeCode = () =>
      */
   });
 
-const applyCode = Effect.gen(function* () {
-  const { client } = yield* RedisContext;
-  const fs = yield* FileSystem.FileSystem;
-  const randomAhFileContent = "";
+// rah put roomId as context
+const applyCode = ({
+  code,
+  path,
+  roomId,
+}: {
+  code: string;
+  path: string;
+  roomId: string;
+}) =>
+  Effect.gen(function* () {
+    const { client } = yield* RedisContext;
+    const fs = yield* FileSystem.FileSystem;
+    const fileString = yield* fs.readFileString(path);
+    const randomAhFileContent = "";
+    const events = yield* client.effect.getChatEvents(roomId);
+    const messages = yield* server_eventsToMessage(events);
 
-  const { fullStream } = streamText({
-    model: openai("gpt-4.1-mini"),
-    providerOptions: {
-      openai: {
-        prediction: {
-          type: "content",
-          content: `\`\`\`
+    const { fullStream, text } = streamText({
+      model: openai("gpt-4.1-mini"),
+      providerOptions: {
+        openai: {
+          prediction: {
+            type: "content",
+            content: `\`\`\`
         ${randomAhFileContent}
         \`\`\``,
+          },
         },
       },
-    },
-    messages: [
-      {
-        role: "user",
-        content: "Apply dis shit bro",
-      },
-    ],
-  });
+      messages: [
+        ...messages,
+        {
+          role: "user",
+          content: `Here is the file content: ${fileString} \n\n\n Please integrate the following code to this file by providing the entire file back ${code}`,
+        },
+      ],
+    });
 
-  const stream = Stream.fromAsyncIterable<TextStreamPart<ToolSet>, ModelError>(
-    fullStream,
-    (e) => new ModelError({ error: e })
-  );
-});
+    /**
+     * er i do want to send the stream but I don't really want model to see it
+     *
+     * i guess i need some meta on the event and need to post process based on what i want the base model seeing?
+     */
+    const stream = Stream.fromAsyncIterable<
+      TextStreamPart<ToolSet>,
+      ModelError
+    >(fullStream, (e) => new ModelError({ error: e }));
+
+    const _ = yield* stream.pipe(
+      Stream.runForEach((chunk) =>
+        Effect.gen(function* () {
+          // todo what we do her
+        })
+      )
+    );
+
+    const finalText = yield* Effect.tryPromise(() => text);
+
+    const applyCode = yield* parseModelResult(finalText);
+
+    /**
+     * we want to do a check on the
+     */
+
+    const previous = yield* fs.readFileString(path);
+    yield* fs.writeFileString(path, code);
+    // i wish i had some way of giving model lsp info/ querying lsp, obviously can do that, just need to figure out correct impl for that
+
+    yield* typeCheck.pipe(
+      Effect.onError(() =>
+        Effect.gen(function* () {
+          // yield* fs.writeFileString(path,previous ).pipe(Effect.mapError(e => null))
+          const res = yield* fs.writeFileString(path, previous).pipe(
+            Effect.match({
+              onFailure: () => null,
+              onSuccess: () => {},
+            })
+          );
+        })
+      )
+    );
+
+    /**
+     *
+     * if this fails should we undo the apply and tell the model the error? probably, should have some weird state evolving over the file
+     */
+    yield* ProjectContext;
+  });
 
 export const ProjectContext = Context.GenericTag<{
   path: string;
@@ -351,6 +569,11 @@ const typeCheck = Effect.gen(function* () {
    * I do need project context
    */
   const { path, typecheckCommand } = yield* ProjectContext;
+  // todo run type checker over correct project path
+
+  if (false) {
+    return yield* new TypecheckError({ errorString: "todo get error output" });
+  }
 });
 
 const reapplyCode = Effect.gen(function* () {
