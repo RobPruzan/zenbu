@@ -22,6 +22,7 @@ import { server_eventsToMessage } from "./server-utils";
 import { nanoid } from "nanoid";
 import { iife } from "src/tools/message-runtime";
 import { write } from "node:console";
+type AsyncIterableStream<T> = AsyncIterable<T> & ReadableStream<T>;
 
 const redisClient = makeRedisClient();
 
@@ -100,8 +101,10 @@ export const injectWebSocket = (server: HttpServer) => {
     // actually yeah we do, we want room level context and message level context, just make message passing absurdly easy
     socket.join(roomId);
     const activeStreamController = {
-      kind: "not-active",
-    } as ActiveAbortController; // stupid type hack
+      current: {
+        kind: "not-active",
+      } as ActiveAbortController,
+    }; // stupid type hack
 
     /**
      * okay what's left
@@ -130,10 +133,16 @@ export const injectWebSocket = (server: HttpServer) => {
       async ({ event }: { event: ClientEvent; projectName: string }) => {
         const _ = Effect.runPromiseExit(
           Effect.gen(function* () {
-            if (activeStreamController.kind === "active") {
-              activeStreamController.abortController.abort();
+            if (activeStreamController.current.kind === "active") {
+              activeStreamController.current.abortController.abort();
             }
             const abortController = new AbortController();
+
+            activeStreamController.current = {
+              kind: "active",
+              abortController,
+            };
+
             const { client } = yield* RedisContext;
 
             const record = yield* client.effect.get(
@@ -155,103 +164,124 @@ export const injectWebSocket = (server: HttpServer) => {
             const { fullStream } = streamText({
               model: openai("gpt-4.1"),
               abortSignal: abortController.signal,
-              messages: [
-                {
-                  role: "system",
-                  content: "i need a system prompt for this sexy ass lil model",
-                } satisfies CoreMessage,
+              // messages: [
+              //   // {
+              //   //   role: 'tool',
+              //   //   content: [{
 
-                ...messages,
-              ],
-              toolCallStreaming: true,
-              tools: {
-                /**
-                 * write code tool will be any time the model wants to write code, it asks
-                 * the model to do it for it
-                 *
-                 * we must store previous chat messages of course, will need to give that in a good
-                 * format
-                 *
-                 * I'm not gonna play any weird hacks with accumulating result in local variable,
-                 * everything just gets written to redis
-                 */
-                writeCode: tool({
-                  execute: async ({ goal, path }) => {
-                    const exit = await Effect.runPromiseExit(
-                      Effect.gen(function* () {
-                        const { client } = yield* RedisContext;
-                        const fs = yield* FileSystem.FileSystem;
-                        const exists = yield* fs.exists(path);
-                        if (!exists) {
-                          // i wonder if we should just provide the models the internal errors and let it iterate?
-                          yield* new InvariantError({
-                            reason: "todo not implemented",
-                          });
-                        }
+              //   //   }]
+              //   // },
+              //   {
+              //     role: "system",
+              //     content: "i need a system prompt for this sexy ass lil model",
+              //   } satisfies CoreMessage,
 
-                        // const events = yield* client.effect.getChatEvents(roomId);
-                        // const messages = yield* server_eventsToMessage(events);
+              //   ...messages,
+              // ],
+              // toolCallStreaming: true,
+              // tools: {
+              //   /**
+              //    * write code tool will be any time the model wants to write code, it asks
+              //    * the model to do it for it
+              //    *
+              //    * we must store previous chat messages of course, will need to give that in a good
+              //    * format
+              //    *
+              //    * I'm not gonna play any weird hacks with accumulating result in local variable,
+              //    * everything just gets written to redis
+              //    */
+              //   writeCode: tool({
+              //     description:
+              //       "Request a coder model to make the edit you want",
+              //     args: {},
+              //     parameters: z.object({
+              //       goal: z.string(),
+              //       path: z.string(),
+              //     }),
+              //     execute: async ({ goal, path }) => {
+              //       const exit = await Effect.runPromiseExit(
+              //         Effect.gen(function* () {
+              //           const { client } = yield* RedisContext;
+              //           const fs = yield* FileSystem.FileSystem;
+              //           const exists = yield* fs.exists(path);
+              //           if (!exists) {
+              //             // i wonder if we should just provide the models the internal errors and let it iterate?
+              //             yield* new InvariantError({
+              //               reason: "todo not implemented",
+              //             });
+              //           }
 
-                        yield* writeCode({
-                          requestId: event.requestId,
-                          roomId,
-                          path,
-                        });
-                      })
-                        .pipe(
-                          Effect.provideService(RedisContext, {
-                            client: redisClient,
-                          })
-                        )
-                        .pipe(Effect.provide(NodeContext.layer))
-                        .pipe(
-                          Effect.provideService(ProjectContext, {
-                            path: "fake path for now",
-                            typecheckCommand: "tsc",
-                          })
-                        )
-                    );
-                    return;
-                  },
-                  description:
-                    "Request a coder model to make the edit you want",
-                  args: {},
-                  parameters: z.object({
-                    goal: z.string(),
-                    path: z.string(),
-                  }),
-                }),
-              },
+              //           // const events = yield* client.effect.getChatEvents(roomId);
+              //           // const messages = yield* server_eventsToMessage(events);
+
+              //           yield* writeCode({
+              //             requestId: event.requestId,
+              //             roomId,
+              //             path,
+              //           });
+              //         })
+              //           .pipe(
+              //             Effect.provideService(RedisContext, {
+              //               client: redisClient,
+              //             })
+              //           )
+              //           .pipe(Effect.provide(NodeContext.layer))
+              //           .pipe(
+              //             Effect.provideService(ProjectContext, {
+              //               path: "fake path for now",
+              //               typecheckCommand: "tsc",
+              //             })
+              //           )
+              //       );
+              //       return;
+              //     },
+              //   }),
+              // },
             });
 
-            const stream = Stream.fromAsyncIterable<
-              TextStreamPart<ToolSet>,
-              ModelError
-            >(fullStream, (e) => new ModelError({ error: e }));
 
-            const result = yield* stream.pipe(
-              Stream.runForEach((chunk) =>
-                Effect.gen(function* () {
-                  const { client } = yield* RedisContext;
+            type Inner = typeof fullStream extends infer R ? R : never
+            type Fucker = Inner extends AsyncIterable<infer R> ? R : never
 
-                  const chunkText = chunkToText(chunk);
-                  if (!chunkText) {
-                    return;
-                  }
-                  client.effect.pushChatEvent(roomId, {
-                    kind: "model-message",
-                    associatedRequestId: event.requestId,
-                    id: nanoid(),
-                    timestamp: Date.now(),
-                    text: chunkText,
-                  });
-                  /**
-                   *
-                   * yes, write that shi to redis
-                   */
-                })
-              )
-            );
+
+            const _ = new Promise(async (res) => {
+              for await (const obj of fullStream) {
+                obj
+              }
+            })
+
+
+            // const stream = Stream.fromAsyncIterable<
+            // Inner ,
+            //   ModelError
+            // >(fullStream, (e) => new ModelError({ error: e }));
+            
+
+            // const result = yield* stream.pipe(
+            //   Stream.runForEach((chunk) =>
+            //     Effect.gen(function* () {
+            //       const { client } = yield* RedisContext;
+            //       chunk.
+
+            //       // chunk.type === 'tool-result'
+            //       // const chunkText = chunkToText(chunk);
+            //       // if (!chunkText) {
+            //       //   return;
+            //       // }
+            //       client.effect.pushChatEvent(roomId, {
+            //         kind: "model-message",
+            //         associatedRequestId: event.requestId,
+            //         id: nanoid(),
+            //         timestamp: Date.now(),
+            //         // text: chunkText,
+            //       });
+            //       /**
+            //        *
+            //        * yes, write that shi to redis
+            //        */
+            //     })
+            //   )
+            // );
           })
             .pipe(Effect.provideService(RedisContext, { client: redisClient }))
             .pipe(Effect.provide(NodeContext.layer))
@@ -266,12 +296,14 @@ export const chunkToText = (chunk: TextStreamPart<ToolSet>) => {
     case "reasoning": {
       return chunk.textDelta;
     }
+
     case "text-delta": {
       return chunk.textDelta;
     }
     case "tool-call-delta": {
       return chunk.argsTextDelta;
     }
+
     default: {
       return null;
     }
@@ -416,6 +448,17 @@ const writeCode = ({
           if (!chunkText) {
             return chunkText;
           }
+          // er this is weird, i don't want the sub agent thread really in the global messages?
+          // yes i do
+          // no i don't
+          /**
+           * i need it in the global to read, but then i need to do a really
+           * annoying transform over the data which i guess is fine but is
+           * really annoying
+           *
+           *
+           * no i just need model metadata
+           */
 
           yield* client.effect.pushChatEvent(roomId, {
             kind: "model-message",
@@ -541,7 +584,7 @@ const applyCode = ({
     yield* typeCheck.pipe(
       Effect.onError(() =>
         Effect.gen(function* () {
-          // yield* fs.writeFileString(path,previous ).pipe(Effect.mapError(e => null))
+          // yie`ld* fs.writeFileString(path,previous ).pipe(Effect.mapError(e => null))
           const res = yield* fs.writeFileString(path, previous).pipe(
             Effect.match({
               onFailure: () => null,

@@ -20,6 +20,7 @@ export type ModelEvent = {
   kind: "model-message";
   id: string;
   associatedRequestId: string;
+
 };
 
 export type ClientEvent = {
