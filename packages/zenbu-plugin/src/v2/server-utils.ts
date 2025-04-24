@@ -4,7 +4,7 @@ import { getGeminiVideoURL } from "./message-ws";
 import { accumulateEvents } from "./shared-utils";
 // fix later
 import { ClientEvent, ModelEvent } from "../../../zenbu-redis/src/redis";
-import { CoreMessage } from "ai";
+import { CoreMessage, TextStreamPart } from "ai";
 
 /**
  *  alright now we have it on the server, we just need it on the client which
@@ -90,7 +90,9 @@ export const server_eventsToMessage = (
           } else {
             return {
               role: "assistant" as const,
-              content: [{ type: "text" as const, text: event.text }],
+              content: [
+                { type: "text" as const, text: stringifyChunks(event.chunks) },
+              ],
             };
           }
         })
@@ -98,7 +100,40 @@ export const server_eventsToMessage = (
     );
 
     return coreMessages;
-
-    // const
   });
+};
+
+const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
+  const textChunks = chunks.map((chunk) => {
+    switch (chunk.type) {
+      case "text-delta": {
+        return chunk.textDelta;
+      }
+      case "reasoning": {
+        return `${chunk.textDelta}`;
+      }
+      case "redacted-reasoning": {
+        return `${chunk.data}`;
+      }
+      case "tool-call": {
+        return `${JSON.stringify(chunk, null, 2)}`;
+      }
+      case "tool-result": {
+        return `${JSON.stringify(chunk, null, 2)}`;
+      }
+      case "source": {
+        return `${chunk.source?.title || "Unknown source"} ${chunk.source?.url ? `(${chunk.source.url})` : ""}`;
+      }
+      case "error": {
+        return `${JSON.stringify(chunk.error)}`;
+      }
+      case "finish":
+      default:
+        return;
+    }
+  });
+
+  let acc = "";
+  textChunks.forEach((chunk) => (acc += chunk));
+  return acc;
 };

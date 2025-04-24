@@ -229,7 +229,7 @@ export const injectWebSocket = (server: HttpServer) => {
                         .pipe(
                           Effect.provideService(ProjectContext, {
                             path: "fake path for now",
-                            typecheckCommand: "tsc",
+                            typecheckCommand: "tsc .",
                           })
                         )
                     );
@@ -239,41 +239,22 @@ export const injectWebSocket = (server: HttpServer) => {
               },
             });
 
-
-            type Inner = typeof fullStream extends infer R ? R : never
-            type Fucker = Inner extends AsyncIterable<infer R> ? R : never
-
-
-            const _ = new Promise(async (res) => {
-              for await (const obj of fullStream as AsyncIterable<TextStreamPart<{stupid: any}>>) {
-              }
-            })
-
-
             const stream = Stream.fromAsyncIterable<
-              TextStreamPart<{ stupid:any}> ,
+              TextStreamPart<{ stupid: any }>,
               ModelError
             >(fullStream, (e) => new ModelError({ error: e }));
-            
 
             const result = yield* stream.pipe(
               Stream.runForEach((chunk) =>
                 Effect.gen(function* () {
                   const { client } = yield* RedisContext;
-
-                  // chunk.type === 'tool-result'
-                  
                   client.effect.pushChatEvent(roomId, {
                     kind: "model-message",
                     associatedRequestId: event.requestId,
                     id: nanoid(),
                     timestamp: Date.now(),
-                    chunk
+                    chunk,
                   });
-                  /**
-                   *
-                   * yes, write that shi to redis
-                   */
                 })
               )
             );
@@ -437,7 +418,7 @@ const writeCode = ({
     });
 
     const stream = Stream.fromAsyncIterable<
-      TextStreamPart<{stupid:any}>,
+      TextStreamPart<{ stupid: any }>,
       ModelError
     >(fullStream, (e) => new ModelError({ error: e }));
 
@@ -467,7 +448,7 @@ const writeCode = ({
             associatedRequestId: requestId,
             id: nanoid(),
             timestamp: Date.now(),
-            chunk ,
+            chunk,
           });
           /**
            *
@@ -553,22 +534,19 @@ const applyCode = ({
       ],
     });
 
-
-
     /**
      * er i do want to send the stream but I don't really want model to see it
      *
      * i guess i need some meta on the event and need to post process based on what i want the base model seeing?
      */
     const stream = Stream.fromAsyncIterable<
-      TextStreamPart<{stupid:any}>,
+      TextStreamPart<{ stupid: any }>,
       ModelError
     >(fullStream, (e) => new ModelError({ error: e }));
 
     const _ = yield* stream.pipe(
       Stream.runForEach((chunk) =>
         Effect.gen(function* () {
-
           // todo what we do her
         })
       )
