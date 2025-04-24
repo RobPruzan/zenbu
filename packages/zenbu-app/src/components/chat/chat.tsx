@@ -133,12 +133,9 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
       timestamp: Date.now(),
       id: nanoid(),
     };
-
     eventLog.actions.pushEvent(clientEvent);
-
     console.log("sending", chatControls.state.input);
     chatControls.actions.setInput("");
-
     socket.emit("message", { event: clientEvent, projectName: project.name });
     updateInputSize();
   };

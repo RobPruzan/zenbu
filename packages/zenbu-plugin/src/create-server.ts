@@ -10,10 +10,10 @@ import { shim } from "./validator-shim.js";
 import { cors } from "hono/cors";
 import { getZenbuPrompt, makeEdit } from "./ai.js";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { injectWebSocket } from "./ws/ws.js";
 import { ChatMessage } from "./ws/utils.js";
 import { exists } from "node:fs";
 import { nanoid } from "nanoid";
+import { injectWebSocket } from "./v2/message-ws.js";
 
 const operateOnPath =
   "/Users/robby/zenbu/packages/examples/iframe-website/index.ts";
@@ -40,24 +40,24 @@ const VERSION = "0.0.0";
  * sqlite here, then connect via drizzle
  * or should the next server manage the drizzle instance? Would I ever want to access it in the
  * wait im so stupid
- * 
- * 
+ *
+ *
  * it definitely cannot be here since this is just a plugin that will be able to run via a public api
- * 
+ *
  * it of course not couple the global app state
- * 
+ *
  * so we either can setup the db next to the daemon or next to the actual application (next server with trpc)
- * 
+ *
  * i vote that because that's what I want to query from anyways
- * 
+ *
  * also makes it easier for me since it's already setup
- * 
+ *
  * I don't think I'd ever even want to query the DB from the other locations? It should just push data to the client/manage servers
- * 
+ *
  * er but this case is a little weird- spawn experiment:
  *  - frontend requests to a server that a process should be spawned
  *  - we need to tag it with metadata? So then we wait then request our backend
- * 
+ *
  * okay im dumb you obviously just make an RPC that handles this whole process and communicating with the daemon
  *
  * okay this is a good programming model that I'm happy with
@@ -113,7 +113,7 @@ export const createServer = async () => {
         },
       });
     })
-// waidaminute
+    // waidaminute
     .post("/video/upload", async (opts) => {
       // uh is it any different from image upload? form data get the bytes write? I suppose..
 

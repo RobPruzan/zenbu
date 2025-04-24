@@ -17,11 +17,10 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { validator } from "hono/validator";
 
-const redisClient = makeRedisClient();
-
 export const getCreatedAt = (name: string) =>
   Effect.gen(function* () {
-    const res = yield* redisClient.effect.get(`${name}_createdAt`);
+    const { client } = yield* RedisContext;
+    const res = yield* client.effect.get(`${name}_createdAt`);
     if (res.kind !== "createdAt") {
       return yield* new RedisValidationError();
     }
@@ -212,8 +211,9 @@ const killAllProjects = Effect.gen(function* () {
 
   const killEffects = runningProjects.map((project) =>
     Effect.gen(function* () {
+      const { client } = yield* RedisContext;
       process.kill(project.pid);
-      yield* redisClient.effect.set(project.name, {
+      yield* client.effect.set(project.name, {
         kind: "status",
         status: "killed",
       });
@@ -222,43 +222,18 @@ const killAllProjects = Effect.gen(function* () {
 
   yield* Effect.all(killEffects);
 });
-const nuke = async () => {
-  const program = Effect.match(
-    Effect.gen(function* () {
-      yield* killAllProjects;
-      yield* Effect.tryPromise(() => redisClient.flushdb());
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs.remove("projects", { recursive: true });
-      yield* fs.makeDirectory("projects");
-    })
-      .pipe(Effect.provideService(RedisContext, { client: redisClient }))
-      .pipe(Effect.provide(NodeContext.layer)),
-    {
-      onSuccess: () => {
-        return { success: true };
-      },
-      onFailure: (error) => {
-        switch (error._tag) {
-          case "UnknownException": {
-          }
-          case "NotFoundError": {
-          }
-          case "GenericError": {
-          }
-          case "SystemError": {
-          }
-          case "RedisValidationError": {
-          }
-          case "BadArgument": {
-          }
-        }
-      },
-    }
-  );
-  return await Effect.runPromiseExit(program);
-};
+const nuke = Effect.gen(function* () {
+  yield* killAllProjects;
+  const { client } = yield* RedisContext;
+  yield* Effect.tryPromise(() => client.flushdb());
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.remove("projects", { recursive: true });
+  yield* fs.makeDirectory("projects");
+});
 
-export const createServer = async () => {
+export const createServer = async (
+  redisClient: ReturnType<typeof makeRedisClient>
+) => {
   console.log("Starting server...");
   await Effect.runPromise(
     Effect.gen(function* () {
@@ -384,7 +359,12 @@ export const createServer = async () => {
       }
     )
     .post("/nuke", async (opts) => {
-      const exit = await nuke();
+      const exit = await Effect.runPromiseExit(
+        nuke
+          .pipe(Effect.provide(NodeContext.layer))
+          .pipe(Effect.provideService(RedisContext, { client: redisClient }))
+      );
+
       return opts.json({ exit: exit.toJSON() });
     })
     .post("/get-projects", async (opts) => {
@@ -550,8 +530,9 @@ export class ChildProcessError extends Data.TaggedError(
 
 const publishStartedProject = (name: string) =>
   Effect.gen(function* () {
+    const { client } = yield* RedisContext;
     // this state is used so we know at startup how to restore state
-    redisClient.effect.set(name, {
+    client.effect.set(name, {
       kind: "status",
       status: "running",
     });
@@ -573,7 +554,8 @@ const parseProcessMarkerArgument = (markerArgument: string) =>
   });
 export const setCreatedAt = (name: string, createdAt: number) =>
   Effect.gen(function* () {
-    yield* redisClient.effect.set(`${name}_createdAt`, {
+    const { client } = yield* RedisContext;
+    yield* client.effect.set(`${name}_createdAt`, {
       createdAt,
       kind: "createdAt",
     });
@@ -593,6 +575,7 @@ const getProcessTitleMarker = ({
 
 const restoreProjects = Effect.gen(function* () {
   const projects = yield* getProjects;
+  const { client } = yield* RedisContext;
   const startedProjects = projects.map((project) => {
     return Effect.gen(function* () {
       if (project.status !== "running") {
@@ -600,7 +583,7 @@ const restoreProjects = Effect.gen(function* () {
       }
       const createdAt = yield* getCreatedAt(project.name);
       yield* runProject({ name: project.name, createdAt });
-      yield* redisClient.effect.set(project.name, {
+      yield* client.effect.set(project.name, {
         kind: "status",
         status: "running",
       });
@@ -657,27 +640,7 @@ const spawnProject = Effect.gen(function* () {
   return project;
 });
 
-process.on("beforeExit", async () => {
-  const effect = Effect.gen(function* () {
-    const projects = yield* getProjects;
-
-    const markProjectsKilled = projects.map((project) =>
-      Effect.gen(function* () {
-        yield* redisClient.effect.set(project.name, {
-          kind: "status",
-          status: "killed",
-        });
-      })
-    );
-
-    yield* Effect.all(markProjectsKilled);
-  })
-    .pipe(Effect.provide(NodeContext.layer))
-    .pipe(Effect.provideService(RedisContext, { client: redisClient }));
-  const _ = await Effect.runPromiseExit(effect);
-});
-
-createServer();
+//
 
 export const getProject = (name: string) =>
   Effect.gen(function* () {
@@ -698,6 +661,7 @@ const killProject = (name: string) =>
      */
 
     const project = yield* getProject(name);
+    const { client } = yield* RedisContext;
 
     if (project.status !== "running") {
       return;
@@ -705,7 +669,7 @@ const killProject = (name: string) =>
 
     process.kill(project.pid);
 
-    yield* redisClient.effect.set(project.name, {
+    yield* client.effect.set(project.name, {
       kind: "status",
       status: "killed",
     });
@@ -717,9 +681,10 @@ const deleteProject = (name: string) =>
     yield* killProject(name);
     const fs = yield* FileSystem.FileSystem;
     const project = yield* getProject(name);
+    const { client } = yield* RedisContext;
 
     const rmEffect = fs.remove(project.cwd, { recursive: true });
-    const redisEffect = redisClient.effect.del(project.name);
+    const redisEffect = client.effect.del(project.name);
     yield* Effect.all([rmEffect, redisEffect]);
   });
 

@@ -59,6 +59,7 @@ export const injectWebSocket = (server: HttpServer) => {
 
   ioServer.on("connection", async (socket) => {
     const roomId = socket.handshake.query.roomId as string;
+    console.log("connect on:", roomId);
 
     /**
      *
@@ -154,6 +155,7 @@ export const injectWebSocket = (server: HttpServer) => {
             // i should distribute this via context so the project can always be
             // accessed
             const project = yield* getProject(projectName);
+            console.log("got event", event, projectName, project);
             // project.cwd
 
             const record = yield* client.effect.get(
