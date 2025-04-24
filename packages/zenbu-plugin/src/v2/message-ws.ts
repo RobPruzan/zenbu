@@ -220,7 +220,8 @@ export const injectWebSocket = (server: HttpServer) => {
                 // },
                 {
                   role: "system",
-                  content: "i need a system prompt for this sexy ass lil model",
+                  content:
+                    "You are a helpful assistant, we are debugging right now so just respond with simple answers to make it easy for me",
                 } satisfies CoreMessage,
 
                 ...messages,
@@ -303,8 +304,11 @@ export const injectWebSocket = (server: HttpServer) => {
             const result = yield* stream.pipe(
               Stream.runForEach((chunk) =>
                 Effect.gen(function* () {
+                  chunk.type === "text-delta" &&
+                    console.log("mode lis chunking", chunk);
+
                   const { client } = yield* RedisContext;
-                  client.effect.pushChatEvent(roomId, {
+                 yield* client.effect.pushChatEvent(roomId, {
                     kind: "model-message",
                     associatedRequestId: event.requestId,
                     id: nanoid(),

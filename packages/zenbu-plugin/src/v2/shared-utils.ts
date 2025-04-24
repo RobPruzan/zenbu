@@ -18,7 +18,7 @@ const getGroupId = (event: ClientEvent | ModelEvent) => {
       return event.associatedRequestId;
     }
     case "user-message": {
-      event.requestId;
+      return event.requestId;
     }
   }
 };
@@ -56,7 +56,7 @@ const initializeFullEvent = (
         kind: "user-message",
         context: partialEvent.context,
         id: partialEvent.id,
-        text: partialEvent.text,
+        text: "",
         timestamp: partialEvent.timestamp,
       };
     }
@@ -84,7 +84,6 @@ function pushAcc(
 
 export const accumulateEvents = (events: Array<ClientEvent | ModelEvent>) =>
   Effect.gen(function* () {
-    
     if (events.length === 0) {
       return [];
     }

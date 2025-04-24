@@ -1,7 +1,6 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Component,
   Suspense,
   useEffect,
   useLayoutEffect,
@@ -18,30 +17,20 @@ import { getCommandItems } from "./command-items";
 import {
   X,
   FileText,
-  Code,
   Terminal,
   MessageSquare,
-  Store,
   SplitSquareHorizontal,
   Smartphone,
   PlusCircle,
-  Loader2,
   Folder,
   GitBranch,
-  AlertCircle,
-  Scan,
-  PanelBottom,
-  DownloadCloudIcon,
-  Activity,
   TerminalSquare,
   Network,
   Atom,
   FlaskConical,
   Plus,
 } from "lucide-react";
-import { TopBarContent } from "./top-bar-content";
 
-import { z } from "zod";
 // import { BottomPanel } from "src/components/bottom-panel";
 import { ChatInstanceContext, useChatStore } from "src/components/chat-store";
 import { Chat } from "src/components/chat/chat";
@@ -62,11 +51,9 @@ import {
   ResizableHandle,
 } from "src/components/ui/resizable";
 import * as ResizablePrimitive from "react-resizable-panels";
-import { WebsiteTree } from "src/components/website-tree/website-tree";
 import { trpc } from "src/lib/trpc";
 import { cn } from "src/lib/utils";
 import { Button } from "src/components/ui/button";
-import usePersistQueryClient from "src/hooks/use-persist-query-client";
 import dynamic from "next/dynamic";
 import { ChildToParentMessage } from "zenbu-devtools";
 import { ProjectsSidebar } from "./project-sidebar";
@@ -108,6 +95,8 @@ export default function Home() {
   const bottomPanelRef =
     useRef<ResizablePrimitive.ImperativePanelHandle | null>(null);
   // usePersistQueryClient();
+
+
 
   useEffect(() => {
     const handleToggleChat = (event: CustomEvent) =>
@@ -232,6 +221,7 @@ export default function Home() {
           return;
         }
 
+        // @ts-expect-error
         if (e.key === " " && !e.repeat) {
           setLeaderKeyPending(true);
 
@@ -533,6 +523,10 @@ export default function Home() {
   }
 
   // we need to remove the coupling with the "default" project, wont be using that anymore since now that just complicates things
+
+
+
+  utils.project.getEvents.prefetch({projectName: firstRunningProject.name})
 
   return (
     <main className="relative flex h-screen overflow-hidden bg-background text-foreground">

@@ -490,6 +490,7 @@ export const ChatTextArea = () => {
               context: contextItems
                 .map((item) => {
                   switch (item.kind) {
+                    
                     case "image": {
                       return {
                         kind: "image" as const,

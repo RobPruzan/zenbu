@@ -20,29 +20,39 @@ export const chatRouter = createTRPCRouter({
   getEvents: publicProcedure
     .input(
       z.object({
-        roomId: z.string(),
+        projectName: z.string(),
       }),
     )
-    .query((opts) => {
-      const exit = Effect.runPromiseExit(
+    .query(async (opts) => {
+      const exit = await Effect.runPromiseExit(
         Effect.gen(function* () {
           const { client } = yield* RedisContext;
+          const events = yield* client.effect.getChatEvents(opts.input.projectName);
+          return events;
         }).pipe(
           Effect.provideService(RedisContext, { client: opts.ctx.redis }),
         ),
       );
+
+      switch (exit._tag) {
+        case "Success":
+          return exit.value;
+        case "Failure":
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            cause: exit.cause,
+          });
+      }
     }),
   persistEvent: publicProcedure.input(z.object({})).mutation((opts) => {
     const exit = Effect.runPromiseExit(
       Effect.gen(function* () {
-        const {client} = yield* RedisContext
+        const { client } = yield* RedisContext;
         /**
-         * 
+         *
          * blah blah persist it
          */
-      }).pipe(
-        Effect.provideService(RedisContext, { client: opts.ctx.redis }),
-      ),
+      }).pipe(Effect.provideService(RedisContext, { client: opts.ctx.redis })),
     );
   }),
   // getEvents: publicProcedure

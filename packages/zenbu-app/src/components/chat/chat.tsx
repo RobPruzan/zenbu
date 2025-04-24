@@ -14,6 +14,7 @@ import { ChatTextArea } from "./context-input";
 import { useEventWS } from "src/app/ws";
 import { iife, cn } from "src/lib/utils";
 import { ClientTaskEvent } from "zenbu-plugin/src/ws/schemas";
+import { trpc } from "src/lib/trpc";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -31,6 +32,10 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const [isAtBottom, setIsAtBottom] = useState(true);
 
   const project = useChatStore((state) => state.iframe.state.project);
+  const [events] = trpc.project.getEvents.useSuspenseQuery({
+    projectName: project.name,
+  });
+
   const { socket } = useEventWS({
     projectName: project.name,
     onMessage: (message) => {
@@ -192,6 +197,15 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
           <div className="space-y-4 pt-3 pb-2 w-full">
             {/* {`bro what len: ${mainThreadMessages.length}`} */}
 
+            {events.map((event) => (
+              <div>
+                {event.kind}
+                {event.kind === "model-message" &&
+                  event.chunk.type === "text-delta" &&
+                  event.chunk.textDelta}
+                {event.kind === "user-message" && event.text}
+              </div>
+            ))}
             {mainThreadMessages.map((message, index) => (
               <div key={index}>
                 {iife(() => {
