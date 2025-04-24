@@ -16,12 +16,11 @@ config();
 // need to start typing this for the chat entries
 
 export type ModelEvent = {
-  chunk: TextStreamPart<{stupid: any}> 
+  chunk: TextStreamPart<{ stupid: any }>;
   timestamp: number;
   kind: "model-message";
   id: string;
   associatedRequestId: string;
-
 };
 
 export type ClientEvent = {
@@ -44,16 +43,18 @@ export type RedisSchema = Record<
       kind: "createdAt";
       createdAt: number;
     }
-  | {
-      kind: "chat-events";
-      events: Array<PartialEvent>;
-    }
+  | ChatEvents
   | {
       kind: "video-cache";
       data: string;
       mimeType: string;
     }
 >;
+
+type ChatEvents = {
+  kind: "chat-events";
+  events: Array<PartialEvent>;
+};
 
 export const makeVideoCacheKey = ({ path }: { path: string }) => {
   return `${path}_video_cache`;
@@ -149,7 +150,9 @@ const getChatEvents = (roomId: string) =>
       return [];
     }
     if (previous.kind !== "chat-events") {
-      return yield* new RedisValidationError();
+      return yield* new RedisValidationError({
+        meta: "wrong kind, should be chat events:" + previous.kind,
+      });
     }
 
     return previous.events;
@@ -166,10 +169,18 @@ export const pushChatEvent = (roomId: string, event: PartialEvent) =>
       );
     }
     if (previous.kind !== "chat-events") {
-      return yield* new RedisValidationError();
+      return yield* new RedisValidationError({
+        meta: "wrong kind, should be chat events:" + previous.kind,
+      });
     }
     return yield* Effect.tryPromise(() =>
-      client.set(key, JSON.stringify([...previous.events, event]))
+      client.set(
+        key,
+        JSON.stringify({
+          events: [...previous.events, event],
+          kind: "chat-events",
+        } satisfies ChatEvents)
+      )
     );
   });
 

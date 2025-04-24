@@ -136,7 +136,11 @@ const NOUNS = [
 export const getProjects = Effect.gen(function* () {
   const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep || true`;
   const fs = yield* FileSystem.FileSystem;
-  const projectNames = yield* fs.readDirectory("projects");
+  // okay so later we will make a dedicated zenbu store in some custom dir, or .zenbu, till then we hardcode the path
+  // semantically the same thing so this impl won't have to change, just a common todo
+  const projectNames = yield* fs.readDirectory(
+    "/Users/robby/zenbu/packages/zenbu-daemon/projects"
+  );
   const execResult = yield* Effect.tryPromise(() => execPromise(command));
   const lines = execResult.stdout.trim().split("\n");
 
@@ -520,7 +524,7 @@ export type EffectReturnType<T> =
 export class GenericError extends Data.TaggedError("GenericError")<{}> {}
 export class RedisValidationError extends Data.TaggedError(
   "RedisValidationError"
-)<{}> {}
+)<{meta: unknown}> {}
 export class ProjectNotFoundError extends Data.TaggedError(
   "ProjectNotFoundError"
 )<{}> {}

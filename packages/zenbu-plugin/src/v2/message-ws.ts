@@ -59,7 +59,6 @@ export const injectWebSocket = (server: HttpServer) => {
 
   ioServer.on("connection", async (socket) => {
     const roomId = socket.handshake.query.roomId as string;
-    console.log("connect on:", roomId);
 
     /**
      *
@@ -132,14 +131,11 @@ export const injectWebSocket = (server: HttpServer) => {
     // ug i should make this project id im being lazy, project name is basically a stupid id rn
     socket.on(
       "message",
-      async ({
-        event,
-        projectName,
-      }: {
-        event: ClientEvent;
-        projectName: string;
-      }) => {
-        const _ = Effect.runPromiseExit(
+      async (e: { event: ClientEvent; projectName: string }) => {
+        const { event, projectName } = e;
+        console.log("incoming message", e);
+
+        const exit = await Effect.runPromiseExit(
           Effect.gen(function* () {
             if (activeStreamController.current.kind === "active") {
               activeStreamController.current.abortController.abort();
@@ -154,16 +150,32 @@ export const injectWebSocket = (server: HttpServer) => {
             const { client } = yield* RedisContext;
             // i should distribute this via context so the project can always be
             // accessed
+            // woops yeah this is not gonna work since it's from a diff dir
             const project = yield* getProject(projectName);
             console.log("got event", event, projectName, project);
             // project.cwd
 
-            const record = yield* client.effect.get(
-              makeChatEventsKey({ roomId })
+            let record = yield* client.effect.getOrElse(
+              makeChatEventsKey({ roomId }),
+              () => null
             );
-            if (record.kind !== "chat-events") {
-              return yield* new RedisValidationError();
+            console.log("record returned", record);
+
+            // okay at some point its getting set to something else
+            if (!record) {
+              record = { kind: "chat-events", events: [] };
+              yield* client.effect.set(makeChatEventsKey({ roomId }), record);
             }
+            if (record.kind !== "chat-events") {
+              return yield* new RedisValidationError({
+                meta: JSON.stringify({
+                  shit: "what the sigma",
+                  fuck: record,
+                }),
+              });
+            }
+            console.log("starting off", record);
+
             /**
              * persistence yay
              */
@@ -173,6 +185,12 @@ export const injectWebSocket = (server: HttpServer) => {
             yield* client.effect.pushChatEvent(roomId, event);
             const events = yield* client.effect.getChatEvents(roomId);
             const messages = yield* server_eventsToMessage(events);
+
+            /**
+             * oh right how do we handle messages that failed? Er i guess just keep em there, let user retry?
+             */
+
+            console.log("we now have these messages", messages);
 
             const { fullStream } = streamText({
               model: openai("gpt-4.1"),
@@ -284,6 +302,8 @@ export const injectWebSocket = (server: HttpServer) => {
             .pipe(Effect.provideService(RedisContext, { client: redisClient }))
             .pipe(Effect.provide(NodeContext.layer))
         );
+
+        console.log(exit);
       }
     );
   });
@@ -325,7 +345,9 @@ export const getGeminiVideoURL = (path: string) =>
     );
 
     if (record && record.kind !== "video-cache") {
-      return yield* new RedisValidationError();
+      return yield* new RedisValidationError({
+        meta: "should be video cache, got:" + record.kind,
+      });
     }
     if (record) {
       return record;

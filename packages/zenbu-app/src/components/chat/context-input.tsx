@@ -16,6 +16,7 @@ import { z } from "zod";
 import { ContextItem } from "../slices/context-slice";
 import { iife } from "src/lib/utils";
 import { ClientMessageEvent } from "zenbu-plugin/src/ws/schemas";
+import { ClientEvent } from "zenbu-redis";
 
 // Props for the MentionMenu component
 interface MentionMenuProps {
@@ -161,7 +162,7 @@ export const ChatTextArea = () => {
 
     syncSelectedItems();
   };
-  const projectId = useChatStore((state) => state.iframe.state.projectName);
+  const project = useChatStore((state) => state.iframe.state.project);
   const insertMention = (mention: string) => {
     const chatInput = chatInputRef.current;
     if (!chatInput) return;
@@ -483,7 +484,7 @@ export const ChatTextArea = () => {
             const target = e.target as HTMLDivElement;
             e.preventDefault();
             e.stopPropagation();
-            const clientEvent: ClientMessageEvent = {
+            const clientEvent: ClientEvent = {
               requestId: nanoid(),
               // context: [],
               context: contextItems
@@ -509,13 +510,15 @@ export const ChatTextArea = () => {
               text: target.textContent ?? "",
               timestamp: Date.now(),
               id: nanoid(),
-              previousEvents: eventLog.events,
             };
             console.log("sending dis");
 
             actions.setItems([]);
             eventLog.actions.pushEvent(clientEvent);
-            socket.emit("message", { event: clientEvent, projectId });
+            socket.emit("message", {
+              event: clientEvent,
+              projectName: project.name,
+            });
             target.textContent = "";
           }
         }}

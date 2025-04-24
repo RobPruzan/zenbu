@@ -30,7 +30,9 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
+  const project = useChatStore((state) => state.iframe.state.project);
   const { socket } = useEventWS({
+    projectName: project.name,
     onMessage: (message) => {
       const { event, projectName } = message;
       const todo_validationOverProjectIdAndClosureVariables = () => undefined;
@@ -82,7 +84,6 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   //   });
   //   // });
   // }, [eventLog.events]);
-  const project = useChatStore((state) => state.iframe.state.project);
   // const { mainThreadMessages, otherThreadsMessages } =
   //
 

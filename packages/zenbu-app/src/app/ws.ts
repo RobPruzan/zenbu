@@ -3,11 +3,9 @@ import { io, Socket } from "socket.io-client";
 import { PluginServerEvent } from "zenbu-plugin/src/ws/schemas";
 import { PartialEvent } from "zenbu-redis";
 
-export const useEventWS = (opts?: {
-  onMessage?: (message: {
-    event: PartialEvent;
-    projectName: string
-  }) => void;
+export const useEventWS = (opts: {
+  projectName: string;
+  onMessage?: (message: { event: PartialEvent; projectName: string }) => void;
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
@@ -16,7 +14,7 @@ export const useEventWS = (opts?: {
       path: "/ws",
       transports: ["websocket"],
       query: {
-        roomId: "todo-impl-rooms-based-on-project-hostname",
+        roomId: opts.projectName,
       },
     });
     socketInstance.on("connect", () => {

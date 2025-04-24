@@ -68,7 +68,8 @@ export function DevtoolsOverlay() {
   const lastElementRef = useRef<Element | null>(null);
 
   const sendMessage = useIFrameMessenger();
-  const { socket } = useEventWS();
+  const project = useChatStore((state) => state.iframe.state.project);
+  const { socket } = useEventWS({ projectName: project.name });
   const makeRequest = useMakeRequest();
   const { inspector, eventLog, chatControls } = useChatStore();
 
