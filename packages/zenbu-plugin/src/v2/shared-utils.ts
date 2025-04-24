@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { ClientEvent, ModelEvent } from "../../../zenbu-redis/src/redis";
-
+import { TextStreamPart } from "ai";
 
 const compareGroupId = (
   a: ClientEvent | ModelEvent,
@@ -23,20 +23,21 @@ const getGroupId = (event: ClientEvent | ModelEvent) => {
   }
 };
 
-export type FullEvent =
-  | {
-      kind: "user-message";
-      text: string;
-      context: ClientEvent["context"];
-      id: ClientEvent["id"];
-      timestamp: ClientEvent["timestamp"];
-    }
-  | {
-      kind: "model-message";
-      text: string;
-      timestamp: ModelEvent["timestamp"];
-      id: ModelEvent["id"];
-    };
+type ModelMessage = {
+  kind: "model-message";
+  // text: string;
+  chunks: Array<TextStreamPart<{ stupid: any }>>;
+  timestamp: ModelEvent["timestamp"];
+  id: ModelEvent["id"];
+};
+type UserMessage = {
+  kind: "user-message";
+  text: string;
+  context: ClientEvent["context"];
+  id: ClientEvent["id"];
+  timestamp: ClientEvent["timestamp"];
+};
+export type FullEvent = UserMessage | ModelMessage;
 
 const initializeFullEvent = (
   partialEvent: ClientEvent | ModelEvent
@@ -46,7 +47,7 @@ const initializeFullEvent = (
       return {
         kind: "model-message",
         id: partialEvent.id,
-        text: partialEvent.text,
+        chunks: [],
         timestamp: partialEvent.timestamp,
       };
     }
@@ -61,6 +62,25 @@ const initializeFullEvent = (
     }
   }
 };
+
+function pushAcc(
+  message: ModelMessage | UserMessage,
+  event: ModelEvent | ClientEvent
+) {
+  if (message.kind === "model-message") {
+    if (event.kind !== "model-message") {
+      throw new Error("Impossible State");
+    }
+
+    message.chunks.push(event.chunk);
+    return;
+  }
+
+  if (event.kind !== "user-message") {
+    throw new Error("Impossible State");
+  }
+  message.text += event.text;
+}
 
 export const accumulateEvents = (events: Array<ClientEvent | ModelEvent>) =>
   Effect.gen(function* () {
@@ -84,7 +104,7 @@ export const accumulateEvents = (events: Array<ClientEvent | ModelEvent>) =>
         const message = initializeFullEvent(start);
 
         accumulatedEvents.forEach((event) => {
-          message.text += event.text;
+          pushAcc(message, event);
         });
 
         flushedEvents.push(message);
@@ -111,7 +131,7 @@ export const accumulateEvents = (events: Array<ClientEvent | ModelEvent>) =>
     if (accumulatedEvents.length > 0) {
       const message = initializeFullEvent(accumulatedEvents[0]);
       accumulatedEvents.forEach((event) => {
-        message.text += event.text;
+        pushAcc(message, event);
       });
 
       flushedEvents.push(message);

@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import { Context, Data, Effect } from "effect";
 import { cwd } from "process";
 import { RedisValidationError } from "../../zenbu-daemon/src/daemon";
+import { TextStreamPart } from "ai";
 
 config();
 
@@ -15,7 +16,7 @@ config();
 // need to start typing this for the chat entries
 
 export type ModelEvent = {
-  text: string;
+  chunk: TextStreamPart<{stupid: any}> 
   timestamp: number;
   kind: "model-message";
   id: string;

@@ -251,7 +251,7 @@ export const injectWebSocket = (server: HttpServer) => {
 
 
             const stream = Stream.fromAsyncIterable<
-              AsyncIterable<TextStreamPart<{ stupidLanguage:any}>> ,
+              TextStreamPart<{ stupid:any}> ,
               ModelError
             >(fullStream, (e) => new ModelError({ error: e }));
             
@@ -260,19 +260,15 @@ export const injectWebSocket = (server: HttpServer) => {
               Stream.runForEach((chunk) =>
                 Effect.gen(function* () {
                   const { client } = yield* RedisContext;
-                  chunk.
 
                   // chunk.type === 'tool-result'
-                  const chunkText = chunkToText(chunk);
-                  if (!chunkText) {
-                    return;
-                  }
+                  
                   client.effect.pushChatEvent(roomId, {
                     kind: "model-message",
                     associatedRequestId: event.requestId,
                     id: nanoid(),
                     timestamp: Date.now(),
-                    text: chunkText,
+                    chunk
                   });
                   /**
                    *
@@ -290,27 +286,31 @@ export const injectWebSocket = (server: HttpServer) => {
   });
 };
 
-export const chunkToText = (chunk: TextStreamPart<{stupid:any}>) => {
-  switch (chunk.type) {
-    case "reasoning": {
-      return chunk.textDelta;
-    }
-    case 'tool-result': {
-      return chunk.
-    }
+// export const chunkToText = (chunk: TextStreamPart<{stupid:any}>) => {
+//   switch (chunk.type) {
+//     case "reasoning": {
+//       return chunk.textDelta;
+//     }
+//     case 'tool-result': {
+//       /**
+//        * right the reason i stopped here is because i probably need to discriminate union over everything and just store the chunk result?
+//        * and then when we to message we accumulate that, that's fine
+//        */
+//       // return chunk.
+//     }
 
-    case "text-delta": {
-      return chunk.textDelta;
-    }
-    case "tool-call-delta": {
-      return chunk.argsTextDelta;
-    }
+//     case "text-delta": {
+//       return chunk.textDelta;
+//     }
+//     case "tool-call-delta": {
+//       return chunk.argsTextDelta;
+//     }
 
-    default: {
-      return null;
-    }
-  }
-};
+//     default: {
+//       return null;
+//     }
+//   }
+// };
 
 export const getGeminiVideoURL = (path: string) =>
   Effect.gen(function* () {
@@ -437,7 +437,7 @@ const writeCode = ({
     });
 
     const stream = Stream.fromAsyncIterable<
-      TextStreamPart<ToolSet>,
+      TextStreamPart<{stupid:any}>,
       ModelError
     >(fullStream, (e) => new ModelError({ error: e }));
 
@@ -446,10 +446,10 @@ const writeCode = ({
         Effect.gen(function* () {
           const { client } = yield* RedisContext;
 
-          const chunkText = chunkToText(chunk);
-          if (!chunkText) {
-            return chunkText;
-          }
+          // const chunkText = chunkToText(chunk);
+          // if (!chunkText) {
+          //   return chunkText;
+          // }
           // er this is weird, i don't want the sub agent thread really in the global messages?
           // yes i do
           // no i don't
@@ -467,7 +467,7 @@ const writeCode = ({
             associatedRequestId: requestId,
             id: nanoid(),
             timestamp: Date.now(),
-            text: chunkText,
+            chunk ,
           });
           /**
            *
@@ -553,19 +553,22 @@ const applyCode = ({
       ],
     });
 
+
+
     /**
      * er i do want to send the stream but I don't really want model to see it
      *
      * i guess i need some meta on the event and need to post process based on what i want the base model seeing?
      */
     const stream = Stream.fromAsyncIterable<
-      TextStreamPart<ToolSet>,
+      TextStreamPart<{stupid:any}>,
       ModelError
     >(fullStream, (e) => new ModelError({ error: e }));
 
     const _ = yield* stream.pipe(
       Stream.runForEach((chunk) =>
         Effect.gen(function* () {
+
           // todo what we do her
         })
       )
