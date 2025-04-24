@@ -1,14 +1,15 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText, TextStreamPart, tool, ToolSet } from "ai";
-import { getProject, getProjects } from "zenbu-daemon";
+import { getProject, getProjects, Project } from "zenbu-daemon";
 import { type Server as HttpServer } from "node:http";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { effect, z } from "zod";
 import {
   ClientEvent,
   makeChatEventsKey,
   makeRedisClient,
   makeVideoCacheKey,
+  ModelEvent,
   RedisContext,
 } from "../../../zenbu-redis/src/redis";
 import { Context, Data, Effect, Stream } from "effect";
@@ -23,33 +24,16 @@ import { server_eventsToMessage } from "./server-utils";
 import { nanoid } from "nanoid";
 import { iife } from "src/tools/message-runtime";
 import { write } from "node:console";
-// at the very top of your main entry‐point (e.g. index.js):
-
-// const util =
 import * as util from "util";
+import { InvariantError, ModelError, TypecheckError } from "./shared-utils";
 
-// set depth to 5 (or `null` for infinite)
 util.inspect.defaultOptions.depth = 5;
 
-// (optional) also show hidden props, unlimited array length, colors, etc.
 util.inspect.defaultOptions.showHidden = true;
 util.inspect.defaultOptions.maxArrayLength = null;
 util.inspect.defaultOptions.colors = true;
 
-// type AsyncIterableStream<T> = AsyncIterable<T> & ReadableStream<T>;
-
 const redisClient = makeRedisClient();
-
-/**
- * oh actually do we want to wrap the whole thing in an effect and read the context for the inject there? Hm
- */
-
-// const RoomContext = Context.GenericTag<{
-//   activeStreamController:
-//     | { controller: AbortController; kind: "active" }
-//     | { kind: "not-active" };
-//   roomId: string;
-// }>("RoomContext");
 
 type ActiveAbortController =
   | { kind: "not-active" }
@@ -73,80 +57,20 @@ export const injectWebSocket = (server: HttpServer) => {
   ioServer.on("connection", async (socket) => {
     const roomId = socket.handshake.query.roomId as string;
 
-    /**
-     *
-     * lets reiterate what we want and get everything back into ram
-     *
-     * we don't want to build multi threading into the model yet
-     *
-     * i don't want to do structured patches, they just don't seem to work well
-     * and depend on the model on the format they like, so we shall just ask them to output
-     * a proposed change and will have gpt4.1 mini apply, 4.1 reapply
-     *
-     * should be really easy cause u just dump edit model output
-     *
-     * i really want to keep doing smarter model high level thinks then claude implements
-     * or something, i don't think I care about latency an insane amount if it works well
-     *
-     * then we can hot swap any model pretty well
-     *
-     * the video thing we know how to solve
-     *
-     * cancellation i think we know how to solve
-     */
-
     if (!roomId) {
       throw new Error("Invariant: roomId is required for socket connection");
     }
 
-    /**
-     *
-     * hm i wonder how this would work if the boundary was much more expensive
-     *
-     * i guess a local synced cache would do wonders
-     *
-     * the mental model of "what if the boundary didn't exist" is quite useful
-     *
-     *
-     * cause you can always wrap it in an optimistic+sync
-     */
-
-    // we might want this as context actually
-    // actually yeah we do, we want room level context and message level context, just make message passing absurdly easy
     socket.join(roomId);
     const activeStreamController = {
       current: {
         kind: "not-active",
       } as ActiveAbortController,
-    }; // stupid type hack
-
-    /**
-     * okay what's left
-     *
-     * we have to compose
-     * parse model results
-     * pipe them together
-     * actually store in redis
-     * fetch the initial state of chat from redis through trpc
-     * do the events -> chat message parsing, not isomorphic
-     * handle video/images
-     * do image/vide upload again
-     *  - this time the video upload will not be retarded
-     * `
-     *
-     *
-     *
-     * im dumb i forgot i wanted this to be decoupled
-     *
-     *
-     * i guess its fine for now, i just need a router pretty simple
-     */
-    // ug i should make this project id im being lazy, project name is basically a stupid id rn
+    };
     socket.on(
       "message",
       async (e: { event: ClientEvent; projectName: string }) => {
         const { event, projectName } = e;
-        console.log("incoming message", e);
 
         const exit = await Effect.runPromiseExit(
           Effect.gen(function* () {
@@ -165,8 +89,15 @@ export const injectWebSocket = (server: HttpServer) => {
             // accessed
             // woops yeah this is not gonna work since it's from a diff dir
             const project = yield* getProject(projectName);
-            console.log("got event", event, projectName, project);
-            // project.cwd
+
+            const MessageService = Effect.provideService(MessageContext, {
+              path: "fake path for now",
+              typecheckCommand: "tsc .",
+              project,
+              requestId: event.requestId,
+              roomId,
+              socket,
+            });
 
             let record = yield* client.effect.getOrElse(
               makeChatEventsKey({ roomId }),
@@ -174,7 +105,6 @@ export const injectWebSocket = (server: HttpServer) => {
             );
             console.log("record returned", record);
 
-            // okay at some point its getting set to something else
             if (!record) {
               record = { kind: "chat-events", events: [] };
               yield* client.effect.set(makeChatEventsKey({ roomId }), record);
@@ -187,37 +117,20 @@ export const injectWebSocket = (server: HttpServer) => {
                 }),
               });
             }
-            console.log("starting off", record);
-
-            /**
-             * persistence yay
-             */
-
-            // lowkey i should mock the ai sdk maybe?
 
             yield* client.effect.pushChatEvent(roomId, event);
             const events = yield* client.effect.getChatEvents(roomId);
-            console.log("we have these events", events);
 
             const messages = yield* server_eventsToMessage(events);
-            console.log("and these messages", messages);
 
             /**
              * oh right how do we handle messages that failed? Er i guess just keep em there, let user retry?
              */
 
-            console.log("we now have these messages", messages);
-
             const { fullStream } = streamText({
               model: openai("gpt-4.1"),
               abortSignal: abortController.signal,
               messages: [
-                // {
-                //   role: 'tool',
-                //   content: [{
-
-                //   }]
-                // },
                 {
                   role: "system",
                   content:
@@ -283,12 +196,7 @@ export const injectWebSocket = (server: HttpServer) => {
                           })
                         )
                         .pipe(Effect.provide(NodeContext.layer))
-                        .pipe(
-                          Effect.provideService(ProjectContext, {
-                            path: "fake path for now",
-                            typecheckCommand: "tsc .",
-                          })
-                        )
+                        .pipe(MessageService)
                     );
                     return;
                   },
@@ -308,12 +216,17 @@ export const injectWebSocket = (server: HttpServer) => {
                     console.log("mode lis chunking", chunk);
 
                   const { client } = yield* RedisContext;
-                 yield* client.effect.pushChatEvent(roomId, {
+                  const modelEvent: ModelEvent = {
                     kind: "model-message",
                     associatedRequestId: event.requestId,
                     id: nanoid(),
                     timestamp: Date.now(),
                     chunk,
+                  };
+                  yield* client.effect.pushChatEvent(roomId, modelEvent);
+                  socket.emit("message", {
+                    event: modelEvent,
+                    projectName: project.name,
                   });
                 })
               )
@@ -328,32 +241,6 @@ export const injectWebSocket = (server: HttpServer) => {
     );
   });
 };
-
-// export const chunkToText = (chunk: TextStreamPart<{stupid:any}>) => {
-//   switch (chunk.type) {
-//     case "reasoning": {
-//       return chunk.textDelta;
-//     }
-//     case 'tool-result': {
-//       /**
-//        * right the reason i stopped here is because i probably need to discriminate union over everything and just store the chunk result?
-//        * and then when we to message we accumulate that, that's fine
-//        */
-//       // return chunk.
-//     }
-
-//     case "text-delta": {
-//       return chunk.textDelta;
-//     }
-//     case "tool-call-delta": {
-//       return chunk.argsTextDelta;
-//     }
-
-//     default: {
-//       return null;
-//     }
-//   }
-// };
 
 export const getGeminiVideoURL = (path: string) =>
   Effect.gen(function* () {
@@ -420,16 +307,7 @@ export const getGeminiVideoURL = (path: string) =>
     });
     return data;
   });
-export class ModelError extends Data.TaggedError("GenericError")<{
-  error: any;
-}> {}
-export class TypecheckError extends Data.TaggedError("TypecheckError")<{
-  errorString: string;
-}> {}
-export class InvariantError extends Data.TaggedError("InvariantError")<{
-  reason?: string;
-  context?: unknown;
-}> {}
+
 const parseModelResult = (outputWithCode: string) =>
   Effect.gen(function* () {
     /**
@@ -685,19 +563,23 @@ const applyCode = ({
      *
      * if this fails should we undo the apply and tell the model the error? probably, should have some weird state evolving over the file
      */
-    yield* ProjectContext;
+    yield* MessageContext;
   });
 
-export const ProjectContext = Context.GenericTag<{
+export const MessageContext = Context.GenericTag<{
+  project: Project;
+  socket: Socket;
   path: string;
   typecheckCommand: string;
+  roomId: string;
+  requestId: string;
 }>("ProjectContext");
 
 const typeCheck = Effect.gen(function* () {
   /**
    * I do need project context
    */
-  const { path, typecheckCommand } = yield* ProjectContext;
+  const { path, typecheckCommand } = yield* MessageContext;
   // todo run type checker over correct project path
 
   if (false) {

@@ -1,6 +1,18 @@
-import { Effect } from "effect";
+import { Data, Effect } from "effect";
 import { ClientEvent, ModelEvent } from "../../../zenbu-redis/src/redis";
 import { TextStreamPart } from "ai";
+// import { InvariantError } from "./message-ws";
+
+export class ModelError extends Data.TaggedError("GenericError")<{
+  error: any;
+}> {}
+export class TypecheckError extends Data.TaggedError("TypecheckError")<{
+  errorString: string;
+}> {}
+export class InvariantError extends Data.TaggedError("InvariantError")<{
+  reason?: string;
+  context?: unknown;
+}> {}
 
 const compareGroupId = (
   a: ClientEvent | ModelEvent,
@@ -86,6 +98,24 @@ export const accumulateEvents = (events: Array<ClientEvent | ModelEvent>) =>
   Effect.gen(function* () {
     if (events.length === 0) {
       return [];
+    }
+    // kinda dumb but whatever
+    if (events.length === 1) {
+      const firstEvent = events[0];
+      if (firstEvent.kind !== "user-message") {
+        return yield* new InvariantError({
+          reason: "first message must always be a users",
+        });
+      }
+      return [
+        {
+          kind: "user-message",
+          context: firstEvent.context,
+          id: firstEvent.id,
+          text: firstEvent.text,
+          timestamp: firstEvent.timestamp,
+        } satisfies FullEvent,
+      ];
     }
     const sortedEvents = events.toSorted((a, b) => a.timestamp - b.timestamp);
 
