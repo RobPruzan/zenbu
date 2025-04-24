@@ -17,6 +17,7 @@ import { ContextItem } from "../slices/context-slice";
 import { iife } from "src/lib/utils";
 import { ClientMessageEvent } from "zenbu-plugin/src/ws/schemas";
 import { ClientEvent } from "zenbu-redis";
+import { trpc } from "src/lib/trpc";
 
 // Props for the MentionMenu component
 interface MentionMenuProps {
@@ -80,6 +81,7 @@ export const ChatTextArea = () => {
     state: { items: contextItems },
     actions,
   } = useChatStore((state) => state.context);
+  const utils = trpc.useUtils();
   // im so stupid
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [query, setQuery] = useState<string>("");
@@ -484,13 +486,13 @@ export const ChatTextArea = () => {
             const target = e.target as HTMLDivElement;
             e.preventDefault();
             e.stopPropagation();
+
             const clientEvent: ClientEvent = {
               requestId: nanoid(),
               // context: [],
               context: contextItems
                 .map((item) => {
                   switch (item.kind) {
-                    
                     case "image": {
                       return {
                         kind: "image" as const,
@@ -516,6 +518,11 @@ export const ChatTextArea = () => {
 
             actions.setItems([]);
             eventLog.actions.pushEvent(clientEvent);
+
+            utils.project.getEvents.setData(
+              { projectName: project.name },
+              (prev) => (prev ? [...prev, clientEvent] : [clientEvent]),
+            );
             socket.emit("message", {
               event: clientEvent,
               projectName: project.name,

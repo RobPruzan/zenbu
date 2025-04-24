@@ -15,6 +15,8 @@ import { useEventWS } from "src/app/ws";
 import { iife, cn } from "src/lib/utils";
 import { ClientTaskEvent } from "zenbu-plugin/src/ws/schemas";
 import { trpc } from "src/lib/trpc";
+import { client_eventToMessages } from "zenbu-plugin/src/v2/client-utils";
+import { Effect } from "effect";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -35,6 +37,9 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const [events] = trpc.project.getEvents.useSuspenseQuery({
     projectName: project.name,
   });
+  const utils = trpc.useUtils();
+
+  const messages = Effect.runSync(client_eventToMessages(events));
 
   const { socket } = useEventWS({
     projectName: project.name,
@@ -42,6 +47,10 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
       const { event, projectName } = message;
       const todo_validationOverProjectIdAndClosureVariables = () => undefined;
       todo_validationOverProjectIdAndClosureVariables();
+
+      utils.project.getEvents.setData({ projectName: project.name }, (prev) =>
+        prev ? [...prev, event] : [event],
+      );
       // console.log("got back message", message);
 
       // wut was i doing
@@ -197,7 +206,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
           <div className="space-y-4 pt-3 pb-2 w-full">
             {/* {`bro what len: ${mainThreadMessages.length}`} */}
 
-            {events.map((event) => (
+            {/* {events.map((event) => (
               <div>
                 {event.kind}
                 {event.kind === "model-message" &&
@@ -205,20 +214,14 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                   event.chunk.textDelta}
                 {event.kind === "user-message" && event.text}
               </div>
+            ))} */}
+            {messages.map((message, index) => (
+              <div key={index}></div>
             ))}
-            {mainThreadMessages.map((message, index) => (
+
+            {messages.map((message, index) => (
               <div key={index}>
                 {iife(() => {
-                  console.log(
-                    "whats the roke",
-                    message.role,
-                    index,
-                    mainThreadMessages,
-                    mainThreadMessages.length,
-                    // otherThreadsMessages,
-                    eventLog,
-                  );
-
                   switch (message.role) {
                     case "assistant": {
                       return (

@@ -1,8 +1,9 @@
 import { Effect } from "effect";
-import { ClientEvent, ModelEvent, accumulateEvents } from "./shared-utils";
-import { CoreMessage } from "ai";
+import { accumulateEvents } from "./shared-utils";
+import { CoreMessage, TextStreamPart } from "ai";
+import { ClientEvent, ModelEvent } from "../../../zenbu-redis/src/redis";
 
-export const server_eventsToMessage = (
+export const client_eventToMessages = (
   events: Array<ClientEvent | ModelEvent>
 ) => {
   return Effect.gen(function* () {
@@ -82,7 +83,9 @@ export const server_eventsToMessage = (
           } else {
             return {
               role: "assistant" as const,
-              content: [{ type: "text" as const, text: event.text }],
+              content: [
+                { type: "text" as const, text: stringifyChunks(event.chunks) },
+              ],
             };
           }
         })
@@ -91,4 +94,39 @@ export const server_eventsToMessage = (
 
     return coreMessages;
   });
+};
+
+const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
+  const textChunks = chunks.map((chunk) => {
+    switch (chunk.type) {
+      case "text-delta": {
+        return chunk.textDelta;
+      }
+      case "reasoning": {
+        return `${chunk.textDelta}`;
+      }
+      case "redacted-reasoning": {
+        return `${chunk.data}`;
+      }
+      case "tool-call": {
+        return `${JSON.stringify(chunk, null, 2)}`;
+      }
+      case "tool-result": {
+        return `${JSON.stringify(chunk, null, 2)}`;
+      }
+      case "source": {
+        return `${chunk.source?.title || "Unknown source"} ${chunk.source?.url ? `(${chunk.source.url})` : ""}`;
+      }
+      case "error": {
+        return `${JSON.stringify(chunk.error)}`;
+      }
+      case "finish":
+      default:
+        return;
+    }
+  });
+
+  let acc = "";
+  textChunks.forEach((chunk) => (acc += chunk));
+  return acc;
 };
