@@ -193,7 +193,6 @@ export const injectWebSocket = (server: HttpServer) => {
                 writeCode: tool({
                   description:
                     "Request a coder model to make the edit you want",
-                  args: {},
                   parameters: z.object({
                     goal: z.string(),
                     path: z.string(),
@@ -218,6 +217,16 @@ export const injectWebSocket = (server: HttpServer) => {
                           requestId: event.requestId,
                           roomId,
                           path,
+                        });
+
+                        // should make this system i guess
+                        yield* client.effect.pushChatEvent(roomId, {
+                          kind: "user-message",
+                          context: [],
+                          id: nanoid(),
+                          requestId: event.requestId,
+                          text: "You are now transitioning back to being an architect model, so you will not be able to write code till your active code model mode",
+                          timestamp: Date.now(),
                         });
                       })
                         .pipe(
@@ -391,8 +400,13 @@ const writeCode = ({
      * read that shit from redis
      */
 
+    /**
+     *
+     * i kinda need to figure out recursion here and passing through context
+     */
     const events = yield* client.effect.getChatEvents(roomId);
     const messages = yield* server_eventsToMessage(events);
+    let codeResponse: null | string = null;
     const { fullStream, text } = streamText({
       messages: [
         {
@@ -400,6 +414,11 @@ const writeCode = ({
           content: "mhm yeah such a good system prompt to write code",
         },
         ...messages,
+        {
+          role: "system",
+          content:
+            "You have successfully turned yourself into a highly skilled coder model. You may write the code that you wanted to implement now",
+        },
       ],
       tools: {
         reapply: tool({
@@ -478,7 +497,29 @@ const writeCode = ({
       code,
       path,
       roomId,
-    });
+    }).pipe(
+      Effect.mapError(() =>
+        Effect.gen(function* () {
+          yield* reapplyCodeSmarter().pipe(
+            Effect.mapError((e) =>
+              /**
+               * will need to pass errors through because they will include typechecking stuff so the next model should know what to do
+               */
+              Effect.gen(function* () {
+                yield* reapplyCodeRewrite().pipe(
+                  Effect.mapError((e) =>
+                    Effect.gen(function* () {
+                      yield* reapplyCodeReasoner();
+                    })
+                  )
+                );
+              })
+            )
+          );
+        })
+      )
+    );
+    // if this recurses its wrong actually
 
     /**
      *
@@ -602,39 +643,44 @@ const typeCheck = Effect.gen(function* () {
   }
 });
 
-const reapplyCode = Effect.gen(function* () {
-  const { client } = yield* RedisContext;
-  /**
-   * get the chat history with the fail
-   *
-   *
-   * do we need anything else?
-   */
-  const fs = yield* FileSystem.FileSystem;
-  const randomAhFileContent = "";
+const reapplyCodeSmarter = () =>
+  Effect.gen(function* () {
+    const { client } = yield* RedisContext;
+    /**
+     * get the chat history with the fail
+     *
+     *
+     * do we need anything else?
+     */
+    const fs = yield* FileSystem.FileSystem;
+    const randomAhFileContent = "";
 
-  const { fullStream } = streamText({
-    model: openai("gpt-4.1"),
-    providerOptions: {
-      openai: {
-        prediction: {
-          type: "content",
-          content: `\`\`\`
+    const { fullStream } = streamText({
+      model: openai("gpt-4.1"),
+      providerOptions: {
+        openai: {
+          prediction: {
+            type: "content",
+            content: `\`\`\`
         ${randomAhFileContent}
         \`\`\``,
+          },
         },
       },
-    },
-    messages: [
-      {
-        role: "user",
-        content: "Apply dis shit bro",
-      },
-    ],
+      messages: [
+        {
+          role: "user",
+          content: "Apply dis shit bro",
+        },
+      ],
+    });
+
+    const stream = Stream.fromAsyncIterable<
+      TextStreamPart<ToolSet>,
+      ModelError
+    >(fullStream, (e) => new ModelError({ error: e }));
   });
 
-  const stream = Stream.fromAsyncIterable<TextStreamPart<ToolSet>, ModelError>(
-    fullStream,
-    (e) => new ModelError({ error: e })
-  );
-});
+const reapplyCodeRewrite = () => Effect.gen(function* () {});
+
+const reapplyCodeReasoner = () => Effect.gen(function* () {});

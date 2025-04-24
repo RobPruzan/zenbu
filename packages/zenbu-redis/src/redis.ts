@@ -34,6 +34,7 @@ export type ClientEvent = {
   timestamp: number;
   requestId: string;
 };
+// i could have a last code response for a room and then feed that back into reapply, may make future things hairy like parallel stuff idk
 export type PartialEvent = ClientEvent | ModelEvent;
 export type ProjectStatus = "running" | "paused" | "killed";
 export type RedisSchema = Record<
