@@ -1,53 +1,19 @@
 "use client";
-import {
-  useState,
-  useRef,
-  useEffect,
-  createContext,
-  useContext,
-  useLayoutEffect,
-} from "react";
+import { ClientEvent } from "zenbu-redis";
+import { useState, useRef, useEffect, createContext, useContext } from "react";
 import { useChatStore } from "../chat-store";
 import { nanoid } from "nanoid";
-import {
-  SendIcon,
-  FileText,
-  ChevronDown,
-  ChevronUp,
-  Search,
-  MessageSquare,
-  PanelRightOpen,
-  RefreshCw,
-  Video,
-  Camera,
-  PenTool,
-  Inspect,
-  Clock,
-  X,
-} from "lucide-react";
-import { Button } from "../ui/button";
+import { SendIcon, Clock } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
 import { ChatMessage, toGroupedChatMessages } from "zenbu-plugin/src/ws/utils";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
-import TokenStreamingWrapper from "./wrapper";
-import { ThinkingUITester } from "./thinking";
 import { Socket } from "socket.io-client";
-import { flushSync } from "react-dom";
 import { ChatTextArea } from "./context-input";
 import { useEventWS } from "src/app/ws";
 import { iife, cn } from "src/lib/utils";
-import {
-  ClientMessageEvent,
-  ClientTaskEvent,
-} from "zenbu-plugin/src/ws/schemas";
+import { ClientTaskEvent } from "zenbu-plugin/src/ws/schemas";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -63,11 +29,10 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   ) as React.MutableRefObject<HTMLTextAreaElement>;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const [hiddenThreads, setHiddenThreads] = useState<Set<number>>(new Set());
 
   const { socket } = useEventWS({
     onMessage: (message) => {
-      const { event, projectChatId } = message;
+      const { event, projectName } = message;
       const todo_validationOverProjectIdAndClosureVariables = () => undefined;
       todo_validationOverProjectIdAndClosureVariables();
       // console.log("got back message", message);
@@ -77,18 +42,18 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
       //   throw new Error("Invariant: user message cannot come from server");
       // }
 
-      if (
-        event.text.includes("================== EDITING FILE END =============")
-      ) {
-        const iframe = document.getElementById(
-          "child-iframe",
-        ) as HTMLIFrameElement | null;
+      // if (
+      //   event.text.includes("================== EDITING FILE END =============")
+      // ) {
+      //   const iframe = document.getElementById(
+      //     "child-iframe",
+      //   ) as HTMLIFrameElement | null;
 
-        if (!iframe) {
-          throw new Error("invariant: must have child-iframe as preview");
-        }
-        iframe.src = iframe.src;
-      }
+      //   if (!iframe) {
+      //     throw new Error("invariant: must have child-iframe as preview");
+      //   }
+      //   iframe.src = iframe.src;
+      // }
 
       eventLog.actions.pushEvent(event);
     },
@@ -105,19 +70,19 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   // i need a post mortem here
   // it would resolve the data only after a tick? It would return a promise? Why wouldn't the type show that though?
   // omg its cause it would push it async, so then i wouldn't have the data every render no matter what, every time it regenerated it would have it one tick too late
-  useEffect(() => {
-    iife(async () => {
-      // this should resolve as a microtask since its just a promise, so it should be complete before rendering, but unfortunately react will not flush it in time, whatever we pay a tick this is a dog shit abstraction i just need a sync vs async i don't know if there's a way around this aifjasdkl;fjhdsaklfjdas;lkjfdsa;kljfkl;adskjfj;dlaksfjk
-      // i will need to fix this i just will not rn
-      const { mainThreadMessages, otherThreadsMessages } =
-        await toGroupedChatMessages(eventLog.events, true);
+  // useEffect(() => {
+  //   iife(async () => {
+  //     // this should resolve as a microtask since its just a promise, so it should be complete before rendering, but unfortunately react will not flush it in time, whatever we pay a tick this is a dog shit abstraction i just need a sync vs async i don't know if there's a way around this aifjasdkl;fjhdsaklfjdas;lkjfdsa;kljfkl;adskjfj;dlaksfjk
+  //     // i will need to fix this i just will not rn
+  //     const { mainThreadMessages, otherThreadsMessages } =
+  //       await toGroupedChatMessages(eventLog.events, true);
 
-      setMainThreadMessages(mainThreadMessages);
-      setOtherThreadMessages(otherThreadsMessages);
-    });
-    // });
-  }, [eventLog.events]);
-  const projectId = useChatStore((state) => state.iframe.state.projectId);
+  //     setMainThreadMessages(mainThreadMessages);
+  //     setOtherThreadMessages(otherThreadsMessages);
+  //   });
+  //   // });
+  // }, [eventLog.events]);
+  const project = useChatStore((state) => state.iframe.state.project);
   // const { mainThreadMessages, otherThreadsMessages } =
   //
 
@@ -160,14 +125,13 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const sendMessage = () => {
     if (!chatControls.state.input.trim() || !socket) return;
 
-    const clientEvent: ClientMessageEvent = {
+    const clientEvent: ClientEvent = {
       requestId: nanoid(),
       context: [],
       kind: "user-message",
       text: chatControls.state.input,
       timestamp: Date.now(),
       id: nanoid(),
-      previousEvents: eventLog.events,
     };
 
     eventLog.actions.pushEvent(clientEvent);
@@ -175,31 +139,31 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     console.log("sending", chatControls.state.input);
     chatControls.actions.setInput("");
 
-    socket.emit("message", { event: clientEvent, projectId });
+    socket.emit("message", { event: clientEvent, projectName: project.name });
     updateInputSize();
   };
 
-  const scheduleTask = () => {
-    if (!chatControls.state.input.trim() || !socket) return;
+  // const scheduleTask = () => {
+  //   if (!chatControls.state.input.trim() || !socket) return;
 
-    const clientEvent: ClientTaskEvent = {
-      requestId: nanoid(),
-      context: [],
-      kind: "user-task",
-      text: chatControls.state.input,
-      timestamp: Date.now(),
-      id: nanoid(),
-      previousEvents: eventLog.events,
-    };
+  //   const clientEvent: ClientTaskEvent = {
+  //     requestId: nanoid(),
+  //     context: [],
+  //     kind: "user-task",
+  //     text: chatControls.state.input,
+  //     timestamp: Date.now(),
+  //     id: nanoid(),
+  //     previousEvents: eventLog.events,
+  //   };
 
-    eventLog.actions.pushEvent(clientEvent);
+  //   eventLog.actions.pushEvent(clientEvent);
 
-    chatControls.actions.setInput("");
+  //   chatControls.actions.setInput("");
 
-    socket.emit("message", { event: clientEvent, projectId });
+  //   socket.emit("message", { event: clientEvent, projectId });
 
-    updateInputSize();
-  };
+  //   updateInputSize();
+  // };
 
   if (!socket) {
     // needs loading, but realistically it should connect instant since local
@@ -329,7 +293,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
 
               <div className="flex items-center justify-end px-4 py-2 border-t  bg-accent/5">
                 <div className="flex items-center gap-2">
-                  <button
+                  {/* <button
                     onClick={scheduleTask}
                     disabled={!chatControls.state.input.trim()}
                     className={cn(
@@ -342,7 +306,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                   >
                     <Clock className="h-3 w-3 mr-1.5" />
                     <span>Task</span>
-                  </button>
+                  </button> */}
                   <button
                     onClick={sendMessage}
                     disabled={!chatControls.state.input.trim()}

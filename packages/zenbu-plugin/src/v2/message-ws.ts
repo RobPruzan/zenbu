@@ -1,5 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText, TextStreamPart, tool, ToolSet } from "ai";
+import { getProject, getProjects } from "zenbu-daemon";
 import { type Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import { effect, z } from "zod";
@@ -130,7 +131,13 @@ export const injectWebSocket = (server: HttpServer) => {
     // ug i should make this project id im being lazy, project name is basically a stupid id rn
     socket.on(
       "message",
-      async ({ event }: { event: ClientEvent; projectName: string }) => {
+      async ({
+        event,
+        projectName,
+      }: {
+        event: ClientEvent;
+        projectName: string;
+      }) => {
         const _ = Effect.runPromiseExit(
           Effect.gen(function* () {
             if (activeStreamController.current.kind === "active") {
@@ -144,6 +151,10 @@ export const injectWebSocket = (server: HttpServer) => {
             };
 
             const { client } = yield* RedisContext;
+            // i should distribute this via context so the project can always be
+            // accessed
+            const project = yield* getProject(projectName);
+            // project.cwd
 
             const record = yield* client.effect.get(
               makeChatEventsKey({ roomId })
@@ -503,7 +514,14 @@ const writeCode = ({
           yield* reapplyCodeSmarter().pipe(
             Effect.mapError((e) =>
               /**
-               * will need to pass errors through because they will include typechecking stuff so the next model should know what to do
+               * will need to pass errors through because they will include
+               * typechecking stuff so the next model should know what to do
+               *
+               *
+               * this is a good place to apply frontend verification checks,
+               * will need to distribute the socket via context so we can do
+               * that
+               *
                */
               Effect.gen(function* () {
                 yield* reapplyCodeRewrite().pipe(

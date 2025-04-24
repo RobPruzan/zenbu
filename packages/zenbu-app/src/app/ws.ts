@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { PluginServerEvent } from "zenbu-plugin/src/ws/schemas";
+import { PartialEvent } from "zenbu-redis";
 
 export const useEventWS = (opts?: {
   onMessage?: (message: {
-    event: PluginServerEvent;
-    projectChatId: string;
+    event: PartialEvent;
+    projectName: string
   }) => void;
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);

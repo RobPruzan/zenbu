@@ -1,12 +1,13 @@
+import { Project } from "zenbu-daemon";
 import { SliceCreator } from "../chat-store";
 
 export type IFrameSliceInitialState = {
   url: string;
-  projectId: string;
+  project: Project
 };
 export type IFrameSliceState = {
   url: string;
-  projectId: string;
+  project: Project
 };
 
 export type IFrameSlice = {

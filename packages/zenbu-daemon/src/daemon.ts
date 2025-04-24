@@ -134,7 +134,7 @@ const NOUNS = [
   "pirate",
 ];
 
-const getProjects = Effect.gen(function* () {
+export const getProjects = Effect.gen(function* () {
   const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep || true`;
   const fs = yield* FileSystem.FileSystem;
   const projectNames = yield* fs.readDirectory("projects");
@@ -679,7 +679,7 @@ process.on("beforeExit", async () => {
 
 createServer();
 
-const getProject = (name: string) =>
+export const getProject = (name: string) =>
   Effect.gen(function* () {
     const projects = yield* getProjects;
 

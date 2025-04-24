@@ -539,7 +539,7 @@ export default function Home() {
       <ChatInstanceContext.Provider
         initialValue={{
           iframe: {
-            projectId: "idk",
+            project: firstRunningProject,
             url: `http://localhost:${firstRunningProject.port}`,
           },
           toolbar: {
@@ -780,7 +780,6 @@ export default function Home() {
                           ) : (
                             <div className="flex h-full flex-col">
                               <IFrameWrapper>
-                            
                                 <BetterToolbar />
                                 <DevtoolsOverlay />
                               </IFrameWrapper>
@@ -892,7 +891,7 @@ export default function Home() {
                       />
                     </div>
                   ) : rightSidebar.component === "websiteTree" ? (
-                    <ProjectsSidebar />
+                    <ProjectsSidebar onNuke={() => {}} />
                   ) : rightSidebar.component === "reactTree" ? (
                     <ReactTree
                       onClose={() => toggleSidebar("reactTree", "right")}

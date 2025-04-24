@@ -161,7 +161,7 @@ export const ChatTextArea = () => {
 
     syncSelectedItems();
   };
-  const projectId = useChatStore((state) => state.iframe.state.projectId);
+  const projectId = useChatStore((state) => state.iframe.state.projectName);
   const insertMention = (mention: string) => {
     const chatInput = chatInputRef.current;
     if (!chatInput) return;
