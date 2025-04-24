@@ -84,6 +84,7 @@ function pushAcc(
 
 export const accumulateEvents = (events: Array<ClientEvent | ModelEvent>) =>
   Effect.gen(function* () {
+    
     if (events.length === 0) {
       return [];
     }

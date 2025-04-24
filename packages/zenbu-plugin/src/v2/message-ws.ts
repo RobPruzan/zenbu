@@ -23,6 +23,19 @@ import { server_eventsToMessage } from "./server-utils";
 import { nanoid } from "nanoid";
 import { iife } from "src/tools/message-runtime";
 import { write } from "node:console";
+// at the very top of your main entry‐point (e.g. index.js):
+
+// const util =
+import * as util from "util";
+
+// set depth to 5 (or `null` for infinite)
+util.inspect.defaultOptions.depth = 5;
+
+// (optional) also show hidden props, unlimited array length, colors, etc.
+util.inspect.defaultOptions.showHidden = true;
+util.inspect.defaultOptions.maxArrayLength = null;
+util.inspect.defaultOptions.colors = true;
+
 // type AsyncIterableStream<T> = AsyncIterable<T> & ReadableStream<T>;
 
 const redisClient = makeRedisClient();
@@ -184,7 +197,10 @@ export const injectWebSocket = (server: HttpServer) => {
 
             yield* client.effect.pushChatEvent(roomId, event);
             const events = yield* client.effect.getChatEvents(roomId);
+            console.log("we have these events", events);
+
             const messages = yield* server_eventsToMessage(events);
+            console.log("and these messages", messages);
 
             /**
              * oh right how do we handle messages that failed? Er i guess just keep em there, let user retry?
