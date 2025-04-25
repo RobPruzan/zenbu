@@ -1,4 +1,5 @@
 import { Data, identity, Effect } from "effect";
+
 import * as util from "node:util";
 
 import { Option } from "effect";
@@ -16,13 +17,16 @@ import { serve } from "@hono/node-server";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { validator } from "hono/validator";
+import { injectWebSocket } from "./inject-websocket";
 
 export const getCreatedAt = (name: string) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
     const res = yield* client.effect.get(`${name}_createdAt`);
     if (res.kind !== "createdAt") {
-      return yield* new RedisValidationError({meta: "not created at, was:" + res.kind});
+      return yield* new RedisValidationError({
+        meta: "not created at, was:" + res.kind,
+      });
     }
     return res.createdAt;
   });
@@ -414,7 +418,7 @@ export const createServer = async (
 
   const port = 40_000;
   const host = "localhost";
-  const $server = serve(
+  const server = serve(
     {
       fetch: app.fetch,
       port,
@@ -424,8 +428,8 @@ export const createServer = async (
       console.log(`Server is running on http://${host}:${info.port}`);
     }
   );
-  // will inject websocket into this server
-  return app;
+
+  return { app, server };
 };
 
 // todo: embed this logic so we never have collisions
@@ -524,7 +528,7 @@ export type EffectReturnType<T> =
 export class GenericError extends Data.TaggedError("GenericError")<{}> {}
 export class RedisValidationError extends Data.TaggedError(
   "RedisValidationError"
-)<{meta: unknown}> {}
+)<{ meta: unknown }> {}
 export class ProjectNotFoundError extends Data.TaggedError(
   "ProjectNotFoundError"
 )<{}> {}
@@ -692,4 +696,4 @@ const deleteProject = (name: string) =>
     yield* Effect.all([rmEffect, redisEffect]);
   });
 
-export type DaemonAppType = Awaited<ReturnType<typeof createServer>>;
+export type DaemonAppType = Awaited<ReturnType<typeof createServer>>["app"];
