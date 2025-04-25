@@ -762,13 +762,51 @@ export default function Home() {
                           }
                         >
                           {mobileSplit ? (
-                            <div className="relative mx-auto h-[852px] w-[393px] flex-shrink-0 overflow-hidden rounded-[40px] border-[10px] border-black bg-black shadow-xl">
+                            <div className="relative mx-auto h-[852px] w-[393px] flex-shrink-0 overflow-hidden rounded-[40px] border-[10px] border-black bg-black shadow-xl ring-1 ring-gray-500/30">
+                              <div className="absolute top-0 left-0 right-0 h-[44px] bg-black px-6 flex items-center justify-between text-white text-xs z-10">
+                                <div>1:10</div>
+                                <div className="absolute left-1/2 -translate-x-1/2 h-[25px] w-[95px] bg-black rounded-[20px] flex items-center justify-center mt-1">
+                                  <div className="h-[4px] w-[4px] rounded-full bg-green-500"></div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div>5G</div>
+                                  <div>100%</div>
+                                </div>
+                              </div>
                               <div className="h-full w-full overflow-hidden rounded-[30px]">
-                                <IFrameWrapper mobile>
-                                  <></>
-                                  {/* <BetterToolbar />
-                                  <DevtoolsOverlay /> */}
-                                </IFrameWrapper>
+                                <div className="flex h-full flex-col">
+                                  <div className="h-[44px]"></div>
+                                  <IFrameWrapper mobile>
+                                    <></>
+                                  </IFrameWrapper>
+                                  <div className="flex flex-col bg-[#f2f2f7] border-t border-gray-200">
+                                    <div className="flex items-center px-3 h-11 bg-[#f2f2f7] border-b border-gray-200">
+                                      <div className="flex-1 px-2 py-1">
+                                        <div className="bg-[#e1e1e6] rounded-lg h-8 flex items-center px-3 gap-2">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                          <span className="text-sm text-gray-400 flex-1 truncate">next-go-production.up.railway.app</span>
+                                        </div>
+                                      </div>
+                                      <button className="w-11 h-11 flex items-center justify-center text-blue-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15v3H6v-3"/><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/></svg>
+                                      </button>
+                                    </div>
+                                    <div className="flex h-14 items-center justify-between px-4">
+                                      <button className="flex flex-col items-center justify-center text-gray-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 10-5 5 5 5"/><path d="m20 4-5 5 5 5"/></svg>
+                                      </button>
+                                      <button className="flex flex-col items-center justify-center text-gray-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                                      </button>
+                                      <button className="flex flex-col items-center justify-center text-gray-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 15v4c0 1.1.9 2 2 2h4M21 9V5c0-1.1-.9-2-2-2h-4m-8 0H5c-1.1 0-2 .9-2 2v4m18 0V5c0-1.1-.9-2-2-2h-4M21 15v4c0 1.1-.9 2-2 2h-4"/></svg>
+                                      </button>
+                                      <button className="flex flex-col items-center justify-center text-gray-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ) : (
