@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import { streamText, TextStreamPart, tool, ToolSet } from "ai";
+import { smoothStream, streamText, TextStreamPart, tool, ToolSet } from "ai";
 import { getProject, getProjects, Project } from "zenbu-daemon";
 import { type Server as HttpServer } from "node:http";
 import { Server, Socket } from "socket.io";
@@ -25,8 +25,15 @@ import { nanoid } from "nanoid";
 import { iife } from "src/tools/message-runtime";
 import { write } from "node:console";
 import * as util from "util";
-import { InvariantError, ModelError, TypecheckError } from "./shared-utils";
+import {
+  FileReadError,
+  InvariantError,
+  ModelError,
+  TRANSITION_MESSAGE,
+  TypecheckError,
+} from "./shared-utils";
 import { indexCodebase } from "src/tools/code-base-search";
+import { execSync } from "node:child_process";
 
 util.inspect.defaultOptions.depth = 5;
 
@@ -152,6 +159,7 @@ export const injectWebSocket = (server: HttpServer) => {
               model: openai("gpt-4.1"),
               abortSignal: abortController.signal,
               maxSteps: 50,
+              experimental_transform: smoothStream(),
               messages: [
                 {
                   role: "system",
@@ -201,28 +209,35 @@ export const injectWebSocket = (server: HttpServer) => {
 
                         const { client } = yield* RedisContext;
                         const fs = yield* FileSystem.FileSystem;
+                        console.log("the path we got", path);
+
                         const exists = yield* fs.exists(path);
                         if (!exists) {
                           // i wonder if we should just provide the models the internal errors and let it iterate?
-                          return yield* new InvariantError({
-                            reason: "todo not implemented",
+                          return yield* new FileReadError({
+                            error: "File does not exist",
+                            meta:
+                              "Try again, here is the tree of the file system:" +
+                              execSync(`tree ${project.cwd}`, {
+                                encoding: "utf-8",
+                              }),
                           });
                         }
 
                         // const events = yield* client.effect.getChatEvents(roomId);
                         // const messages = yield* server_eventsToMessage(events);
-                        yield* client.effect.pushChatEvent(roomId, {
-                          kind: "model-message",
-                          // context: [],
-                          id: nanoid(),
-                          associatedRequestId: event.requestId,
-                          // text: "You are now transitioning back to being an architect model, so you will not be able to write code till your active code model mode with the writeCode tool",
-                          chunk: {
-                            type: "text-delta",
-                            textDelta: "Writing code now",
-                          },
-                          timestamp: Date.now(),
-                        });
+                        // yield* client.effect.pushChatEvent(roomId, {
+                        //   kind: "model-message",
+                        //   // context: [],
+                        //   id: nanoid(),
+                        //   associatedRequestId: event.requestId,
+                        //   // text: "You are now transitioning back to being an architect model, so you will not be able to write code till your active code model mode with the writeCode tool",
+                        //   chunk: {
+                        //     type: "text-delta",
+                        //     textDelta: "Writing code now",
+                        //   },
+                        //   timestamp: Date.now(),
+                        // });
 
                         console.log("triggering write code");
 
@@ -236,13 +251,21 @@ export const injectWebSocket = (server: HttpServer) => {
                         console.log("wrote code");
 
                         // should make this system i guess
-                        yield* client.effect.pushChatEvent(roomId, {
+                        const transitionEvent: ClientEvent = {
                           kind: "user-message",
                           context: [],
                           id: nanoid(),
                           requestId: event.requestId,
-                          text: "You are now transitioning back to being an architect model, so you will not be able to write code till your active code model mode with the writeCode tool",
+                          text: TRANSITION_MESSAGE,
                           timestamp: Date.now(),
+                        };
+                        yield* client.effect.pushChatEvent(
+                          roomId,
+                          transitionEvent
+                        );
+                        socket.emit("message", {
+                          event: transitionEvent,
+                          projectName: project.name,
                         });
 
                         return result;
@@ -429,6 +452,7 @@ const writeCode = ({
 
     console.log("writeCode: setting up streamText");
     const { fullStream, text } = streamText({
+      experimental_transform: smoothStream(),
       messages: [
         {
           content: yield* getCodebaseIndexPrompt(projectPath).pipe(
@@ -537,6 +561,7 @@ const writeCode = ({
         )
       )
       .pipe(Effect.mapError(() => "h"));
+
     console.log("writeCode: stream processing complete");
 
     console.log("writeCode: getting final text");
@@ -600,33 +625,23 @@ const applyCode = ({
   path: string;
 }) =>
   Effect.gen(function* () {
-    console.log("applyCode: starting");
     const { socket, project, requestId, roomId, typecheckCommand } =
       yield* MessageContext;
-    console.log("applyCode: got MessageContext");
     const { client } = yield* RedisContext;
-    console.log("applyCode: got RedisContext");
     const fs = yield* FileSystem.FileSystem;
-    console.log("applyCode: got FileSystem", path);
     const fileString = yield* fs.readFileString(path);
-    console.log("applyCode: read file string");
 
     const events = yield* client.effect.getChatEvents(roomId);
-    console.log("applyCode: got chat events");
     const messages = yield* server_eventsToMessage(events);
-    console.log("applyCode: converted events to messages");
 
-    const applySystemPrompt = `Given an existing file, code edits, and edit\
-    instructions, you will apply the code edits to the file and return the\
-    updated file.  These code edits can contain comments indicating where\
-    existing code should be copied and kept. Follow these comments to keep code,\
-    then remove these comments in your output.  Interpret the <code_edits> as\
-    ALWAYS ADDING/CHANGING code, unless specifically instructed to remove code\
-    by the <edit_instructions>.  Write the COMPLETE file content with the code\
-    edits applied in a single \`\`\` code block.  The updated file should always\
-    be valid code and should always BE COMPLETE. This means that any code that\
-    you think should be kept, keep the code.`;
-    console.log("applyCode: defined system prompt");
+    const applySystemPrompt = `Given an existing file, and a description\
+    of edits to make to a file, you will apply the changes to the file by\
+    returning the entire file back by writing it with the changes applied.\
+    You must return the code you want to be written to the file inside triple tick \`\`\`<lang>... \`\`\` format\
+    so I can parse the result and write it to a file. You may never omit any code, and you must
+    listen to the instructions of how to apply the code changes that are provided to you\
+    `;
+
     const applyPrompt = `<existing_file>
     \`\`\`
     ${fileString}
@@ -639,14 +654,11 @@ const applyCode = ({
     \`\`\`
     </code_edits>
     
-    <edit_instructions>
-    ${goal}
-    </edit_instructions>
-    
     Please apply the code edits to the file and return the COMPLETE new file content. Infer the <code_edits> as ALWAYS ADDING/CHANGING code, unless specifically instructed to remove code. Write a single \`\`\` code block of the entire file.`;
-    console.log("applyCode: defined apply prompt");
+
     const { fullStream, text } = streamText({
       model: openai("gpt-4.1-nano"),
+      experimental_transform: smoothStream(),
       providerOptions: {
         openai: {
           prediction: {
@@ -661,33 +673,16 @@ const applyCode = ({
       prompt: applyPrompt,
       temperature: 0.5,
       maxTokens: 30_000,
-      // messages: [
-      //   ...messages,
-      //   {
-      //     role: "user",
-      //     content: `Here is the file content: ${fileString} \n\n\n Please integrate the following code to this file by providing the entire file back ${coderModelOutput}`,
-      //   },
-      // ],
     });
-    console.log("applyCode: set up streamText");
 
-    /**
-     * er i do want to send the stream but I don't really want model to see it
-     *
-     * i guess i need some meta on the event and need to post process based on what i want the base model seeing?
-     */
     const stream = Stream.fromAsyncIterable<
       TextStreamPart<{ stupid: any }>,
       ModelError
     >(fullStream, (e) => new ModelError({ error: e }));
-    console.log("applyCode: created stream");
 
     const _ = yield* stream.pipe(
       Stream.runForEach((chunk) =>
         Effect.gen(function* () {
-          console.log("applyCode: processing stream chunk");
-          // todo what we do her
-
           const modelEvent: ModelEvent = {
             kind: "model-message",
             associatedRequestId: requestId,
@@ -699,57 +694,32 @@ const applyCode = ({
             event: modelEvent,
             projectName: project.name,
           });
-          console.log("applyCode: emitted message");
         })
       )
     );
-    console.log("applyCode: finished processing stream");
 
     const finalText = yield* Effect.tryPromise(() => text);
-    console.log("applyCode: got final text");
-
     const applyCode = yield* parseCodeFromText(finalText);
-    console.log("applyCode: parsed code from text");
-
-    /**
-     * we want to do a check on the
-     */
-
     const previous = yield* fs.readFileString(path);
-    console.log("applyCode: read previous file content");
     yield* fs.writeFileString(path, applyCode);
-    console.log("applyCode: wrote new file content");
-    // i wish i had some way of giving model lsp info/ querying lsp, obviously can do that, just need to figure out correct impl for that
 
     yield* typeCheck.pipe(
       Effect.onError(() =>
         Effect.gen(function* () {
-          console.log("applyCode: typeCheck failed, restoring previous file");
-          // yie`ld* fs.writeFileString(path,previous ).pipe(Effect.mapError(e => null))
           const res = yield* fs.writeFileString(path, previous).pipe(
             Effect.match({
-              onFailure: () => {
-                console.log("applyCode: failed to restore previous file");
-                return null;
-              },
-              onSuccess: () => {
-                console.log("applyCode: successfully restored previous file");
-              },
+              onFailure: () => null,
+              onSuccess: () => {},
             })
           );
         })
       )
     );
-    console.log("applyCode: typeCheck completed");
 
-    /**
-     *
-     * if this fails should we undo the apply and tell the model the error? probably, should have some weird state evolving over the file
-     */
-
-    console.log("applyCode: returning result");
     return applyCode;
   });
+//   return applyCode;
+// });
 
 export class CodeParseError extends Data.TaggedError("CodeParseError")<{
   reason: string;

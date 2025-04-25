@@ -1,5 +1,5 @@
 "use client";
-import { ClientEvent } from "zenbu-redis";
+import { ClientEvent, PartialEvent } from "zenbu-redis";
 import { useState, useRef, useEffect, createContext, useContext } from "react";
 import { useChatStore } from "../chat-store";
 import { nanoid } from "nanoid";
@@ -17,6 +17,7 @@ import { ClientTaskEvent } from "zenbu-plugin/src/ws/schemas";
 import { trpc } from "src/lib/trpc";
 import { client_eventToMessages } from "zenbu-plugin/src/v2/client-utils";
 import { Effect } from "effect";
+import { TRANSITION_MESSAGE } from "zenbu-plugin/src/v2/shared-utils";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -38,11 +39,27 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const [events] = trpc.project.getEvents.useSuspenseQuery({
     projectName: project.name,
   });
+
   console.log("chunks", events);
 
   const utils = trpc.useUtils();
 
   const messages = Effect.runSync(client_eventToMessages(events));
+
+  const flushQueue = useRef<Array<PartialEvent>>([]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      utils.project.getEvents.setData({ projectName: project.name }, (prev) =>
+        prev ? [...prev, ...flushQueue.current] : flushQueue.current,
+      );
+      flushQueue.current = [];
+    }, 100);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
 
   const { socket } = useEventWS({
     projectName: project.name,
@@ -51,11 +68,20 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
       const todo_validationOverProjectIdAndClosureVariables = () => undefined;
       todo_validationOverProjectIdAndClosureVariables();
 
-      utils.project.getEvents.setData({ projectName: project.name }, (prev) =>
-        prev ? [...prev, event] : [event],
-      );
+      if (
+        event.kind === "user-message" &&
+        event.text.includes(TRANSITION_MESSAGE)
+      ) {
+        const iframe = document.getElementById(
+          "child-iframe",
+        ) as HTMLIFrameElement | null;
 
-      eventLog.actions.pushEvent(event);
+        if (!iframe) {
+          throw new Error("invariant: must have child-iframe as preview");
+        }
+        iframe.src = iframe.src;
+      }
+      flushQueue.current.push(event);
     },
   });
 

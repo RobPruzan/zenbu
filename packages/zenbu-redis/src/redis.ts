@@ -33,7 +33,12 @@ export type ClientEvent = {
   timestamp: number;
   requestId: string;
 };
+
 // i could have a last code response for a room and then feed that back into reapply, may make future things hairy like parallel stuff idk
+// uh do i want to persist this? I kinda don't love the idea of ephemeral
+// i don't even know if we have anything that we can refresh on completion, it's
+// more like the action itself triggers some reactive behavior, not the other
+// way around and we can derive everything
 export type PartialEvent = ClientEvent | ModelEvent;
 export type ProjectStatus = "running" | "paused" | "killed";
 export type RedisSchema = Record<

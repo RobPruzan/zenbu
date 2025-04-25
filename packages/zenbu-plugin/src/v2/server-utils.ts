@@ -175,7 +175,11 @@ const transformToolCallDeltas = (
       if (curr.type === "tool-call-delta") {
         const lastEvent = prev.at(-1);
         if (lastEvent?.type !== "tool-call") {
-          throw new Error("invariant");
+          throw new Error(JSON.stringify({
+            reason: "invariant",
+            lastEvent,
+            expected: 'tool-call'
+          }));
         }
         lastEvent.args += curr.argsTextDelta;
         return prev
@@ -183,7 +187,11 @@ const transformToolCallDeltas = (
       if (curr.type === "tool-call") {
         const lastEvent = prev.at(-1);
         if (lastEvent?.type !== "tool-call") {
-          throw new Error("invariant");
+          throw new Error(JSON.stringify({
+            reason: "invariant (but the second one) server",
+            lastEvent,
+            expected: 'tool-call',
+          }));
         }
         lastEvent.args = JSON.parse(lastEvent.args);
         return prev;

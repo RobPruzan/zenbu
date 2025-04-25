@@ -9,10 +9,8 @@ export class ModelError extends Data.TaggedError("GenericError")<{
 export class TypecheckError extends Data.TaggedError("TypecheckError")<{
   errorString: string;
 }> {}
-export class InvariantError extends Data.TaggedError("InvariantError")<{
-  reason?: string;
-  context?: unknown;
-}> {}
+export class InvariantError extends Data.TaggedError("InvariantError")<Record<string, unknown>> {}
+export class FileReadError extends Data.TaggedError("FileReadError")<Record<string, unknown>> {}
 
 const compareGroupId = (
   a: ClientEvent | ModelEvent,
@@ -169,3 +167,6 @@ export const accumulateEvents = (events: Array<ClientEvent | ModelEvent>) =>
 
     return flushedEvents;
   });
+
+export const TRANSITION_MESSAGE =
+  "You are now transitioning back to being an architect model, so you will not be able to write code till your active code model mode with the writeCode tool";

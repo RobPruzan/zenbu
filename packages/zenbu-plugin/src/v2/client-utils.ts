@@ -157,16 +157,34 @@ const transformToolCallDeltas = (
       }
       if (curr.type === "tool-call-delta") {
         const lastEvent = prev.at(-1);
+
         if (lastEvent?.type !== "tool-call") {
-          throw new Error("invariant");
+          // this will probably break something, but i don't get why this happens, model bug? Not sure, we will see when we start doing derivations from the events
+          return prev;
+          throw new Error(
+            JSON.stringify({
+              reason: "invariant",
+              lastEvent,
+              expected: "tool-call",
+              curr,
+              // last3: prev.slice(-3)
+            })
+          );
         }
         lastEvent.args += curr.argsTextDelta;
-        return prev
+        return prev;
       }
       if (curr.type === "tool-call") {
         const lastEvent = prev.at(-1);
         if (lastEvent?.type !== "tool-call") {
-          throw new Error("invariant");
+          throw new Error(
+            JSON.stringify({
+              reason: "invariant but the second one client",
+              lastEvent,
+              expected: "tool-call",
+              // events: chunks,
+            })
+          );
         }
         lastEvent.args = JSON.parse(lastEvent.args);
         return prev;
