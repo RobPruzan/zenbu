@@ -22,7 +22,7 @@ export const getCreatedAt = (name: string) =>
     const { client } = yield* RedisContext;
     const res = yield* client.effect.get(`${name}_createdAt`);
     if (res.kind !== "createdAt") {
-      return yield* new RedisValidationError();
+      return yield* new RedisValidationError({meta: "not created at, was:" + res.kind});
     }
     return res.createdAt;
   });

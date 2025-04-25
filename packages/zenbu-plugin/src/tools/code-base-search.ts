@@ -145,7 +145,7 @@ const traverseCodebase = async (path: string, ignore: Array<string>) => {
     })
   );
 
-  console.log("what we got", pathToContent);
+  // console.log("what we got", pathToContent);
 
   pathToContent.sort((a, b) =>
     a.path === b.path ? 0 : a.path < b.path ? -1 : 1
