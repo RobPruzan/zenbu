@@ -9,6 +9,7 @@ export const useIFrameMessenger = () => {
     ) as HTMLIFrameElement | null;
 
     if (!iframe) {
+      return // idk
       throw new Error("invairant: must have child-iframe as preview");
     }
 

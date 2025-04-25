@@ -124,6 +124,7 @@ export const injectWebSocket = (server: HttpServer) => {
               requestId: event.requestId,
               roomId,
               socket,
+              ioServer,
             });
 
             let record = yield* client.effect.getOrElse(
@@ -263,7 +264,7 @@ export const injectWebSocket = (server: HttpServer) => {
                           roomId,
                           transitionEvent
                         );
-                        socket.emit("message", {
+                        ioServer.to(roomId).emit("message", {
                           event: transitionEvent,
                           projectName: project.name,
                         });
@@ -314,7 +315,7 @@ export const injectWebSocket = (server: HttpServer) => {
                     chunk,
                   };
                   yield* client.effect.pushChatEvent(roomId, modelEvent);
-                  socket.emit("message", {
+                  ioServer.to(roomId).emit("message", {
                     event: modelEvent,
                     projectName: project.name,
                   });
@@ -420,37 +421,24 @@ const writeCode = ({
   goal: string;
 }) =>
   Effect.gen(function* () {
-    console.log("writeCode: starting");
     const { client } = yield* RedisContext;
-    console.log("writeCode: got RedisContext");
-
-    const { socket, project } = yield* MessageContext;
-    console.log("writeCode: got MessageContext");
+    const { socket, project, ioServer } = yield* MessageContext;
     const fs = yield* FileSystem.FileSystem;
-    console.log("writeCode: got FileSystem");
 
-    console.log("writeCode: getting chat events");
     const events = yield* client.effect
       .getChatEvents(roomId)
       .pipe(Effect.mapError(() => "a"));
-    console.log("writeCode: got chat events");
     const messages = yield* server_eventsToMessage(events).pipe(
       Effect.mapError(() => "b")
     );
-    console.log("writeCode: converted events to messages");
     let codeResponse: null | string = null;
-    console.log("writeCode: initialized codeResponse");
     const projectPath =
       "/Users/robby/zenbu/packages/zenbu-daemon/" + project.cwd;
-    console.log("writeCode: set projectPath", projectPath);
     const filePath = path;
-    console.log("writeCode: set filePath", filePath);
     const existingFileContent = yield* fs
       .readFileString(filePath)
       .pipe(Effect.mapError(() => "c"));
-    console.log("writeCode: read existing file content");
 
-    console.log("writeCode: setting up streamText");
     const { fullStream, text } = streamText({
       experimental_transform: smoothStream(),
       messages: [
@@ -502,16 +490,12 @@ const writeCode = ({
         reapply: tool({
           parameters: z.object({}),
           execute: async () => {
-            console.log("writeCode: reapply tool executed");
             const effect = Effect.gen(function* () {
-              console.log("writeCode: inside reapply effect");
               yield* new InvariantError({
                 reason: "not implemented yet shi",
               }).pipe(Effect.mapError(() => "e"));
             });
-            console.log("writeCode: running reapply effect");
             const exit = Effect.runPromiseExit(effect);
-            console.log("writeCode: reapply effect completed");
           },
           description:
             "If the apply model didn't apply, your code change right, call this and a smarter model will retry",
@@ -519,25 +503,19 @@ const writeCode = ({
       },
       model: openai("gpt-4.1"),
     });
-    console.log("writeCode: streamText setup complete");
 
-    console.log("writeCode: creating stream");
     const stream = Stream.fromAsyncIterable<
       TextStreamPart<{ stupid: any }>,
       ModelError
     >(fullStream, (e) => new ModelError({ error: e }));
-    console.log("writeCode: stream created");
 
-    console.log("writeCode: starting stream processing");
     const result = yield* stream
       .pipe(
         Stream.runForEach((chunk) =>
           Effect.gen(function* () {
-            console.log("writeCode: processing chunk");
             const { client } = yield* RedisContext.pipe(
               Effect.mapError(() => "f")
             );
-            console.log("writeCode: got RedisContext in chunk processing");
 
             const modelEvent: ModelEvent = {
               kind: "model-message",
@@ -546,31 +524,23 @@ const writeCode = ({
               timestamp: Date.now(),
               chunk,
             };
-            console.log("writeCode: created modelEvent");
-            socket.emit("message", {
+            ioServer.to(roomId).emit("message", {
               event: modelEvent,
               projectName: project.name,
             });
-            console.log("writeCode: emitted message to socket");
 
             yield* client.effect
               .pushChatEvent(roomId, modelEvent)
               .pipe(Effect.mapError(() => "g"));
-            console.log("writeCode: pushed chat event to Redis");
           })
         )
       )
       .pipe(Effect.mapError(() => "h"));
 
-    console.log("writeCode: stream processing complete");
-
-    console.log("writeCode: getting final text");
     const finalText = yield* Effect.tryPromise(() => text).pipe(
       Effect.mapError(() => "i")
     );
-    console.log("writeCode: got final text");
 
-    console.log("writeCode: applying code");
     const applyResult = yield* applyCode({
       path,
       coderModelOutput: finalText,
@@ -578,39 +548,27 @@ const writeCode = ({
     }).pipe(
       Effect.mapError(() =>
         Effect.gen(function* () {
-          console.log("writeCode: applyCode failed, trying reapplyCodeSmarter");
           yield* reapplyCodeSmarter().pipe(
             Effect.mapError((e) =>
               Effect.gen(function* () {
-                console.log(
-                  "writeCode: reapplyCodeSmarter failed, trying reapplyCodeRewrite"
-                );
                 yield* reapplyCodeRewrite()
                   .pipe(
                     Effect.mapError((e) =>
                       Effect.gen(function* () {
-                        console.log(
-                          "writeCode: reapplyCodeRewrite failed, trying reapplyCodeReasoner"
-                        );
                         yield* reapplyCodeReasoner().pipe(
                           Effect.mapError(() => "j")
                         );
-                        console.log("writeCode: reapplyCodeReasoner completed");
                       })
                     )
                   )
                   .pipe(Effect.mapError(() => "k"));
-                console.log("writeCode: reapplyCodeRewrite completed");
               })
             )
           );
-          console.log("writeCode: reapplyCodeSmarter completed");
         })
       )
     );
-    console.log("writeCode: applyCode completed");
 
-    console.log("writeCode: returning applyResult");
     return applyResult;
   });
 
@@ -625,7 +583,7 @@ const applyCode = ({
   path: string;
 }) =>
   Effect.gen(function* () {
-    const { socket, project, requestId, roomId, typecheckCommand } =
+    const { ioServer, project, requestId, roomId, typecheckCommand } =
       yield* MessageContext;
     const { client } = yield* RedisContext;
     const fs = yield* FileSystem.FileSystem;
@@ -690,7 +648,7 @@ const applyCode = ({
             timestamp: Date.now(),
             chunk,
           };
-          socket.emit("message", {
+          ioServer.to(roomId).emit("message", {
             event: modelEvent,
             projectName: project.name,
           });
@@ -752,6 +710,7 @@ export const MessageContext = Context.GenericTag<{
   typecheckCommand: string;
   roomId: string;
   requestId: string;
+  ioServer: Server;
 }>("ProjectContext");
 
 const typeCheck = Effect.gen(function* () {

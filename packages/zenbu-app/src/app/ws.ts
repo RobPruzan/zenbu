@@ -40,7 +40,7 @@ export const useEventWS = (opts: {
     return () => {
       socketInstance.disconnect();
     };
-  }, []);
+  }, [opts.projectName]);
 
   return { socket };
 };

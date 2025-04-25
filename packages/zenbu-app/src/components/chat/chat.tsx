@@ -39,8 +39,9 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const [events] = trpc.project.getEvents.useSuspenseQuery({
     projectName: project.name,
   });
+  console.log("fetching on", project.name);
 
-  console.log("chunks", events);
+  // console.log("chunks", events);
 
   const utils = trpc.useUtils();
 
@@ -59,7 +60,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+  }, [project.name]);
 
   const { socket } = useEventWS({
     projectName: project.name,

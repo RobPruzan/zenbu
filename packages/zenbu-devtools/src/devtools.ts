@@ -173,12 +173,12 @@ function getFirstElementWithId(element: HTMLElement): HTMLElement | null {
 }
 
 const blockClick = (shouldHandle: boolean) => async (e: MouseEvent) => {
-  console.log("sending click", e.target);
+  // console.log("sending click", e.target);
 
   sendMessage({
     kind: "sync-action",
     from: pageId,
-    selector: getFirstElementWithId(e.target as HTMLElement)!.id,
+    selector: "",
   });
   if ((await getState()).kind !== "inspecting") {
     return;

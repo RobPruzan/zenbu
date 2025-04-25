@@ -19,7 +19,7 @@ import {
   TooltipTrigger,
 } from "src/components/ui/tooltip";
 
-export const ProjectsSidebar = ({onNuke}: {onNuke: () => void}) => {
+export const ProjectsSidebar = ({ onNuke }: { onNuke: () => void }) => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
   const createProjectMutation = trpc.daemon.createProject.useMutation();
   const nukeMutation = trpc.daemon.nuke.useMutation();
@@ -55,8 +55,8 @@ export const ProjectsSidebar = ({onNuke}: {onNuke: () => void}) => {
                   variant="ghost"
                   className="h-6 w-6"
                   onClick={() => {
-                    onNuke()
- nukeMutation.mutate()
+                    onNuke();
+                    nukeMutation.mutate();
                   }}
                 >
                   {nukeMutation.isPending ? (
@@ -102,6 +102,7 @@ export const ProjectButton = ({ project }: { project: Project }) => {
 
   // Check if this project is currently active by comparing URLs
   const currentUrl = iframe.state.url;
+  const utils = trpc.useUtils();
   const projectUrl = isKilled
     ? null
     : `http://localhost:${(project as any).port}`;
@@ -112,12 +113,15 @@ export const ProjectButton = ({ project }: { project: Project }) => {
       const startedProject = await startProjectMutation.mutateAsync({
         name: project.name,
       });
+
       iframe.actions.setInspectorState({
         url: `http://localhost:${startedProject.port}`,
+        project: startedProject,
       });
     } else {
       iframe.actions.setInspectorState({
         url: projectUrl!,
+        project,
       });
     }
   };
@@ -125,6 +129,9 @@ export const ProjectButton = ({ project }: { project: Project }) => {
   return (
     <div className="px-1">
       <div
+        onMouseOver={() => {
+          utils.project.getEvents.prefetch({ projectName: project.name });
+        }}
         onClick={handleProjectClick}
         className={cn(
           "w-full flex items-center gap-2 rounded-md px-2 py-1.5 group relative text-left cursor-pointer",
@@ -156,8 +163,7 @@ export const ProjectButton = ({ project }: { project: Project }) => {
         <div
           className={cn(
             "flex items-center gap-0.5",
-            !isActive &&
-              "opacity-0 group-hover:opacity-100 transition-opacity",
+            !isActive && "opacity-0 group-hover:opacity-100 transition-opacity",
           )}
         >
           {isRunning ? (
@@ -218,7 +224,5 @@ export const ProjectButton = ({ project }: { project: Project }) => {
         </div>
       </div>
     </div>
-
-  
   );
 };
