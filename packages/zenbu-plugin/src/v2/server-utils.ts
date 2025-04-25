@@ -107,7 +107,7 @@ export const server_eventsToMessage = (
 };
 
 const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
-  const textChunks = chunks.map((chunk) => {
+  const textChunks = transformToolCallDeltas(chunks).map((chunk) => {
     switch (chunk.type) {
       case "text-delta": {
         return chunk.textDelta;
@@ -120,6 +120,12 @@ const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
       }
       case "tool-call": {
         return `${JSON.stringify(chunk, null, 2)}`;
+      }
+      case "tool-call-delta": {
+        console.log(chunk);
+
+        return "";
+        // return `${chunk.argsTextDelta}`
       }
       case "tool-result": {
         return `${JSON.stringify(chunk, null, 2)}`;
@@ -141,3 +147,60 @@ const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
   textChunks.forEach((chunk) => (acc += chunk));
   return acc;
 };
+
+const transformToolCallDeltas = (
+  chunks: Array<TextStreamPart<Record<string, any>>>
+) => {
+  // let accumulatedArgDeltas = "";
+  let currentTool: { toolCallId: string; toolName: string } | null = null;
+
+  return chunks.reduce(
+    (prev, curr) => {
+      if (curr.type === "tool-call-streaming-start") {
+        currentTool = {
+          toolCallId: curr.toolCallId,
+          toolName: curr.toolName,
+        };
+
+        return [
+          ...prev,
+          {
+            type: "tool-call" as const,
+            args: "", // pls
+            toolCallId: curr.toolCallId,
+            toolName: curr.toolName,
+          },
+        ];
+      }
+      if (curr.type === "tool-call-delta") {
+        const lastEvent = prev.at(-1);
+        if (lastEvent?.type !== "tool-call") {
+          throw new Error("invariant");
+        }
+        lastEvent.args += curr.argsTextDelta;
+        return prev
+      }
+      if (curr.type === "tool-call") {
+        const lastEvent = prev.at(-1);
+        if (lastEvent?.type !== "tool-call") {
+          throw new Error("invariant");
+        }
+        lastEvent.args = JSON.parse(lastEvent.args);
+        return prev;
+      }
+
+      return [...prev, curr];
+    },
+    [] as typeof chunks
+  );
+};
+
+// {
+//   "type": "tool-call",
+//   "toolCallId": "call_0SWyQCTmMrrXmHZmIjUb3Bf5",
+//   "toolName": "writeCode",
+//   "args": {
+//       "goal": "Transform the current HTML into a high-quality, modern dashboard inspired by Vercel's design. Include a sleek sidebar with navigation (Dashboard, Projects, Analytics, Settings), a top bar with user avatar and notifications, and a main content area with a welcome message, project stats cards, and a recent activity section. Use elegant, dark-themed styles, subtle gradients, and smooth hover effects. Ensure responsive layout and polish all UI elements for a premium feel.",
+//       "path": "/Users/robby/zenbu/packages/zenbu-daemon/projects/intrepid-tiger-949/index.html"
+//   }
+// }

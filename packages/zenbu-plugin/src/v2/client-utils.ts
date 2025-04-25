@@ -97,7 +97,7 @@ export const client_eventToMessages = (
 };
 
 const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
-  const textChunks = chunks.map((chunk) => {
+  const textChunks = transformToolCallDeltas(chunks).map((chunk) => {
     switch (chunk.type) {
       case "text-delta": {
         return chunk.textDelta;
@@ -129,4 +129,51 @@ const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
   let acc = "";
   textChunks.forEach((chunk) => (acc += chunk));
   return acc;
+};
+
+const transformToolCallDeltas = (
+  chunks: Array<TextStreamPart<Record<string, any>>>
+) => {
+  // let accumulatedArgDeltas = "";
+  let currentTool: { toolCallId: string; toolName: string } | null = null;
+
+  return chunks.reduce(
+    (prev, curr) => {
+      if (curr.type === "tool-call-streaming-start") {
+        currentTool = {
+          toolCallId: curr.toolCallId,
+          toolName: curr.toolName,
+        };
+
+        return [
+          ...prev,
+          {
+            type: "tool-call" as const,
+            args: "", // pls
+            toolCallId: curr.toolCallId,
+            toolName: curr.toolName,
+          },
+        ];
+      }
+      if (curr.type === "tool-call-delta") {
+        const lastEvent = prev.at(-1);
+        if (lastEvent?.type !== "tool-call") {
+          throw new Error("invariant");
+        }
+        lastEvent.args += curr.argsTextDelta;
+        return prev
+      }
+      if (curr.type === "tool-call") {
+        const lastEvent = prev.at(-1);
+        if (lastEvent?.type !== "tool-call") {
+          throw new Error("invariant");
+        }
+        lastEvent.args = JSON.parse(lastEvent.args);
+        return prev;
+      }
+
+      return [...prev, curr];
+    },
+    [] as typeof chunks
+  );
 };

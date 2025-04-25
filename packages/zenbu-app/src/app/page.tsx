@@ -723,15 +723,15 @@ export default function Home() {
                             : 100
                       }
                       className="relative"
-                      minSize={
-                        horizontalSplit || mobileSplit
-                          ? 20
-                          : devtoolsVisible
-                            ? 15
-                            : topBarVisible
-                              ? 0
-                              : 100
-                      }
+                      // minSize={
+                      //   horizontalSplit || mobileSplit
+                      //     ? 20
+                      //     : devtoolsVisible
+                      //       ? 15
+                      //       : topBarVisible
+                      //         ? 0
+                      //         : 100
+                      // }
                     >
                       <div className="flex h-full flex-col">
                         {showHttpClient ? (
@@ -753,7 +753,7 @@ export default function Home() {
                         <ResizableHandle withHandle className="bg-border/40" />
                         <ResizablePanel
                           defaultSize={horizontalSplit ? 50 : undefined}
-                          minSize={horizontalSplit ? 20 : undefined}
+                          // minSize={horizontalSplit ? 20 : undefined}
                           collapsible={false}
                           className={
                             mobileSplit
@@ -826,7 +826,7 @@ export default function Home() {
                         <ResizableHandle withHandle className="bg-border/40" />
                         <ResizablePanel
                           defaultSize={30}
-                          minSize={15}
+                          // minSize={15}
                           collapsible={true}
                           className="relative"
                         >

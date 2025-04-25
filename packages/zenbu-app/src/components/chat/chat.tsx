@@ -38,6 +38,8 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const [events] = trpc.project.getEvents.useSuspenseQuery({
     projectName: project.name,
   });
+  console.log("chunks", events);
+
   const utils = trpc.useUtils();
 
   const messages = Effect.runSync(client_eventToMessages(events));
@@ -136,7 +138,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
 
         <Header onCloseChat={onCloseChat} />
 
-        <div 
+        <div
           className="flex-1 px-4 py-3 relative z-10 w-full overflow-y-auto"
           onScroll={handleScroll}
           ref={scrollAreaRef}
