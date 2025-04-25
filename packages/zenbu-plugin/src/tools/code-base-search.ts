@@ -109,7 +109,7 @@ ${stringCodebase}
 const codebaseCache = new Map<string, string>();
 
 export const indexCodebase = async (
-  path: string = HARD_CODED_USER_PROJECT_PATH
+  path: string
 ) => {
   if (codebaseCache.has(path)) {
     return codebaseCache.get(path)!;

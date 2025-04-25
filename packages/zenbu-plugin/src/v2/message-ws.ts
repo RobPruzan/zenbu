@@ -26,6 +26,7 @@ import { iife } from "src/tools/message-runtime";
 import { write } from "node:console";
 import * as util from "util";
 import { InvariantError, ModelError, TypecheckError } from "./shared-utils";
+import { indexCodebase } from "src/tools/code-base-search";
 
 util.inspect.defaultOptions.depth = 5;
 
@@ -38,6 +39,26 @@ const redisClient = makeRedisClient();
 type ActiveAbortController =
   | { kind: "not-active" }
   | { kind: "active"; abortController: AbortController };
+let codebaseIndexPromptCache: string | null = null;
+export const getCodebaseIndexPrompt = (path: string) =>
+  Effect.gen(function* () {
+    if (codebaseIndexPromptCache) {
+      return codebaseIndexPromptCache;
+    }
+    const fs = yield* FileSystem.FileSystem;
+
+    const prompt = yield* fs.readFileString(
+      "/Users/robby/zenbu/packages/zenbu-plugin/src/codebase-index.md"
+    );
+
+    const templated = prompt.replace(
+      "{codebaseString}",
+      yield* Effect.tryPromise(() => indexCodebase(path))
+    );
+    codebaseIndexPromptCache = templated;
+
+    return templated;
+  });
 
 export const injectWebSocket = (server: HttpServer) => {
   const ioServer = new Server(server, {
@@ -127,15 +148,21 @@ export const injectWebSocket = (server: HttpServer) => {
              * oh right how do we handle messages that failed? Er i guess just keep em there, let user retry?
              */
 
+            const HARD_CODED_BASE = "/Users/robby/zenbu/packages/zenbu-daemon/";
             const { fullStream } = streamText({
               model: openai("gpt-4.1"),
               abortSignal: abortController.signal,
               messages: [
                 {
                   role: "system",
-                  content:
-                    "You are a helpful assistant, we are debugging right now so just respond with simple answers to make it easy for me",
+                  content: "You are a helpful coding assistant",
                 } satisfies CoreMessage,
+                {
+                  content: yield* getCodebaseIndexPrompt(
+                    HARD_CODED_BASE + project.cwd
+                  ),
+                  role: "system",
+                },
 
                 ...messages,
               ],
