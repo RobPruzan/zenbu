@@ -122,7 +122,7 @@ const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
       }
       case "finish":
       default:
-        return;
+        return "";
     }
   });
 

@@ -29,14 +29,17 @@ export const server_eventsToMessage = (
                       case "image": {
                         const fs = yield* FileSystem.FileSystem;
 
-                        const bytes = yield* fs.readFile(item.filePath);
+                        // TODO: change base when we have the central store that can be referenced everywhere
+                        const fullPath = `/Users/robby/zenbu/packages/zenbu-plugin/.zenbu/screenshots/${item.filePath}`;
+                        const bytes = yield* fs.readFile(fullPath);
                         return {
                           kind: "image" as const,
                           bytes,
                         };
                       }
                       case "video": {
-                        const upload = yield* getGeminiVideoURL(item.filePath);
+                        const fullPath = `/Users/robby/zenbu/packages/zenbu-plugin/.zenbu/video/${item.filePath}`;
+                        const upload = yield* getGeminiVideoURL(fullPath);
                         return {
                           kind: "video" as const,
                           data: upload.data,
@@ -128,8 +131,9 @@ const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
         return `${JSON.stringify(chunk.error)}`;
       }
       case "finish":
-      default:
-        return;
+      default: {
+        return "";
+      }
     }
   });
 
