@@ -9,13 +9,13 @@ export function UserMessage({ message }: { message: ChatMessage }) {
     <div className="group mb-6 max-w-full">
       <div
         className={cn(
-          "rounded-xl bg-accent/5 backdrop-blur-xl border ",
+          "rounded-lg bg-accent/5 backdrop-blur-xl border border-border/50",
           "shadow-sm overflow-hidden max-w-full",
           "transform hover:translate-y-[-1px] transition-all duration-300",
           "hover:shadow-md hover:border-border/60",
         )}
       >
-        <div className="px-4 py-3 text-xs text-foreground whitespace-pre-wrap font-light leading-relaxed break-words overflow-auto">
+        <div className="px-4 py-3 text-xs text-foreground/90 whitespace-pre-wrap font-light leading-relaxed break-words overflow-auto">
           {iife(() => {
             switch (typeof message.content) {
               case "string": {
@@ -28,20 +28,24 @@ export function UserMessage({ message }: { message: ChatMessage }) {
                       switch (content.type) {
                         case "image": {
                           return (
-                            <img
-                              src={(content.image as URL).href}
-                              alt="User shared image"
-                              className="rounded-md max-w-[300px] my-2"
-                            />
+                            <div className="my-2 rounded-lg overflow-hidden border border-border/50 bg-background/50">
+                              <img
+                                src={(content.image as URL).href}
+                                alt="User shared image"
+                                className="max-w-[300px]"
+                              />
+                            </div>
                           );
                         }
                         case "file": {
                           return (
-                            <video
-                              controls
-                              src={(content.data as URL).toString()}
-                              className="rounded-md max-w-[300px] my-2"
-                            />
+                            <div className="my-2 rounded-lg overflow-hidden border border-border/50 bg-background/50">
+                              <video
+                                controls
+                                src={(content.data as URL).toString()}
+                                className="max-w-[300px]"
+                              />
+                            </div>
                           );
                         }
                         case "text": {
@@ -62,13 +66,11 @@ export function UserMessage({ message }: { message: ChatMessage }) {
           })}
         </div>
 
-        <div className="flex items-center justify-between text-[10px] px-4 py-2 text-muted-foreground bg-accent/10">
+        <div className="flex items-center justify-between text-[10px] px-4 py-2 text-muted-foreground bg-background/50 border-t border-border/50">
           <div className="flex items-center ml-auto">
-            <button className="hover:text-foreground transition-colors">
-              <span className="flex items-center gap-1.5">
-                <RefreshCw className="h-2.5 w-2.5" />
-                Restore
-              </span>
+            <button className="hover:text-foreground transition-colors flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-accent/10">
+              <RefreshCw className="h-2.5 w-2.5" />
+              <span className="font-medium">Restore</span>
             </button>
           </div>
         </div>

@@ -107,16 +107,62 @@ const startServer = (cluster: InternalCluster) => {
       };
     })
 
-    .post("/replay/upload/video", async ({ body, query, request }) => {
-      console.log("POST /replay/upload/video", query);
+    /**
+     *
+     * we actually just need to upload events here
+     *
+     * so to get this working it would be nice to have just a script that
+     * uploads events, times how long it takes, and make sure it works
+     *
+     *
+     * i could fuzz test too
+     *
+     * also I definitely maybe want the interaction events, but I'd like it to
+     * generalize this, not have "interaction"
+     *
+     *
+     * Honestly it would be nice if it was all event based? So we can just order
+     * things logically in events
+     *
+     *
+     * im not sure why i didn't do that to start
+     *
+     * I might be a little stupid :D
+     *
+     * but didn't i have things in the events too?
+     *
+     *
+     * alright so I actually need that running and sending shit
+     *
+     * I could not run this in full app and have dummy app for this, probably
+     *
+     */
+    .post("/replay/upload/video", async ({ query, request }) => {
+      console.log("POST yay /replay/upload/video", query);
 
-      const callback = query["callback"];
+      const callback = decodeURIComponent(query["callback"]);
+      console.log("goober");
+
+      const json = await request.json();
 
       if (!callback) {
+        console.log("callback, u suck", callback);
+
         throw new Error("Must provide a callback for result");
       }
 
-      const input = uploadSchema.parse(JSON.parse(body as string));
+      console.log("input processing");
+
+      const res = uploadSchema.safeParse(json);
+      if (res.error) {
+        console.log(res.error);
+        console.log("shit");
+
+        return;
+      }
+      console.log("cont");
+
+      const { data: input } = res;
 
       console.log("Parsed input with", input.events.length, "events");
 

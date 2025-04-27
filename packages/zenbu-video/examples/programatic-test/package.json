@@ -1,0 +1,25 @@
+{
+  "name": "programatic-test",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "scripts": {
+    "dev": "bun run server.ts"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.80.10",
+    "@effect/platform-node": "^0.76.20",
+    "@hono/node-server": "^1.14.1",
+    "@rrweb/types": "^2.0.0-alpha.18",
+    "effect": "^3.13.11",
+    "hono": "^4.7.7",
+    "rrweb": "2.0.0-alpha.4",
+    "zod": "^3.24.3"
+  }
+}

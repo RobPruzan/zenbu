@@ -56,7 +56,7 @@ export const client_eventToMessages = (
       })
     );
 
-    const coreMessages: Array<CoreMessage> = yield* Effect.all(effects).pipe(
+    const coreMessages = yield* Effect.all(effects).pipe(
       Effect.map((results) =>
         results.map((event) => {
           if (event.kind === "user-message") {
@@ -84,7 +84,7 @@ export const client_eventToMessages = (
             return {
               role: "assistant" as const,
               content: [
-                { type: "text" as const, text: stringifyChunks(event.chunks) },
+                { type: "text" as const, text: stringifyChunks(event.chunks), chunks:event.chunks },
               ],
             };
           }
@@ -177,6 +177,7 @@ const transformToolCallDeltas = (
       if (curr.type === "tool-call") {
         const lastEvent = prev.at(-1);
         if (lastEvent?.type !== "tool-call") {
+          return prev /// same thing as above, not sure why text delta is showing there
           throw new Error(
             JSON.stringify({
               reason: "invariant but the second one client",

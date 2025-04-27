@@ -179,4 +179,4 @@ dist
 # Finder (MacOS) folder config
 .DS_Store
 
-redis-data/**
+**/redis-data

@@ -259,6 +259,7 @@ export const injectWebSocket = (server: HttpServer) => {
                           requestId: event.requestId,
                           text: TRANSITION_MESSAGE,
                           timestamp: Date.now(),
+                          meta: "tool-transition",
                         };
                         yield* client.effect.pushChatEvent(
                           roomId,

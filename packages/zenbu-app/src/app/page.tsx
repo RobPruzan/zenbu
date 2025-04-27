@@ -51,7 +51,9 @@ import { Button } from "src/components/ui/button";
 import dynamic from "next/dynamic";
 import { ChildToParentMessage } from "zenbu-devtools";
 import { ProjectsSidebar } from "./project-sidebar";
+import { scan } from "react-scan";
 
+// scan();
 const BottomPanel = dynamic(() => import("src/components/bottom-panel"), {
   ssr: false,
 });
@@ -1013,10 +1015,10 @@ export default function Home() {
         />
 
         {/* Render Leader Key Hints */}
-        <LeaderKeyHints
+        {/* <LeaderKeyHints
           isVisible={showLeaderHints}
           onClose={() => setShowLeaderHints(false)}
-        />
+        /> */}
       </ChatInstanceContext.Provider>
     </main>
   );

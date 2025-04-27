@@ -3,9 +3,10 @@ import { ClientEvent, PartialEvent } from "zenbu-redis";
 import { useState, useRef, useEffect, createContext, useContext } from "react";
 import { useChatStore } from "../chat-store";
 import { nanoid } from "nanoid";
-import { SendIcon, Clock } from "lucide-react";
+import { SendIcon, Clock, ArrowRightLeft } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
-import { ChatMessage, toGroupedChatMessages } from "zenbu-plugin/src/ws/utils";
+import { ChatMessage } from "zenbu-plugin/src/ws/utils";
+import { CoreMessage } from "ai";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
@@ -36,7 +37,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const project = useChatStore((state) => state.iframe.state.project);
-  const [events] = trpc.project.getEvents.useSuspenseQuery({
+  const [rawEvents] = trpc.project.getEvents.useSuspenseQuery({
     projectName: project.name,
   });
   console.log("fetching on", project.name);
@@ -45,7 +46,8 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
 
   const utils = trpc.useUtils();
 
-  const messages = Effect.runSync(client_eventToMessages(events));
+  const derivedMessages = Effect.runSync(client_eventToMessages(rawEvents));
+  const [visibleMessagesCount, setVisibleMessagesCount] = useState(5);
 
   const flushQueue = useRef<Array<PartialEvent>>([]);
 
@@ -106,7 +108,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     if (isAtBottom && scrollAreaRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }
-  }, [messages, isAtBottom]);
+  }, [derivedMessages, isAtBottom]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -152,6 +154,20 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     mainThreadMessages.length > 0 &&
     mainThreadMessages[mainThreadMessages.length - 1].role === "user";
 
+  const visibleDerivedMessages = derivedMessages.slice(-visibleMessagesCount);
+
+  const findRawEvent = (derivedMsg: ChatMessage) => {
+    if (derivedMsg.role === "user" && typeof derivedMsg.content === "object") {
+      const textPart = derivedMsg.content.find((part) => part.type === "text");
+      if (textPart) {
+        return rawEvents.find(
+          (e) => e.kind === "user-message" && e.text === textPart.text,
+        );
+      }
+    }
+    return undefined;
+  };
+
   return (
     <WSContext.Provider
       value={{
@@ -171,30 +187,53 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
           ref={scrollAreaRef}
         >
           <div className="space-y-4 pt-3 pb-2 w-full">
-            {messages.map((message, index) => (
-              <div key={index}></div>
-            ))}
-
-            {messages.map((message, index) => (
-              <div key={index} className="max-w-full">
-                <div className="overflow-hidden break-words whitespace-normal">
-                  {iife(() => {
-                    switch (message.role) {
-                      case "assistant": {
-                        return (
-                          <AssistantMessage
-                            message={message satisfies ChatMessage}
-                          />
-                        );
-                      }
-                      case "user": {
-                        return <UserMessage message={message} />;
-                      }
-                    }
-                  })}
-                </div>
+            {derivedMessages.length > visibleMessagesCount && (
+              <div className="text-center mb-4">
+                <button
+                  onClick={() => setVisibleMessagesCount((prev) => prev + 5)}
+                  className="px-3 py-1 rounded-md text-xs font-light bg-accent/10 border border-border/50 hover:bg-accent/20 text-foreground transition-colors duration-200"
+                >
+                  Show More
+                </button>
               </div>
-            ))}
+            )}
+
+            {visibleDerivedMessages.map((message, index) => {
+              const rawEvent = findRawEvent(message);
+              const isTransition =
+                rawEvent?.kind === "user-message" &&
+                rawEvent.meta === "tool-transition";
+
+              return (
+                <div key={index} className="max-w-full">
+                  <div className="overflow-hidden break-words whitespace-normal">
+                    {iife(() => {
+                      switch (message.role) {
+                        case "assistant": {
+                          return <AssistantMessage message={message} />;
+                        }
+                        case "user": {
+                          if (isTransition) {
+                            const textContent = Array.isArray(message.content)
+                              ? message.content.find((p) => p.type === "text")
+                                  ?.text || ""
+                              : "";
+                            return (
+                              <div className="my-2 p-3 rounded-lg border border-dashed border-purple-500/50 bg-purple-900/10 text-purple-300/80 text-xs italic shadow-sm flex items-center gap-2">
+                                <ArrowRightLeft className="h-4 w-4 flex-shrink-0" />
+                                <span>{textContent}</span>
+                              </div>
+                            );
+                          } else {
+                            return <UserMessage message={message} />;
+                          }
+                        }
+                      }
+                    })}
+                  </div>
+                </div>
+              );
+            })}
 
             {isLastMessageFromUser && (
               <div className="flex items-center space-x-2 pl-4">
