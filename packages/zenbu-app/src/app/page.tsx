@@ -1,4 +1,10 @@
 "use client";
+/**
+ *
+ *
+ *
+ * THIS IS ALL PROTOTYPE UI THIS IS NOT WHAT'S BEING USED
+ */
 import { AnimatePresence, motion } from "framer-motion";
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 
@@ -29,7 +35,10 @@ import {
 import { ChatInstanceContext, useChatStore } from "src/components/chat-store";
 import { Chat } from "src/components/chat/chat";
 import { CommandPalette } from "src/components/command-palette";
-import { DevtoolsOverlay } from "src/components/devtools-overlay";
+import {
+  DevtoolsOverlay,
+  useMakeRequest,
+} from "src/components/devtools-overlay";
 import { HttpClient } from "src/components/http-client/http-client";
 import { LeaderKeyHints } from "src/components/leader-key-hints";
 import { NextLint } from "src/components/next-lint/next-lint";
@@ -52,6 +61,9 @@ import dynamic from "next/dynamic";
 import { ChildToParentMessage } from "zenbu-devtools";
 import { ProjectsSidebar } from "./project-sidebar";
 import { scan } from "react-scan";
+import { useWS } from "./ws";
+import { nanoid } from "nanoid";
+import { useIFrameMessenger } from "src/hooks/use-iframe-listener";
 
 // scan();
 const BottomPanel = dynamic(() => import("src/components/bottom-panel"), {
@@ -623,7 +635,10 @@ export default function Home() {
                     },
                   }}
                   className="h-full flex-shrink-0 border-r  overflow-hidden"
-                  style={{ minWidth: 0 }}
+                  style={{
+                    minWidth:
+                      leftSidebar.component === "chat" ? "300px" : "200px",
+                  }}
                 >
                   {leftSidebar.component === "chat" ? (
                     <div className="relative flex h-full flex-col">
@@ -1094,10 +1109,122 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
       onSelect: () => onToggleWebsiteTree("right"),
     },
   ];
+  const context = useChatStore((state) => state.context);
+  // fuck it
+  const replay = useWS<any>({
+    url: "http://localhost:6969",
+    projectName: project?.name,
+    onMessage: (message: { action: "video"; url: string }) => {
+      if (message.action !== "video") {
+        return;
+      }
+
+      navigator.clipboard.writeText(message.url);
+
+
+      // Create a toast notification with a green check mark
+      const toast = document.createElement('div');
+      toast.style.position = 'fixed';
+      toast.style.bottom = '20px';
+      toast.style.right = '20px';
+      toast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      toast.style.color = '#fff';
+      toast.style.padding = '10px 15px';
+      toast.style.borderRadius = '4px';
+      toast.style.display = 'flex';
+      toast.style.alignItems = 'center';
+      toast.style.zIndex = '9999';
+      toast.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+      toast.style.transition = 'opacity 0.3s ease-in-out';
+      
+      const checkIcon = document.createElement('span');
+      checkIcon.innerHTML = '✓';
+      checkIcon.style.color = '#4ade80';
+      checkIcon.style.marginRight = '8px';
+      checkIcon.style.fontSize = '18px';
+      
+      const text = document.createElement('span');
+      text.textContent = 'Copied to clipboard';
+      text.style.fontSize = '14px';
+      
+      toast.appendChild(checkIcon);
+      toast.appendChild(text);
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+          document.body.removeChild(toast);
+        }, 300);
+      }, 2000);
+
+      console.log("replay message", message);
+    },
+  });
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
+      switch (event.data.kind) {
+        case "rrweb-event": {
+          console.log("got event", event.data.event);
+
+          replay.socket?.emit("message", {
+            kind: "event",
+            event: event.data.event,
+          });
+          return;
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, [replay.socket]);
+  // const devtoolsRequesct = useMakeRequest();
+  const message = useIFrameMessenger();
 
   const items = [
     ...getCommandItems({
+      onStartReplay: async () => {
+        // replay.socket?.emit("message", {
+        //   kind: "create-recording",
+        // });
+
+        const res = await message({
+          kind: "start-recording",
+          id: nanoid(),
+          responsePossible: true,
+        });
+
+        console.log("yippy skippy start recording", res);
+      },
       ...toolbarState,
+      // onStartRecording: () => {
+
+      // },
+      onCreateReplay: () => {
+        replay.socket?.emit("message", {
+          kind: "create-recording",
+        });
+        /**
+         * await get recording
+         * await recording to mp4
+         * that's it, i should have a replay preview component that polls for
+         * callback status + with retry to determine state of video
+         *
+         * we will wait the upload on the model side too, just like chatgpt does
+         * when I upload a photo and hit send, objectively the best UX, that
+         * upload sometime takes long af lol
+         *
+         * i love ado
+         *
+         *
+         */
+      },
       inspector,
       createProjectLoading: false,
       onCreateProject: async () => {

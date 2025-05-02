@@ -163,12 +163,27 @@ export const getCommandItems = ({
   state,
   inspector,
   onCreateProject,
+  onCreateReplay,
+  onStartReplay,
 }: ChatInstanceStore["toolbar"] & {
   inspector: ChatInstanceStore["inspector"];
   onCreateProject: () => void;
   // for now we keep it false, but may need a loading state if takes more than 100ms
   createProjectLoading: boolean;
+  onCreateReplay: () => void;
+  onStartReplay: () => void;
 }) => [
+  {
+    shortcut: "Record Replay",
+    icon: <Camera size={16} />,
+    onSelect: onCreateReplay,
+  },
+
+  {
+    shortcut: "Start Replay",
+    icon: <Camera size={16} />,
+    onSelect: onStartReplay,
+  },
   {
     shortcut: "Create Next App",
     icon: <Plus size={16} />,

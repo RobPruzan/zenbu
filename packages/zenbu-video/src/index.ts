@@ -1,541 +1,497 @@
-import { eventWithTime } from "@rrweb/types";
-import * as path from "path";
-import { Elysia, t } from "elysia";
-
-import { join } from "node:path";
-import { spawn } from "child_process";
-import { unlink, mkdir } from "fs/promises";
-import cors from "@elysiajs/cors";
-import { z } from "zod";
+import { Hono } from "hono";
+import { FileSystem } from "@effect/platform";
+import path from "path";
+import { type eventWithTime } from "@rrweb/types";
+import { Server, Socket, type DefaultEventsMap } from "socket.io";
+import { type Server as HttpServer } from "node:http";
+import { Context, Data, Effect, HashMap, Scope } from "effect";
 import {
-  collectElementScreenshotsAndStatistics as collectElementScreenshotsWithStatistics,
-  createReplayClips,
-  InternalCluster,
-} from "./cluster";
-import { Cluster } from "puppeteer-cluster";
-import { cpus } from "os";
+  NodeContext,
+  NodeFileSystem,
+  NodeRuntime,
+} from "@effect/platform-node";
+import type { Browser, Page } from "puppeteer";
+import { serve } from "@hono/node-server";
+import puppeteer from "puppeteer";
+import os from "os";
+import { spawn } from "node:child_process";
+import { cors } from "hono/cors";
 
-const replayDir = join(__dirname, "../replays");
-const videoDir = join(__dirname, "../videos");
-const thumbnailDir = join(__dirname, "../thumbnails");
-const elementScreenshotDir = join(__dirname, "../element-screenshot");
-
-await Promise.all([
-  mkdir(replayDir, { recursive: true }),
-  mkdir(videoDir, { recursive: true }),
-  mkdir(thumbnailDir, { recursive: true }),
-]);
-
-const writeEventsToDisk = async (input: Upload) => {
-  for (const interaction of input.interactions) {
-    const replayPath = join(replayDir, `${interaction.interactionUUID}`);
-    await Bun.write(
-      replayPath,
-      JSON.stringify({
-        events: input.events,
-        startAt: input.startAt,
-        endAt: input.endAt,
-        fpsDiffs: input.fpsDiffs,
-      })
-    );
+/**
+ * used when executing inside page.evaluate, where the fn gets serialized and sent to the env where this type is valid
+ */
+declare global {
+  interface Window {
+    rrweb: any;
+    replayer: any;
   }
-};
+}
 
-// const makeVideoPath = (interaction)
+const pageHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Mirror</title>
+    <style>
+        body { margin: 0; padding: 0; background: transparent; }
+        .replayer-wrapper { background: transparent!important; }
+        .message { font-size: 1.5em; color: #333; }
+        #replay-container { width: 100vw; height: 100vh; background: white; border: 1px solid #ccc; box-sizing: border-box; }
+    </style>
+   
+</head>
+<body>
+    <div class="message" style="display: none;">Waiting for rrweb events...</div>
+    <div id="replay-container"></div>
+  
+</body>
+</html>
+`;
 
-const uploadSchema = z.object({
-  events: z.array(z.any()) as unknown as z.ZodType<Array<eventWithTime>>,
-  interactions: z.array(
-    z.object({
-      interactionUUID: z.string(),
-      interactionStartAt: z.number(),
-      interactionEndAt: z.number(),
-      domNodeToSnapshotId: z.number(),
-      msToRunJS: z.number(),
+const framesToFolder = Effect.fn("framesToFolder")(function* () {
+  const { socket } = yield* SocketContext;
+  const frames = socket.data.frames;
+
+  const fs = yield* FileSystem.FileSystem;
+  const tempDir = yield* fs.makeTempDirectory({
+    directory: os.tmpdir(),
+    prefix: "screenshots",
+  });
+
+  console.log("we have", frames.length, "frames");
+
+  const effects = frames.map((frame, index) =>
+    Effect.gen(function* () {
+      const fileName = `frame-${String(index).padStart(6, "0")}.png`;
+      const filePath = path.join(tempDir, fileName);
+      yield* fs.writeFile(filePath, frame.buffer);
     })
-  ),
-  startAt: z.number(),
-  endAt: z.number(),
-  fpsDiffs: z.array(z.tuple([z.number(), z.number()])),
+  );
+
+  yield* Effect.all(effects);
+
+  const fps =
+    frames.length > 0
+      ? Math.round(frames.length / ((Date.now() - frames[0].timestamp) / 1000))
+      : 30;
+
+  return {
+    cleanup: fs.remove(tempDir, {
+      recursive: true,
+    }),
+    fps,
+    path: tempDir,
+  };
 });
 
-export type Upload = z.infer<typeof uploadSchema>;
-const port = 7500;
+const pngDirToVideo = ({ path, fps }: { path: string; fps: number }) =>
+  Effect.fn("pngDirToVideo")(function* () {
+    const fs = yield* FileSystem.FileSystem;
 
-const startServer = (cluster: InternalCluster) => {
-  console.log("Starting server...");
-  const app = new Elysia()
-    .get("/replay/video/:id", async ({ params: { id } }) => {
-      console.log("GET /replay/video/:id", id);
-      const videoPath = join(replayDir, `${id}.mp4`);
-      // todo, adaptive bitrate streaming if we ever make clips longer than 6 seconds
-      return new Response(Bun.file(videoPath), {
-        headers: {
-          "Content-Type": "video/mp4",
-          "Cache-Control": "public, max-age=31536000",
-          "Accept-Ranges": "bytes",
-        },
-      });
-    })
-    .get("/replay/thumbnail/:id", async ({ params: { id } }) => {
-      console.log("GET /replay/thumbnail/:id", id);
-      const thumbnailPath = join(thumbnailDir, `${id}.png`);
-      return new Response(Bun.file(thumbnailPath), {
-        headers: {
-          "Content-Type": "image/png",
-          "Cache-Control": "public, max-age=31536000",
-        },
-      });
-    })
-    .get("/replay/element-screenshot/:id", async ({ params: { id } }) => {
-      console.log("GET /replay/element-screenshot/:id", id);
-      const screenshotPath = join(elementScreenshotDir, `${id}.png`);
-      console.log("da path", screenshotPath);
+    // Create recordings directory if it doesn't exist
+    const recordingsDir = yield* fs.makeDirectory("recordings", {
+      recursive: true,
+    });
 
-      return new Response(Bun.file(screenshotPath), {
-        headers: {
-          "Content-Type": "image/png",
-          "Cache-Control": "public, max-age=31536000",
-        },
-      });
-    })
-    .get("/health", () => {
-      console.log("GET /health");
+    // Generate a unique filename with timestamp
+    const timestamp = Date.now();
+    const videoFilename = `recording-${timestamp}.mp4`;
+    const outputPath = `recordings/${videoFilename}`;
 
-      return {
-        healthy: true,
+    // Construct ffmpeg command
+    const ffmpeg = "ffmpeg";
+
+    return yield* Effect.tryPromise(
+      () =>
+        new Promise<string>((resolve, reject) => {
+          const proc = spawn(ffmpeg, [
+            "-y",
+            "-framerate",
+            String(fps),
+            "-i",
+            `${path}/frame-%06d.png`,
+            // "-vf",
+            // "scale=max(iw\\,max_width):max(ih\\,max_height):force_original_aspect_ratio=decrease,pad=max_width:max_height:(ow-iw)/2:(oh-ih)/2:black",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            outputPath,
+          ]);
+
+          proc.on("error", (err) => {
+            reject(`Failed to start ffmpeg: ${err}`);
+          });
+
+          proc.on("exit", (code) => {
+            if (code === 0) {
+              resolve(outputPath);
+            } else {
+              reject(`ffmpeg failed with exit code ${code}`);
+            }
+          });
+        })
+    );
+  });
+
+const mp4ToUrl = (path: string) =>
+  Effect.fn("mp4ToUrl")(function* () {
+    const filename = path.split("/").pop();
+    if (!filename) {
+      return yield* Effect.fail("Invalid path");
+    }
+
+    const baseUrl = `http://localhost:${port}`;
+    const encodedFilename = encodeURIComponent(filename);
+    const videoUrl = `${baseUrl}/recordings/${encodedFilename}`;
+
+    return videoUrl;
+  });
+
+const BrowserContext = Context.GenericTag<{
+  browser: Browser;
+}>("BrowserContext");
+declare global {
+  namespace NodeJS {
+    interface Process {
+      existingBrowser?: Browser;
+    }
+  }
+}
+
+const stopCaptureAndGenerateVideo = Effect.fn("stopCaptureAndGenerateVideo")(
+  function* () {
+    const { socket } = yield* SocketContext;
+    // accumulate a couple more frames
+    yield* Effect.sleep("250 millis");
+    clearTimeout(socket.data.recordingTimeout);
+    const { cleanup, fps, path } = yield* framesToFolder();
+    console.log("got frames", path);
+
+    const videoPath = yield* pngDirToVideo({ fps, path })();
+    console.log("video path", videoPath);
+
+    yield* cleanup;
+    const url = yield* mp4ToUrl(videoPath)();
+    console.log("gotcha url");
+
+    return url;
+  }
+);
+
+const CAPTURE_DELAY = 33;
+
+const startCapture = Effect.fn("startCapture")(function* () {
+  const { socket } = yield* SocketContext;
+  const capture = async () => {
+    /**
+     * should page.evaluate if the rrweb replayer is active, and if it's not and we don't want to record inactivity we omit screenshots
+     */
+
+    const buffer = await socket.data.page
+      .screenshot({
+        captureBeyondViewport: false,
+      })
+      .catch(() => null);
+
+    //  const uh = socket.data.page.screencast();
+    if (buffer) {
+      socket.data.frames.push({ buffer, timestamp: Date.now() });
+    }
+    setTimeout(capture, CAPTURE_DELAY);
+  };
+
+  capture().catch(() => {
+    /** */
+  });
+});
+const port = 6969;
+const createServer = Effect.fn("createServer")(function* () {
+  const browser =
+    process.existingBrowser ??
+    (yield* Effect.tryPromise(() =>
+      // oh maybe we don't need the context viewport ug
+      puppeteer.launch({ headless: true, defaultViewport: null })
+    ));
+
+  process.existingBrowser = browser;
+
+  console.log("browser yay", browser.connected);
+
+  const app = new Hono()
+    .use("*", cors())
+    .get("/recordings/:videoPath", async (opts) => {
+      const videoPath = decodeURIComponent(opts.req.param().videoPath);
+
+      const filePath = path.join(process.cwd(), "recordings/" + videoPath);
+
+      try {
+        const fs = await import("fs/promises");
+        const stat = await fs.stat(filePath);
+        if (!stat.isFile()) {
+          return new Response("Not found", { status: 404 });
+        }
+        const fileBuffer = await fs.readFile(filePath);
+        return new Response(fileBuffer, {
+          headers: {
+            "Content-Type": "video/mp4",
+            "Content-Length": stat.size.toString(),
+          },
+        });
+      } catch (err) {
+        return new Response("Not found", { status: 404 });
+      }
+    });
+
+  const hostname = "localhost";
+  const $server = serve({
+    fetch: app.fetch,
+    port,
+    hostname,
+  });
+
+  const server = $server.listen(port, hostname);
+  yield* injectWebSocket(server as HttpServer)().pipe(
+    Effect.provideService(BrowserContext, {
+      browser,
+    })
+  ); // safe assert // safe assert https://github.com/orgs/honojs/discussions/1781#discussioncomment-7827318
+});
+
+type SocketMessage =
+  | { kind: "event"; event: eventWithTime }
+  | { kind: "create-recording" };
+type SocketData = {
+  page: Page;
+  snapshotReceived: boolean;
+  frames: Array<{ buffer: Uint8Array<ArrayBufferLike>; timestamp: number }>;
+  recordingTimeout: number | undefined;
+};
+
+/**
+ * it doesn't actually matter if we set it on the socket instance or distributed
+ * through effect since we can just distribute the socket with the data and its
+ * all the same, and this way I can block connection open for when the instance
+ * is open, avoid having to await the page opening
+ */
+
+const injectWebSocket = (server: HttpServer) =>
+  Effect.fn("injectWebSocket")(function* () {
+    const ioServer = new Server<
+      DefaultEventsMap,
+      DefaultEventsMap,
+      DefaultEventsMap,
+      SocketData
+    >(server, {
+      path: "/ws",
+      serveClient: false,
+      cors: {
+        origin: "*", // narrow later
+        methods: ["GET", "POST"],
+      },
+      transports: ["websocket"],
+    });
+
+    const { browser } = yield* BrowserContext;
+    console.log("hi?", browser.connected);
+
+    ioServer.use(async (socket, next) => {
+      console.log("connect attempt");
+
+      const page = await browser.newPage();
+      console.log("new page");
+
+      await page.setContent(pageHtml);
+      console.log("new content");
+
+      const rrwebScriptPath = require.resolve("rrweb/dist/rrweb.min.js");
+      const rrwebStylePath = require.resolve("rrweb/dist/rrweb.min.css");
+
+      await page.addScriptTag({ path: rrwebScriptPath });
+      await page.addStyleTag({ path: rrwebStylePath });
+      console.log("scripts");
+
+      await page.evaluate(() => {
+        // @ts-ignore
+        window.replayer = new rrweb.Replayer([], {
+          root: document.getElementById("replay-container"),
+          liveMode: true,
+        });
+
+        const BUFFER_MS = 500;
+        window.replayer.startLive(Date.now() - BUFFER_MS);
+        console.log("replayer initialized");
+      });
+      console.log("evaluated");
+      socket.data = {
+        page,
+        snapshotReceived: false,
+        frames: [],
+        recordingTimeout: undefined,
       };
-    })
+      next();
+    });
 
     /**
+     * i probably need a room, no?
      *
-     * we actually just need to upload events here
-     *
-     * so to get this working it would be nice to have just a script that
-     * uploads events, times how long it takes, and make sure it works
-     *
-     *
-     * i could fuzz test too
-     *
-     * also I definitely maybe want the interaction events, but I'd like it to
-     * generalize this, not have "interaction"
-     *
-     *
-     * Honestly it would be nice if it was all event based? So we can just order
-     * things logically in events
-     *
-     *
-     * im not sure why i didn't do that to start
-     *
-     * I might be a little stupid :D
-     *
-     * but didn't i have things in the events too?
-     *
-     *
-     * alright so I actually need that running and sending shit
-     *
-     * I could not run this in full app and have dummy app for this, probably
-     *
+     * omg on open it sets it to the ws instance lol
      */
-    .post("/replay/upload/video", async ({ query, request }) => {
-      console.log("POST yay /replay/upload/video", query);
+    ioServer.on("connection", async (socket) => {
+      socket.on("message", async (message: SocketMessage) => {
+        const exit = Effect.runPromiseExit(
+          Effect.gen(function* () {
+            switch (message.kind) {
+              case "event": {
+                const event = message.event;
+                // console.log(
+                //   "got event",
+                //   event.type,
+                //   "- type mapping: 0=DomContentLoaded, 1=Load, 2=Meta, 3=Custom, 4=Plugin"
+                // );
 
-      const callback = decodeURIComponent(query["callback"]);
-      console.log("goober");
+                const vp = yield* extractViewport(event)();
 
-      const json = await request.json();
+                if (vp) {
+                  console.log("updatinb viewport", vp);
 
-      if (!callback) {
-        console.log("callback, u suck", callback);
+                  yield* updateViewport(vp)().pipe(Effect.mapError(() => null));
+                }
 
-        throw new Error("Must provide a callback for result");
-      }
+                yield* Effect.sleep("500 millis");
 
-      console.log("input processing");
+                yield* addEventToReplay(event)();
+                if (!socket.data.snapshotReceived) {
+                  /**
+                   * if the first event through is not a dom snapshot event then
+                   * we need to resync, it means the ws close but the tab wasn't
+                   * actually closed
+                   */
 
-      const res = uploadSchema.safeParse(json);
-      if (res.error) {
-        console.log(res.error);
-        console.log("shit");
+                  socket.data.snapshotReceived = true;
+                  yield* startCapture();
+                }
+                return;
+              }
+              case "create-recording": {
+                console.log("create reocridng case");
 
-        return;
-      }
-      console.log("cont");
+                // we actually we do want a case to delete the video, we don't
+                // want to infinitely accumulate videos and eat disk
+                const url = yield* stopCaptureAndGenerateVideo();
+                socket.send({ action: "video", url });
+                socket.data.frames = [];
 
-      const { data: input } = res;
+                yield* startCapture();
 
-      console.log("Parsed input with", input.events.length, "events");
+                // Effect.gen(function* () {
+                //   console.log("success yay");
 
-      const task = async () => {
-        console.log(
-          "Starting task for",
-          input.interactions.length,
-          "interactions"
-        );
-        writeEventsToDisk(input);
+                //   socket.send(JSON.stringify({ action: "video", url }));
+                //   yield* startCapture();
+                //   return;
+                // }))
+                //   .pipe(
+                //   Effect.match({
+                //     onSuccess: (url) =>
 
-        try {
-          const [{ clips, thumbnails }, thumbnailsWithStats] =
-            await Promise.all([
-              createReplayClips({
-                cluster,
-                config: {
-                  fps: 15,
-                  outputPath: path.join(
-                    __dirname,
-                    "..",
-                    "videos",
-                    crypto.randomUUID() + ".mp4"
-                  ),
-                  targetVideoDuration: input.endAt - input.startAt,
-                },
-                input,
-              }),
-
-              collectElementScreenshotsWithStatistics({
-                cluster,
-                input,
-              }),
-            ]);
-          console.log("gyat my rizzler", thumbnailsWithStats, clips);
-
-          const processedClips = clips.map((clip) => {
-            const thumbnailWithStatsItem = thumbnailsWithStats.find(
-              (thumbnail) =>
-                thumbnail.interaction.interactionUUID ===
-                clip.interactionStartMetadata.interactionUUID
-            );
-            if (!thumbnailWithStatsItem) {
-              console.log("returning NOPE");
-
-              return null;
+                //     onFailure: (shit) => {
+                //       console.log(shit);
+                //     },
+                //   })
+                // );
+                return;
+              }
             }
-
-            return {
-              clipURL: `http://localhost:${port}/replay/video/${clip.interactionStartMetadata.interactionUUID}`,
-              thumbnailURL: `http://localhost:${port}/replay/thumbnail/${clip.interactionStartMetadata.interactionUUID}`,
-              elementScreenshotURL: `http://localhost:${port}/replay/element-screenshot/${clip.interactionStartMetadata.interactionUUID}`,
-              interactionStartMetadata: clip.interactionStartMetadata,
-              interactionEndMetadata: clip.interactionEndMetadata,
-              stats: {
-                dom: thumbnailWithStatsItem.domStats,
-                offscreenRenders: thumbnailWithStatsItem.offscreenRenders,
-              },
-              fpsUpdates: clip.fpsUpdates,
-            };
-          });
-
-          if (!processedClips.every((clip) => !!clip)) {
-            console.log("no can do backaroo");
-
-            return;
-          }
-
-          console.log("clips", processedClips);
-          console.log("thumbnails", thumbnails);
-
-          return processedClips;
-
-          // return { clips: processedClips };
-        } catch (e) {
-          console.error("Failed at any point in the pipeline", e);
-          return JSON.stringify({
-            error: true,
-          });
-        }
-      };
-
-      task().then(async (clips) => {
-        console.log("Task completed, sending callback to", callback);
-        await fetch(callback, {
-          method: "POST",
-          body: JSON.stringify({ clips, interactions: input.interactions }),
-        });
-      });
-
-      return {
-        received: true,
-      };
-    })
-    .use(cors({}))
-    .listen({
-      port: 7500,
-      hostname: "localhost",
-    });
-
-  Bun.write(
-    Bun.stdout,
-    `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}\n`
-  ).catch(console.error);
-
-  return app;
-};
-
-(async () => {
-  console.log("Initializing server...");
-
-  // @ts-expect-error
-  const cluster = process.CLUSTER
-    ? // @ts-expect-error
-      process.CLUSTER
-    : await Cluster.launch({
-        concurrency: Cluster.CONCURRENCY_CONTEXT,
-        maxConcurrency: 5,
-        puppeteerOptions: {
-          headless: true,
-        },
-        timeout: 60_000,
-      });
-
-  console.log("Cluster initialized");
-
-  // @ts-expect-error
-  process.CLUSTER = cluster;
-
-  process.on("exit", async () => {
-    console.log("Server shutting down...");
-    await cluster.close();
-  });
-
-  // Add error handlers to catch and log unhandled errors
-  process.on("uncaughtException", (err) => {
-    Bun.write(Bun.stderr, `Uncaught Exception: ${err}\n`).catch(console.error);
-    process.exit(1);
-  });
-
-  process.on("unhandledRejection", (reason, promise) => {
-    Bun.write(
-      Bun.stderr,
-      `Unhandled Rejection at: ${promise} reason: ${reason}\n`
-    ).catch(console.error);
-    process.exit(1);
-  });
-
-  startServer(cluster);
-})();
-
-const normalizeTimestamp = (timestamp: number, clip: { startTime: number }) =>
-  timestamp - clip.startTime;
-
-/**
- * oops i want it on the clip level
- */
-
-const mapDataToClip = <
-  TClip extends { startTime: number; endTime: number; interactionUUID: string },
-  TData extends { timestamp: number },
-  TCombined extends TClip,
-  // TCombine extends (clip: TClip, data: TData) => TCombined,
->(
-  clips: Array<TClip>,
-  items: Array<TData>,
-  combineNewFn: (clip: TClip, data: TData, dataIndex: number) => TCombined,
-  /* Should mutate the entry */
-  combineExistingFn: (clip: TCombined, data: TData, dataIndex: number) => void,
-  orElse: (clip: TClip) => NoInfer<TCombined>
-) => {
-  // const maps: Record<
-
-  const interactionToClipWithFps = new Map<string, TCombined>();
-
-  items.forEach((data, index) => {
-    const associatedClips = clips.filter((clip) => {
-      return clip.startTime <= data.timestamp && data.timestamp <= clip.endTime;
-    });
-    if (!associatedClips.length) {
-      // invariant
-      // log perchance
-      return;
-    }
-
-    // const lastFPS = index === 0 ? null : (items.at(index - 1)?.timestamp ?? null);
-    associatedClips.forEach((associatedClip) => {
-      const existingClip = interactionToClipWithFps.get(
-        associatedClip.interactionUUID
-      );
-
-      if (existingClip) {
-        combineExistingFn(existingClip, data, index);
-        // existingClip.fpsDiffs.push([fps, normalizeTimestamp(timestamp)]);
-      } else {
-        interactionToClipWithFps.set(
-          associatedClip.interactionUUID,
-          // invariant: non escaping function
-          combineNewFn(associatedClip!, data, index)
-          // {
-          // ...associatedClip,
-          // lastFPS,
-          // fpsDiffs: [[fps, normalizeTimestamp(timestamp)]],
-          // // wtf is this probably wrong and causing a bug look into it and don't be dumb
-          // startAt: associatedClip.startTime,
-          // }
+            message satisfies never;
+          })
+            .pipe(Effect.provide(NodeContext.layer))
+            .pipe(
+              Effect.provideService(SocketContext, {
+                socket,
+                // because we explicitly want to track if we have the rrweb viewport, otherwise puppeteer viewport may be not null, but not rrweb viewport
+                viewport: { current: null },
+              })
+            )
         );
-      }
+
+        // console.log(await exit);
+      });
+
+      socket.on("disconnect", async () => {
+        // why is this closing browser??
+        await socket.data.page.close();
+      });
     });
   });
-  const withDataClips = Array.from(interactionToClipWithFps.values());
 
-  return withDataClips.concat(
-    clips
-      .filter(
-        (x) =>
-          !withDataClips.some(
-            (wData) => wData.interactionUUID === x.interactionUUID
-          )
-      )
-      .map(orElse)
-  );
-};
-type Meta = Array<
-  | {
-      kind: "interaction-end";
-      dateNowTimestamp: number;
-      interactionUUID: string;
-      atInOriginalVideo: number;
-      memoryUsage: null | number;
-    }
-  | {
-      kind: "interaction-start";
-      dateNowTimestamp: number;
-      interactionUUID: string;
-      atInOriginalVideo: number;
-    }
-  | {
-      kind: "fps-update";
-      dateNowTimestamp: number;
-      atInOriginalVideo: number;
-      fps: number;
-    }
->;
+const SocketContext = Context.GenericTag<{
+  socket: Socket<
+    DefaultEventsMap,
+    DefaultEventsMap,
+    DefaultEventsMap,
+    SocketData
+  >;
+  viewport: {
+    current: null | { width: number; height: number };
+  };
+}>("SocketContext");
 
-const mapMetaToClips = (
-  meta: Meta,
-  clips: ReturnType<typeof mapFPSDiffsToClips>
-
-  // clipStartTimeInSeconds: number
-) => {
-  const metaFormatted = meta.map((i) => ({
-    ...i,
-    timestamp: i.dateNowTimestamp,
-  }));
-
-  return mapDataToClip(
-    clips,
-    metaFormatted,
-    (clip, data) => {
+const extractViewport = (event: eventWithTime & { data: any }) =>
+  Effect.fn("extractViewport")(function* () {
+    if (
+      event &&
+      event.type === 2 &&
+      event.data &&
+      typeof event.data.width === "number"
+    ) {
       return {
-        ...clip,
-        metadata: [
-          {
-            ...data,
-            /* if the interaction occurred at 10s in the origin video,
-             * and the clip started at 7s, then the video would occur
-             * at 3s in the clip (10- 7), so then
-             */
-            relativeTimeToVideoStartMs:
-              data.atInOriginalVideo - clip.clipStartOffsetFromOriginalInMs,
-            // -
-            // clip.startAt,
-          },
-        ],
+        width: event.data.width as number,
+        height: event.data.height as number,
       };
-    },
-    (clip, data) => {
-      clip.metadata.push({
-        ...data,
-        relativeTimeToVideoStartMs:
-          data.atInOriginalVideo - clip.clipStartOffsetFromOriginalInMs,
-        // -
-        // clip.startAt,
-      });
-    },
-    (clip) => ({
-      ...clip,
-      metadata: [],
-      lastFPS: null,
-      fpsDiffs: [],
-      startAt: clip.startTime,
-    })
-  );
-};
-
-export const mapFPSDiffsToClips = (
-  fpsDiffs: Array<[fps: number, timestamp: number]>,
-  clips: Array<{
-    interactionUUID: string;
-    videoUrl: string;
-    // fpsDiffs: any;
-    startTime: number;
-    endTime: number;
-    clipStartOffsetFromOriginalInMs: number;
-    metadata: Awaited<ReturnType<any>>["metadata"]; // todo redo this with new data
-    stats: {
-      dom: {
-        nonVisibleCount: number;
-        totalCount: number;
-      } | null;
-    };
-  }> // clips are disjoint
-) => {
-  const diffsFormatted = fpsDiffs.map(([fps, timestamp]) => ({
-    timestamp,
-    fps,
-  }));
-
-  return mapDataToClip(
-    clips,
-    diffsFormatted,
-    (clip, data, dataIndex) => {
-      const lastFPS =
-        dataIndex === 0
-          ? null
-          : (diffsFormatted.at(dataIndex - 1)?.timestamp ?? null);
-      const fpsDiffs: Array<[number, number]> = [];
+    }
+    if (
+      event &&
+      event.type === 3 &&
+      event.data &&
+      event.data.source === 4 /* viewport-resize */
+    ) {
       return {
-        ...clip,
-        lastFPS,
-        fpsDiffs,
-        // wtf is this probably wrong and causing a bug look into it and don't be dumb
-        startAt: clip.startTime,
+        width: event.data.width as number,
+        height: event.data.height as number,
       };
-    },
-    (clip, data) => {
-      clip.fpsDiffs.push([data.fps, normalizeTimestamp(data.timestamp, clip)]);
-    },
-    (clip) => ({
-      ...clip,
-      lastFPS: null,
-      fpsDiffs: [],
-      startAt: clip.startTime,
-    })
-  );
-};
+    }
+    return null;
+  });
 
-/**
- * todos here:
- *
- * - intake a list of interaction uuids, and the start/end of clip
- * - convert events to video
- * - once we have the video, make n cuts of the video, where each cut is start - 3 seconds, end + 3 seconds
- * - discard the full video
- * - return the list of uuid:video url mappings
- * - expose the video via endpoint
- */
+const updateViewport = (newViewport: { width: number; height: number }) =>
+  Effect.fn("updateViewport")(function* () {
+    const { socket, viewport } = yield* SocketContext;
+    if (
+      !viewport.current ||
+      viewport.current.width !== newViewport.width ||
+      viewport.current.height !== newViewport.height
+    ) {
+      yield* Effect.tryPromise(() => socket.data.page.setViewport(newViewport));
+      viewport.current = newViewport;
+    }
+  });
 
-/**
- * to collect fps diffs for each video:
- *
- *
- * get the timestamp range of each video
- *
- * collect the timestamps of each fps that belongs to the clip
- * include an initial fps value which is either null or the previous fps diff value
- * then we offset the timestamp by the clip timestamp start time to get the time the switch happens
- */
+const addEventToReplay = (event: eventWithTime) =>
+  Effect.fn("addEventToReplayer")(function* () {
+    const { socket } = yield* SocketContext;
 
-/**
- * fix the mapping
- *
- *
- * we need to map data to n overlapping clips if the clip is inside that range
- */
+    yield* Effect.tryPromise(() =>
+      socket.data.page.evaluate((event: eventWithTime) => {
+        console.log("add event", event.type, window.replayer.addEvent);
+
+        window.replayer.addEvent(event);
+      }, event)
+    );
+  });
+
+NodeRuntime.runMain(createServer());
+
+process.on("beforeExit", async () => {
+  await process.existingBrowser?.close();
+});

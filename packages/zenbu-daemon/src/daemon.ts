@@ -237,7 +237,7 @@ const nuke = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove("projects", { recursive: true });
   yield* fs.makeDirectory("projects");
-});
+})
 
 export const createServer = async (
   redisClient: ReturnType<typeof makeRedisClient>

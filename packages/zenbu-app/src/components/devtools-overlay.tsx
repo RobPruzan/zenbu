@@ -20,7 +20,7 @@ import {
 import { useChatContext } from "./chat-interface";
 import { ChatInstanceContext, useChatStore } from "./chat-store";
 import { IFRAME_ID } from "src/app/iframe-wrapper";
-import { useEventWS } from "src/app/ws";
+import { useWS } from "src/app/ws";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -69,7 +69,7 @@ export function DevtoolsOverlay() {
 
   const sendMessage = useIFrameMessenger();
   const project = useChatStore((state) => state.iframe.state.project);
-  const { socket } = useEventWS({ projectName: project.name });
+  const { socket } = useWS({ projectName: project.name });
   const makeRequest = useMakeRequest();
   const { inspector, eventLog, chatControls } = useChatStore();
 
@@ -130,6 +130,11 @@ export function DevtoolsOverlay() {
   const store = ChatInstanceContext.useContext();
   const url = useChatStore((state) => state.iframe.state.url);
 
+  const replay = useWS<any>({
+    url: "http://localhost:6969",
+    projectName: project.name,
+    onMessage: (message) => {},
+  });
   useEffect(() => {
     const getState = store.getState;
     const canvas = canvasRef.current;
@@ -163,6 +168,7 @@ export function DevtoolsOverlay() {
         //     data.
         //   }
         // }
+       
         case "notification": {
           console.log("got notification");
           return;
@@ -342,7 +348,7 @@ export function DevtoolsOverlay() {
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [store, url]);
+  }, [store, url, replay.socket]);
 
   return (
     <canvas

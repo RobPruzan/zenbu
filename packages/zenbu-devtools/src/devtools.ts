@@ -1,7 +1,16 @@
 import { record } from "@rrweb/record";
 import type { eventWithTime } from "@rrweb/types";
 
-console.log("bro mode cock");
+/**
+ *
+ * what does this look like on this side
+ *
+ * well ofc i need rrweb, already have it installed and everything
+ *
+ * probably doesn't work, but i don't think i explored the space much
+ *
+ * ofc need to send that back up, but seems like skeleton is implemented
+ */
 
 window.addEventListener("load", () => {
   console.log("loaded, sending message");
@@ -41,7 +50,7 @@ document.addEventListener("mousemove", (e) => {
 });
 
 export type ChildToParentMessage =
-  | { kind: "sync-action"; selector: string; from: string }
+  | { kind: "sync-action"; selector: string; from: string; id?: string }
   | {
       kind: "load";
     }
@@ -62,6 +71,10 @@ export type ChildToParentMessage =
       kind: "click-element-info";
       focusedInfo: FocusedInfo;
       id?: string;
+    }
+  | {
+      kind: "rrweb-event";
+      event: eventWithTime;
     }
   | {
       kind: "clicked-element-info-response";
@@ -138,7 +151,6 @@ document.addEventListener("keydown", (e) => {
 });
 
 const iife = <T>(f: () => T): T => f();
-
 
 // usage in an event handler:
 // todo: need RPC to share store between parent and child
@@ -262,13 +274,23 @@ window.addEventListener("message", async (event) => {
       return;
     }
     case "start-recording": {
+      console.log("yay recording start");
+
+      stopRecording?.();
       stopRecording = record({
         recordCanvas: true,
         emit: (event) => {
-          events.push(event);
+          console.log("got event sending it up");
+
+          // events.push(event);
+          sendMessage({
+            kind: "rrweb-event",
+            event,
+          });
         },
       });
-      console.log("is this anything lol?", stopRecording);
+      console.log("stop fn", stopRecording);
+
       return;
     }
     case "stop-recording": {
@@ -279,6 +301,8 @@ window.addEventListener("message", async (event) => {
       }
 
       stopRecording?.();
+
+      events = [];
       return;
     }
 
@@ -311,6 +335,7 @@ const makeRequest = async <
 
   sendMessage({
     ...message,
+    // @ts-expect-error i forgor why this is an error, fix later
     id: messageId, // wat
   });
 
@@ -318,6 +343,7 @@ const makeRequest = async <
     const handleMessage = (event: MessageEvent<ParentToChildMessage>) => {
       if (event.origin !== "http://localhost:3000") return;
 
+      // @ts-expect-error i forgor why this is an error, fix later
       if (event.data.id === messageId) {
         res(event.data);
       }

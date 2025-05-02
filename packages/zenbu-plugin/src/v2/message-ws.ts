@@ -297,7 +297,7 @@ export const injectWebSocket = (server: HttpServer) => {
             });
 
             const stream = Stream.fromAsyncIterable<
-              TextStreamPart<{ stupid: any }>,
+              TextStreamPart<Record<string, any>>,
               ModelError
             >(fullStream, (e) => new ModelError({ error: e }));
 
@@ -506,7 +506,7 @@ const writeCode = ({
     });
 
     const stream = Stream.fromAsyncIterable<
-      TextStreamPart<{ stupid: any }>,
+      TextStreamPart<Record<string, any>>,
       ModelError
     >(fullStream, (e) => new ModelError({ error: e }));
 
@@ -589,7 +589,6 @@ const applyCode = ({
     const { client } = yield* RedisContext;
     const fs = yield* FileSystem.FileSystem;
     const fileString = yield* fs.readFileString(path);
-
     const events = yield* client.effect.getChatEvents(roomId);
     const messages = yield* server_eventsToMessage(events);
 
@@ -635,7 +634,7 @@ const applyCode = ({
     });
 
     const stream = Stream.fromAsyncIterable<
-      TextStreamPart<{ stupid: any }>,
+      TextStreamPart<Record<string, any>>,
       ModelError
     >(fullStream, (e) => new ModelError({ error: e }));
 

@@ -12,13 +12,15 @@ import { AssistantMessage } from "./assistant-message";
 import { UserMessage } from "./user-message";
 import { Socket } from "socket.io-client";
 import { ChatTextArea } from "./context-input";
-import { useEventWS } from "src/app/ws";
+import { useWS } from "src/app/ws";
 import { iife, cn } from "src/lib/utils";
 import { ClientTaskEvent } from "zenbu-plugin/src/ws/schemas";
 import { trpc } from "src/lib/trpc";
 import { client_eventToMessages } from "zenbu-plugin/src/v2/client-utils";
 import { Effect } from "effect";
 import { TRANSITION_MESSAGE } from "zenbu-plugin/src/v2/shared-utils";
+import { useIFrameMessenger } from "src/hooks/use-iframe-listener";
+import { useMakeRequest } from "../devtools-overlay";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -43,6 +45,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
   console.log("fetching on", project.name);
 
   // console.log("chunks", events);
+  const devtoolsRequest = useMakeRequest();
 
   const utils = trpc.useUtils();
 
@@ -64,9 +67,9 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     };
   }, [project.name]);
 
-  const { socket } = useEventWS({
+  const { socket } = useWS({
     projectName: project.name,
-    onMessage: (message) => {
+    onMessage: async (message) => {
       const { event, projectName } = message;
       const todo_validationOverProjectIdAndClosureVariables = () => undefined;
       todo_validationOverProjectIdAndClosureVariables();
@@ -78,6 +81,12 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
         const iframe = document.getElementById(
           "child-iframe",
         ) as HTMLIFrameElement | null;
+
+        // const res = await devtoolsRequest({
+        //   kind: "start-recording",
+        //   id: nanoid(),
+        //   responsePossible: true,
+        // });
 
         if (!iframe) {
           throw new Error("invariant: must have child-iframe as preview");
