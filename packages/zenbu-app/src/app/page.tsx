@@ -1136,6 +1136,7 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
       toast.style.zIndex = '9999';
       toast.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
       toast.style.transition = 'opacity 0.3s ease-in-out';
+      toast.style.cursor = 'pointer';
       
       const checkIcon = document.createElement('span');
       checkIcon.innerHTML = '✓';
@@ -1149,6 +1150,10 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
       
       toast.appendChild(checkIcon);
       toast.appendChild(text);
+      
+      toast.addEventListener('click', () => {
+        window.open(message.url, '_blank');
+      });
       
       document.body.appendChild(toast);
       
