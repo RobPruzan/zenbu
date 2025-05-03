@@ -25,7 +25,7 @@ export const IFrameWrapperTwo = ({
   // const { inspectorState, setInspectorState } = useInspectorStateContext();
   // const { inspector } = useChatStore();
 
-  const iframe = useChatStore(state => state.iframe );
+  const iframe = useChatStore((state) => state.iframe);
 
   // const makeRequest = useMakeRequest();
 
@@ -93,7 +93,7 @@ export const IFrameWrapperTwo = ({
           id={IFRAME_ID}
           key={lastUpdate}
           ref={iframeRef}
-          src={iframe.state.url}
+          src={iframe.state.url ?? "about:blank"}
           style={{
             height: "100%",
             width: "100%",
