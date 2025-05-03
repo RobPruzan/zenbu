@@ -2,12 +2,13 @@ import { Project } from "zenbu-daemon";
 import { SliceCreator } from "../chat-store";
 
 export type IFrameSliceInitialState = {
-  url: string;
-  project: Project
+  url?: string;
+  project?: Project;
 };
+
 export type IFrameSliceState = {
-  url: string;
-  project: Project
+  url?: string;
+  project?: Project;
 };
 
 export type IFrameSlice = {
@@ -20,7 +21,10 @@ export type IFrameSlice = {
 export const createIFrameSlice =
   (initialState: IFrameSliceInitialState): SliceCreator<IFrameSlice> =>
   (set, get) => ({
-    state: initialState,
+    state: {
+      url: initialState.url ?? undefined,
+      project: initialState.project ?? undefined,
+    },
     actions: {
       setInspectorState: (inspectorState) =>
         set((state) => {
