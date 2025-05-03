@@ -8,9 +8,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import DevTools from "../components/devtools";
+// import DevTools from "../../components/devtools";
 import { BetterDrawing } from "./better-drawing";
-import { IFrameWrapper } from "./iframe-wrapper";
+// import { IFrameWrapper } from "./iframe-wrapper";
 import { ScreenshotTool } from "./screenshot-tool";
 
 import { getCommandItems } from "./command-items";
@@ -61,9 +61,11 @@ import dynamic from "next/dynamic";
 import { ChildToParentMessage } from "zenbu-devtools";
 import { ProjectsSidebar } from "./project-sidebar";
 import { scan } from "react-scan";
-import { useWS } from "./ws";
+import { useWS } from "../../ws";
 import { nanoid } from "nanoid";
 import { useIFrameMessenger } from "src/hooks/use-iframe-listener";
+import DevTools from "src/components/devtools";
+import { IFrameWrapper } from "src/app/iframe-wrapper";
 
 // scan();
 const BottomPanel = dynamic(() => import("src/components/bottom-panel"), {
@@ -1121,44 +1123,43 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
 
       navigator.clipboard.writeText(message.url);
 
-
       // Create a toast notification with a green check mark
-      const toast = document.createElement('div');
-      toast.style.position = 'fixed';
-      toast.style.bottom = '20px';
-      toast.style.right = '20px';
-      toast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-      toast.style.color = '#fff';
-      toast.style.padding = '10px 15px';
-      toast.style.borderRadius = '4px';
-      toast.style.display = 'flex';
-      toast.style.alignItems = 'center';
-      toast.style.zIndex = '9999';
-      toast.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
-      toast.style.transition = 'opacity 0.3s ease-in-out';
-      toast.style.cursor = 'pointer';
-      
-      const checkIcon = document.createElement('span');
-      checkIcon.innerHTML = '✓';
-      checkIcon.style.color = '#4ade80';
-      checkIcon.style.marginRight = '8px';
-      checkIcon.style.fontSize = '18px';
-      
-      const text = document.createElement('span');
-      text.textContent = 'Copied to clipboard';
-      text.style.fontSize = '14px';
-      
+      const toast = document.createElement("div");
+      toast.style.position = "fixed";
+      toast.style.bottom = "20px";
+      toast.style.right = "20px";
+      toast.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+      toast.style.color = "#fff";
+      toast.style.padding = "10px 15px";
+      toast.style.borderRadius = "4px";
+      toast.style.display = "flex";
+      toast.style.alignItems = "center";
+      toast.style.zIndex = "9999";
+      toast.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.2)";
+      toast.style.transition = "opacity 0.3s ease-in-out";
+      toast.style.cursor = "pointer";
+
+      const checkIcon = document.createElement("span");
+      checkIcon.innerHTML = "✓";
+      checkIcon.style.color = "#4ade80";
+      checkIcon.style.marginRight = "8px";
+      checkIcon.style.fontSize = "18px";
+
+      const text = document.createElement("span");
+      text.textContent = "Copied to clipboard";
+      text.style.fontSize = "14px";
+
       toast.appendChild(checkIcon);
       toast.appendChild(text);
-      
-      toast.addEventListener('click', () => {
-        window.open(message.url, '_blank');
+
+      toast.addEventListener("click", () => {
+        window.open(message.url, "_blank");
       });
-      
+
       document.body.appendChild(toast);
-      
+
       setTimeout(() => {
-        toast.style.opacity = '0';
+        toast.style.opacity = "0";
         setTimeout(() => {
           document.body.removeChild(toast);
         }, 300);

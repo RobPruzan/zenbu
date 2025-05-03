@@ -27,6 +27,7 @@ import {
   Store,
   Zap,
   Folder,
+  HouseIcon,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -37,6 +38,7 @@ import {
 } from "./ui/tooltip";
 import { ChatInstanceStore, useChatStore } from "./chat-store";
 import { cn } from "src/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface SlimSidebarProps {
   className?: string;
@@ -108,6 +110,7 @@ export function SlimSidebar({ className }: SlimSidebarProps) {
     window.dispatchEvent(new CustomEvent("toggle-plugin-store"));
   };
 
+  const router = useRouter();
   return (
     <TooltipProvider>
       <div
@@ -116,6 +119,23 @@ export function SlimSidebar({ className }: SlimSidebarProps) {
           className,
         )}
       >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => {
+                router.push("/home");
+              }}
+            >
+              <HouseIcon className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Home</p>
+          </TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
