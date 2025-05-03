@@ -107,6 +107,10 @@ export default function Home() {
     useRef<ResizablePrimitive.ImperativePanelHandle | null>(null);
   // usePersistQueryClient();
 
+  const [activeWorkspace, setActiveWorkspace] = useState<
+    "main" | "work" | "games"
+  >("main");
+
   useEffect(() => {
     const handleToggleChat = (event: CustomEvent) =>
       toggleSidebar("chat", event.detail?.position);
@@ -373,6 +377,12 @@ export default function Home() {
 
   const utils = trpc.useUtils();
 
+  const switchWorkspace = (workspace: "main" | "work" | "games") => {
+    setActiveWorkspace(workspace);
+    // TODO: Add actual workspace switching logic here
+    console.log(`Switching to workspace: ${workspace}`);
+  };
+
   if (!firstProject) {
     return (
       <div className="flex h-screen flex-col bg-background text-foreground">
@@ -543,6 +553,41 @@ export default function Home() {
           },
         }}
       >
+        <div className="absolute top-2 left-14 z-50 flex gap-1 rounded-lg bg-zinc-900 p-1">
+          <button
+            onClick={() => switchWorkspace("main")}
+            className={cn(
+              "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+              activeWorkspace === "main"
+                ? "bg-blue-600 text-white"
+                : "text-blue-400 hover:bg-blue-600/20",
+            )}
+          >
+            main
+          </button>
+          <button
+            onClick={() => switchWorkspace("work")}
+            className={cn(
+              "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+              activeWorkspace === "work"
+                ? "bg-amber-600 text-white"
+                : "text-amber-400 hover:bg-amber-600/20",
+            )}
+          >
+            work
+          </button>
+          <button
+            onClick={() => switchWorkspace("games")}
+            className={cn(
+              "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+              activeWorkspace === "games"
+                ? "bg-emerald-600 text-white"
+                : "text-emerald-400 hover:bg-emerald-600/20",
+            )}
+          >
+            games
+          </button>
+        </div>
         <SlimSidebar />
         <div className="flex-1 relative border-black border-l-0">
           {showHome ? (
