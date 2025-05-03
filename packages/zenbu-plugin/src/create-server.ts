@@ -15,6 +15,7 @@ import { ChatMessage } from "./ws/utils.js";
 import { exists } from "node:fs";
 import { nanoid } from "nanoid";
 import { injectWebSocket } from "./v2/message-ws.js";
+import console from "node:console";
 
 const operateOnPath =
   "/Users/robby/zenbu/packages/examples/iframe-website/index.ts";
@@ -154,6 +155,8 @@ export const createServer = async () => {
       return res;
     })
     .post("/uploads", async (opts) => {
+      console.log("uploading");
+
       const formData = await opts.req.formData();
 
       const file = formData.get("file");
@@ -168,7 +171,7 @@ export const createServer = async () => {
       const fileBytes = await file.bytes();
 
       const now = Date.now();
-      const fileName = `file-${now}-${nanoid()}.${file.name.split('.').pop() || 'bin'}`;
+      const fileName = `file-${now}-${nanoid()}.${file.name.split(".").pop() || "bin"}`;
       const path = `.zenbu/uploads/${fileName}`;
 
       await writeFile(path, fileBytes);
@@ -183,7 +186,7 @@ export const createServer = async () => {
       const path = `.zenbu/uploads/${leafPath}`;
 
       const file = await readFile(path);
-      
+
       return new Response(file);
     })
     .post("/upload", async (opts) => {
@@ -230,7 +233,7 @@ export const createServer = async () => {
     {
       fetch: app.fetch,
       port,
-      hostname
+      hostname,
     },
     (info) => {
       console.log(`Server is running on http://localhost:${info.port}`);
