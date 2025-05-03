@@ -69,13 +69,11 @@ export function DevtoolsOverlay() {
 
   const sendMessage = useIFrameMessenger();
   const project = useChatStore((state) => state.iframe.state.project);
-  const { socket } = useWS({ projectName: project?.name ?? "" });
+  const { socket } = useWS({ projectName: project.name });
   const makeRequest = useMakeRequest();
   const { inspector, eventLog, chatControls } = useChatStore();
 
   useEffect(() => {
-    if (!project) return;
-
     const handleMessage = (e: MessageEvent<ChildToParentMessage>) => {
       if (e.data.kind === "sync-action") {
         const iframe = document.getElementById("iframe") as HTMLIFrameElement;
@@ -94,173 +92,276 @@ export function DevtoolsOverlay() {
     return () => {
       window.removeEventListener("message", handleMessage);
     };
-  }, [project, sendMessage]);
+  }, []);
 
   useEffect(() => {
-    if (!project) return;
+    const canvas = canvasRef.current;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!canvasRef.current) {
-        return;
-      }
+    if (!canvas) {
+      console.log("no canvas");
 
-      const ctx = canvasRef.current.getContext("2d");
-      if (!ctx) {
-        return;
-      }
+      return;
+    }
 
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.log("no ctx");
+
+      return;
+    }
+
+    let rafId: number;
+
+    const clearAndCheck = () => {
       if (inspector.state.kind === "off") {
-        return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
-
-      const now = Date.now();
-      if (now - lastThrottleTimeRef.current < 16) {
-        return;
-      }
-      lastThrottleTimeRef.current = now;
-
-      const iframe = document.getElementById(IFRAME_ID) as HTMLIFrameElement;
-      if (!iframe) {
-        return;
-      }
-
-      const rect = iframe.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
-        return;
-      }
-
-      makeRequest({
-        kind: "clicked-element-info-request",
-        responsePossible: true,
-      }).then((response) => {
-        if (response.kind !== "clicked-element-info-response") {
-          return;
-        }
-
-        const { focusedInfo } = response;
-        if (!focusedInfo) {
-          return;
-        }
-
-        const { domRect } = focusedInfo;
-        if (!domRect) {
-          return;
-        }
-
-        const targetRect = {
-          x: domRect.x,
-          y: domRect.y,
-          width: domRect.width,
-          height: domRect.height,
-        };
-
-        targetRectRef.current = targetRect;
-
-        if (!currentRectRef.current) {
-          currentRectRef.current = targetRect;
-        }
-
-        const current = currentRectRef.current;
-
-        const lerp = (start: number, end: number, t: number) =>
-          start + (end - start) * t;
-
-        const lerpRect = (
-          start: RectPosition,
-          end: RectPosition,
-          t: number,
-        ): RectPosition => ({
-          x: lerp(start.x, end.x, t),
-          y: lerp(start.y, end.y, t),
-          width: lerp(start.width, end.width, t),
-          height: lerp(start.height, end.height, t),
-        });
-
-        const animate = () => {
-          if (!canvasRef.current) {
-            return;
-          }
-
-          const ctx = canvasRef.current.getContext("2d");
-          if (!ctx) {
-            return;
-          }
-
-          if (!currentRectRef.current || !targetRectRef.current) {
-            return;
-          }
-
-          ctx.clearRect(
-            0,
-            0,
-            canvasRef.current.width,
-            canvasRef.current.height,
-          );
-
-          const lerpedRect = lerpRect(
-            currentRectRef.current,
-            targetRectRef.current,
-            0.2,
-          );
-
-          currentRectRef.current = lerpedRect;
-
-          ctx.strokeStyle = "rgb(99, 102, 241)";
-          ctx.lineWidth = 2;
-          ctx.strokeRect(
-            lerpedRect.x,
-            lerpedRect.y,
-            lerpedRect.width,
-            lerpedRect.height,
-          );
-
-          if (
-            Math.abs(currentRectRef.current.x - targetRectRef.current.x) >
-              0.1 ||
-            Math.abs(currentRectRef.current.y - targetRectRef.current.y) >
-              0.1 ||
-            Math.abs(
-              currentRectRef.current.width - targetRectRef.current.width,
-            ) > 0.1 ||
-            Math.abs(
-              currentRectRef.current.height - targetRectRef.current.height,
-            ) > 0.1
-          ) {
-            rafIdRef.current = requestAnimationFrame(animate);
-          }
-        };
-
-        if (rafIdRef.current) {
-          cancelAnimationFrame(rafIdRef.current);
-        }
-
-        rafIdRef.current = requestAnimationFrame(animate);
-      });
+      rafId = requestAnimationFrame(clearAndCheck);
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
+    rafId = requestAnimationFrame(clearAndCheck);
 
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      if (rafIdRef.current) {
+      cancelAnimationFrame(rafId);
+    };
+  }, [inspector.state.kind]);
+  const { setMessages, setInput } = useChatContext();
+  // why did i do this again? I definitely had a reason
+  const store = ChatInstanceContext.useContext();
+  const url = useChatStore((state) => state.iframe.state.url);
+
+  const replay = useWS<any>({
+    url: "http://localhost:6969",
+    projectName: project.name,
+    onMessage: (message) => {},
+  });
+  useEffect(() => {
+    const getState = store.getState;
+    const canvas = canvasRef.current;
+    const iframe = document.getElementById(IFRAME_ID)! as HTMLIFrameElement;
+    if (!canvas || !iframe) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const handleMessage = (event: MessageEvent<ChildToParentMessage>) => {
+      // this acts as validation and why we can assert the event is the above type
+      // we need to switch to runtime validation, we can't do this generally
+      // breaks if yo use react devtools
+      // if (
+      //   event.origin !== "http://localhost:4200" &&
+      //   !(
+      //     new URL(event.origin).port &&
+      //     parseInt(new URL(event.origin).port, 10) > 59000
+      //   )
+      // ) {
+      //   // console.log("wrong origin");
+
+      //   return;
+      // }
+
+      const data = event.data;
+
+      switch (data.kind) {
+        // case 'keydown': {
+        //   if (data.metaKey && data.key === "p") {
+        //     data.
+        //   }
+        // }
+       
+        case "notification": {
+          console.log("got notification");
+          return;
+        }
+        case "mouse-position-update": {
+          if (getState().inspector.state.kind !== "inspecting") {
+            return;
+          }
+
+          const now = Date.now();
+          const throttleInterval = 50;
+
+          if (now - lastThrottleTimeRef.current >= throttleInterval) {
+            const iframeRect = iframe.getBoundingClientRect();
+            const { rect } = data;
+
+            targetRectRef.current = {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+            };
+
+            if (!currentRectRef.current) {
+              currentRectRef.current = { ...targetRectRef.current };
+            }
+
+            if (rafIdRef.current === null) {
+              rafIdRef.current = requestAnimationFrame(animateRect);
+            }
+
+            lastThrottleTimeRef.current = now;
+          }
+
+          return;
+        }
+        case "get-state-request": {
+          sendMessage({
+            kind: "get-state-response",
+            state: getState().inspector.state,
+            // bruh
+            id: event.data.id!,
+          });
+          return;
+        }
+        case "click-element-info": {
+          console.log("we click yay");
+
+          if (rafIdRef.current) {
+            cancelAnimationFrame(rafIdRef.current);
+          }
+
+          inspector.actions.setInspectorState({
+            focusedInfo: data.focusedInfo,
+            kind: "focused",
+          });
+
+          chatControls.actions.setInput(JSON.stringify(data.focusedInfo)) +
+            "\n\n\n\n\n\n\n";
+
+          // setMessages((prev) => [
+          //   ...prev,
+          //   {
+          //     role: "user",
+          //     content: JSON.stringify(data.focusedInfo),
+          //   },
+          // ]);
+
+          setInput(
+            (prev) => prev + "\n" + JSON.stringify(data.focusedInfo) + "\n\n",
+          );
+
+          drawFocusedRect(data.focusedInfo);
+        }
+      }
+    };
+
+    const lerp = (start: number, end: number, t: number): number => {
+      return start * (1 - t) + end * t;
+    };
+
+    const drawFocusedRect = (focusedInfo: FocusedInfo) => {
+      if (
+        !ctx ||
+        !canvas ||
+        !currentRectRef.current ||
+        !targetRectRef.current
+      ) {
+        rafIdRef.current = null;
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const { domRect } = focusedInfo;
+
+      // Draw semi-transparent fill
+      ctx.fillStyle = "rgba(28, 132, 252, 0.15)";
+      ctx.fillRect(domRect.x, domRect.y, domRect.width, domRect.height);
+
+      // Draw bright blue border
+      ctx.strokeStyle = "rgb(28, 132, 252)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(domRect.x, domRect.y, domRect.width, domRect.height);
+    };
+
+    const animateRect = () => {
+      if (
+        !ctx ||
+        !canvas ||
+        !currentRectRef.current ||
+        !targetRectRef.current
+      ) {
+        rafIdRef.current = null;
+        return;
+      }
+
+      const current = currentRectRef.current;
+      const target = targetRectRef.current;
+      const lerpFactor = 0.2;
+
+      current.x = lerp(current.x, target.x, lerpFactor);
+      current.y = lerp(current.y, target.y, lerpFactor);
+      current.width = lerp(current.width, target.width, lerpFactor);
+      current.height = lerp(current.height, target.height, lerpFactor);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw semi-transparent fill
+      ctx.fillStyle = "rgba(28, 132, 252, 0.15)";
+      ctx.fillRect(current.x, current.y, current.width, current.height);
+
+      // Draw bright blue border
+      ctx.strokeStyle = "rgb(28, 132, 252)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(current.x, current.y, current.width, current.height);
+
+      const isCloseEnough =
+        Math.abs(current.x - target.x) < 0.5 &&
+        Math.abs(current.y - target.y) < 0.5 &&
+        Math.abs(current.width - target.width) < 0.5 &&
+        Math.abs(current.height - target.height) < 0.5;
+
+      if (isCloseEnough) {
+        Object.assign(current, target);
+        rafIdRef.current = null;
+      } else {
+        rafIdRef.current = requestAnimationFrame(animateRect);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (iframe) {
+        const rect = iframe.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
+    });
+
+    resizeObserver.observe(iframe);
+    // console.log("SETTING UP");
+
+    requestAnimationFrame(() => {
+      // console.log("focused?", inspector.state.kind);
+
+      if (inspector.state.kind === "focused") {
+        drawFocusedRect(inspector.state.focusedInfo);
+      }
+    });
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      resizeObserver.disconnect();
+      if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
       }
     };
-  }, [inspector.state.kind, project]);
+  }, [store, url, replay.socket]);
 
   return (
     <canvas
       ref={canvasRef}
       style={{
         position: "absolute",
+        pointerEvents: "none",
+        // pointerEvents:
+        //   useContext(InspectorStateContext).inspectorState.kind === "inspecting"
+        //     ? "none"
+        //     : "auto",
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
       }}
     />
   );

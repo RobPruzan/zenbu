@@ -64,8 +64,6 @@ import { scan } from "react-scan";
 import { useWS } from "./ws";
 import { nanoid } from "nanoid";
 import { useIFrameMessenger } from "src/hooks/use-iframe-listener";
-import { HomePage } from "src/components/slim-sidebar";
-import { utils } from "prettier/doc.js";
 
 // scan();
 const BottomPanel = dynamic(() => import("src/components/bottom-panel"), {
@@ -80,7 +78,6 @@ interface SidebarState {
 export default function Home() {
   const [showPluginStore, setShowPluginStore] = useState(false);
   const [showNextLint, setShowNextLint] = useState(false);
-  const [showHome, setShowHome] = useState(true);
   const [leftSidebar, setLeftSidebar] = useState<SidebarState>({
     component: null,
     position: "left",
@@ -107,10 +104,6 @@ export default function Home() {
     useRef<ResizablePrimitive.ImperativePanelHandle | null>(null);
   // usePersistQueryClient();
 
-  const [activeWorkspace, setActiveWorkspace] = useState<
-    "main" | "work" | "games"
-  >("main");
-
   useEffect(() => {
     const handleToggleChat = (event: CustomEvent) =>
       toggleSidebar("chat", event.detail?.position);
@@ -121,7 +114,6 @@ export default function Home() {
     const handleToggleHttpClient = () => setShowHttpClient((prev) => !prev);
     const handleTogglePluginStore = () => setShowPluginStore((prev) => !prev);
     const handleToggleTopBar = () => toggleVisibility("topBar");
-    const handleToggleHome = () => setShowHome((prev) => !prev);
     const handleToggleHorizontalSplit = () => {
       if (isAnimating) return;
       setIsAnimating(true);
@@ -270,7 +262,6 @@ export default function Home() {
     window.addEventListener("toggle-http-client", handleToggleHttpClient);
     window.addEventListener("toggle-plugin-store", handleTogglePluginStore);
     window.addEventListener("toggle-top-bar", handleToggleTopBar);
-    window.addEventListener("toggle-home", handleToggleHome);
     window.addEventListener("toggle-split", handleToggleHorizontalSplit);
     window.addEventListener("toggle-mobile-split", handleToggleMobileSplit);
     window.addEventListener("toggle-dense-tabs", handleToggleDenseTabs);
@@ -298,7 +289,6 @@ export default function Home() {
         handleTogglePluginStore,
       );
       window.removeEventListener("toggle-top-bar", handleToggleTopBar);
-      window.removeEventListener("toggle-home", handleToggleHome);
       window.removeEventListener("toggle-split", handleToggleHorizontalSplit);
       window.removeEventListener(
         "toggle-mobile-split",
@@ -377,110 +367,138 @@ export default function Home() {
 
   const utils = trpc.useUtils();
 
-  const switchWorkspace = (workspace: "main" | "work" | "games") => {
-    setActiveWorkspace(workspace);
-    // TODO: Add actual workspace switching logic here
-    console.log(`Switching to workspace: ${workspace}`);
-  };
-
   if (!firstProject) {
     return (
       <div className="flex h-screen flex-col bg-background text-foreground">
-        <ChatInstanceContext.Provider
-          initialValue={{
-            iframe: {
-              project: undefined,
-              url: undefined,
-            },
-            toolbar: {
-              state: {
-                activeRoute: "off",
-                drawing: {
-                  active: false,
-                  getEditor: () => null,
-                },
-                screenshotting: {
-                  active: false,
-                },
-                recording: {
-                  active: false,
-                },
-              },
-            },
-            context: {
-              items: [],
-            },
-            inspector: {
-              state: {
-                kind: "off",
-              },
-            },
-            eventLog: {
-              events: [],
-            },
-            chatControls: {
-              input: "",
-            },
-          }}
-        >
-          <CommandPalette
-            items={[
-              {
-                shortcut: "Create Next App",
-                icon: <Plus size={16} />,
-                onSelect: async () => {
-                  const newProject = await createProjectMutation.mutateAsync();
-                  const checkUrlReady = () => {
-                    const hiddenIframe = document.createElement("iframe");
-                    hiddenIframe.style.display = "none";
-                    hiddenIframe.src = `http://localhost:${newProject.port}`;
-                    hiddenIframe.onload = () => {
-                      setTimeout(() => {
-                        utils.daemon.getProjects.setData(undefined, (prev) =>
-                          !prev ? [newProject] : [...prev, newProject],
-                        );
-                      }, 20);
-                      if (document.documentElement.contains(hiddenIframe)) {
-                        document.documentElement.removeChild(hiddenIframe);
-                      }
-                    };
-                    hiddenIframe.onerror = () => {
-                      if (document.documentElement.contains(hiddenIframe)) {
-                        document.documentElement.removeChild(hiddenIframe);
-                      }
-                      setTimeout(checkUrlReady, 10);
-                    };
-                    document.documentElement.appendChild(hiddenIframe);
+        <CommandPalette
+          items={[
+            {
+              shortcut: "Create Next App",
+              icon: <Plus size={16} />,
+              onSelect: async () => {
+                const newProject = await createProjectMutation.mutateAsync();
+                const checkUrlReady = () => {
+                  const hiddenIframe = document.createElement("iframe");
+                  hiddenIframe.style.display = "none";
+                  hiddenIframe.src = `http://localhost:${newProject.port}`;
+                  hiddenIframe.onload = () => {
+                    setTimeout(() => {
+                      utils.daemon.getProjects.setData(undefined, (prev) =>
+                        !prev ? [newProject] : [...prev, newProject],
+                      );
+                    }, 20);
+                    if (document.documentElement.contains(hiddenIframe)) {
+                      document.documentElement.removeChild(hiddenIframe);
+                    }
                   };
-                  checkUrlReady();
-                },
+                  hiddenIframe.onerror = () => {
+                    if (document.documentElement.contains(hiddenIframe)) {
+                      document.documentElement.removeChild(hiddenIframe);
+                    }
+                    setTimeout(checkUrlReady, 10);
+                  };
+                  document.documentElement.appendChild(hiddenIframe);
+                };
+                checkUrlReady();
               },
+            },
 
-              {
-                shortcut: "Create Expo App",
-                icon: <Atom size={16} />,
-                onSelect: () => {},
-              },
+            {
+              shortcut: "Create Expo App",
+              icon: <Atom size={16} />,
+              onSelect: () => {},
+            },
 
-              {
-                shortcut: "Active Ports",
-                icon: <Network size={16} />,
-                onSelect: () => {},
-              },
-              {
-                shortcut: "Terminal",
-                icon: <TerminalSquare />,
-                onSelect: () => {},
-              },
-              {
-                shortcut: "Experiment",
-                icon: <FlaskConical />,
-                onSelect: () => {},
-              },
-            ]}
-          />
-          <HomePage />
-        </ChatInstanceContext.Provider>
+            {
+              shortcut: "Active Ports",
+              icon: <Network size={16} />,
+              onSelect: () => {},
+            },
+            {
+              shortcut: "Terminal",
+              icon: <TerminalSquare />,
+              onSelect: () => {},
+            },
+            {
+              shortcut: "Experiment",
+              icon: <FlaskConical />,
+              onSelect: () => {},
+            },
+          ]}
+        />
+        <div className="mx-auto flex h-full w-full max-w-[850px] flex-col px-8 py-20">
+          <div className="mb-8">
+            <h1 className="mb-1 text-[32px] font-light tracking-tight">
+              Zenbu
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Local Development Environment
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <h2 className="mb-4 text-sm font-medium text-muted-foreground">
+                Start
+              </h2>
+              <div className="grid gap-2">
+                <Button
+                  variant="ghost"
+                  className="h-auto w-full justify-start px-4 py-3"
+                  onClick={async () => {
+                    const newProject =
+                      await createProjectMutation.mutateAsync();
+                    utils.daemon.getProjects.setData(undefined, (prev) =>
+                      !prev ? [newProject] : [...prev, newProject],
+                    );
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <PlusCircle className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm">New Project</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-auto w-full justify-start px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <Folder className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm">Open Folder...</span>
+                  </div>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-auto w-full justify-start px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <GitBranch className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm">Clone Git Repository...</span>
+                  </div>
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="mb-4 text-sm font-medium text-muted-foreground">
+                Recent
+              </h2>
+              <div className="rounded-lg border bg-card/40 p-6 text-center text-sm text-muted-foreground">
+                <Terminal
+                  className="mx-auto mb-3 h-8 w-8 opacity-40"
+                  strokeWidth={1.5}
+                />
+                <p>No recent folders</p>
+                <p className="mt-4 text-xs">
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+                    <span className="text-xs">⌘</span>K
+                  </kbd>{" "}
+                  to show all commands
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -553,473 +571,455 @@ export default function Home() {
           },
         }}
       >
-        <div className="absolute top-2 left-14 z-50 flex gap-1 rounded-lg bg-zinc-900 p-1">
-          <button
-            onClick={() => switchWorkspace("main")}
-            className={cn(
-              "rounded-md px-3 py-1 text-sm font-medium transition-colors",
-              activeWorkspace === "main"
-                ? "bg-blue-600 text-white"
-                : "text-blue-400 hover:bg-blue-600/20",
-            )}
-          >
-            main
-          </button>
-          <button
-            onClick={() => switchWorkspace("work")}
-            className={cn(
-              "rounded-md px-3 py-1 text-sm font-medium transition-colors",
-              activeWorkspace === "work"
-                ? "bg-amber-600 text-white"
-                : "text-amber-400 hover:bg-amber-600/20",
-            )}
-          >
-            work
-          </button>
-          <button
-            onClick={() => switchWorkspace("games")}
-            className={cn(
-              "rounded-md px-3 py-1 text-sm font-medium transition-colors",
-              activeWorkspace === "games"
-                ? "bg-emerald-600 text-white"
-                : "text-emerald-400 hover:bg-emerald-600/20",
-            )}
-          >
-            games
-          </button>
-        </div>
         <SlimSidebar />
-        <div className="flex-1 relative border-black border-l-0">
-          {showHome ? (
-            <HomePage />
-          ) : (
-            <>
-              <ProjectCommandPalette
-                isOpen={projectPaletteOpen}
-                onClose={() => setProjectPaletteOpen(false)}
-              />
-              <PluginStore
-                isOpen={showPluginStore}
-                onClose={() => setShowPluginStore(false)}
-              />
-              <div className="flex h-full w-full flex-col overflow-hidden">
-                <div className="flex h-full w-full overflow-hidden">
-                  <AnimatePresence mode="wait">
-                    {showNextLint && (
-                      <motion.div
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: "400px", opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                          mass: 0.8,
-                        }}
-                        className="relative border-r "
-                      >
-                        <NextLint />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+        <ProjectCommandPalette
+          isOpen={projectPaletteOpen}
+          onClose={() => setProjectPaletteOpen(false)}
+        />
+        <PluginStore
+          isOpen={showPluginStore}
+          onClose={() => setShowPluginStore(false)}
+        />
+        <div className="flex h-full w-full flex-col overflow-hidden">
+          <div className="flex h-full w-full overflow-hidden">
+            <AnimatePresence mode="wait">
+              {showNextLint && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "400px", opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                    mass: 0.8,
+                  }}
+                  className="relative border-r "
+                >
+                  <NextLint />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                  <AnimatePresence mode="wait">
-                    {leftSidebar.component && (
-                      <motion.div
-                        key={`left-sidebar-${leftSidebar.component}`}
-                        initial={{ width: 0, opacity: 0, marginRight: 0 }}
-                        animate={{
-                          width:
-                            leftSidebar.component === "chat" ? "25%" : "16%",
-                          opacity: 1,
-                          marginRight: 0,
-                          transition: {
-                            width: {
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 30,
-                              mass: 0.8,
-                            },
-                            opacity: { duration: 0.1, delay: 0.05 },
-                          },
-                        }}
-                        exit={{
-                          width: 0,
-                          opacity: 0,
-                          marginRight: "-1px",
-                          transition: {
-                            width: {
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 30,
-                              mass: 0.8,
-                            },
-                            opacity: { duration: 0.1 },
-                          },
-                        }}
-                        className="h-full flex-shrink-0 border-r  overflow-hidden"
-                        style={{
-                          minWidth:
-                            leftSidebar.component === "chat"
-                              ? "300px"
-                              : "200px",
-                        }}
-                      >
-                        {leftSidebar.component === "chat" ? (
-                          <div className="relative flex h-full flex-col">
-                            <Chat
-                              onCloseChat={() => toggleSidebar("chat", "left")}
-                            />
-                          </div>
-                        ) : leftSidebar.component === "websiteTree" ? (
-                          <Suspense
-                            fallback={
-                              <div className="flex h-full items-center justify-center">
-                                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                              </div>
-                            }
-                          >
-                            <ProjectsSidebar
-                              onNuke={() => {
-                                setLeftSidebar({
-                                  component: null,
-                                  position: "left",
-                                });
-                              }}
-                            />
-                          </Suspense>
-                        ) : leftSidebar.component === "reactTree" ? (
-                          <ReactTree
-                            onClose={() => toggleSidebar("reactTree", "left")}
-                          />
-                        ) : null}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <div
-                    className={cn(
-                      "flex h-full flex-1 flex-col overflow-hidden",
-                      mobileSplit && "min-w-[750px]",
-                    )}
-                  >
-                    <ResizablePanelGroup
-                      direction="vertical"
-                      className="h-full"
+            <AnimatePresence mode="wait">
+              {leftSidebar.component && (
+                <motion.div
+                  key={`left-sidebar-${leftSidebar.component}`}
+                  initial={{ width: 0, opacity: 0, marginRight: 0 }}
+                  animate={{
+                    width: leftSidebar.component === "chat" ? "25%" : "16%",
+                    opacity: 1,
+                    marginRight: 0,
+                    transition: {
+                      width: {
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                        mass: 0.8,
+                      },
+                      opacity: { duration: 0.1, delay: 0.05 },
+                    },
+                  }}
+                  exit={{
+                    width: 0,
+                    opacity: 0,
+                    marginRight: "-1px",
+                    transition: {
+                      width: {
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                        mass: 0.8,
+                      },
+                      opacity: { duration: 0.1 },
+                    },
+                  }}
+                  className="h-full flex-shrink-0 border-r  overflow-hidden"
+                  style={{
+                    minWidth:
+                      leftSidebar.component === "chat" ? "300px" : "200px",
+                  }}
+                >
+                  {leftSidebar.component === "chat" ? (
+                    <div className="relative flex h-full flex-col">
+                      <Chat onCloseChat={() => toggleSidebar("chat", "left")} />
+                    </div>
+                  ) : leftSidebar.component === "websiteTree" ? (
+                    <Suspense
+                      fallback={
+                        <div className="flex h-full items-center justify-center">
+                          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        </div>
+                      }
                     >
-                      <ResizablePanel
-                        defaultSize={bottomPanelVisible ? 70 : 100}
-                        className="relative"
-                      >
-                        <ResizablePanelGroup
-                          direction={
-                            horizontalSplit || mobileSplit
-                              ? "horizontal"
-                              : "vertical"
-                          }
-                          className="h-full"
-                        >
-                          <ResizablePanel
-                            defaultSize={
-                              devtoolsVisible
-                                ? 70
-                                : horizontalSplit || mobileSplit
-                                  ? 50
-                                  : 100
-                            }
-                            className="relative"
-                          >
-                            <div className="flex h-full flex-col">
-                              {showHttpClient ? (
-                                <HttpClient
-                                  onBack={() => setShowHttpClient(false)}
-                                />
-                              ) : (
-                                <IFrameWrapper>
-                                  <ScreenshotTool />
-                                  <BetterToolbar />
-                                  <DevtoolsOverlay />
-                                  <BetterDrawing />
-                                  <Recording />
-                                </IFrameWrapper>
-                              )}
-                            </div>
-                          </ResizablePanel>
+                      <ProjectsSidebar
+                        onNuke={() => {
+                          setLeftSidebar({ component: null, position: "left" });
+                        }}
+                      />
+                    </Suspense>
+                  ) : leftSidebar.component === "reactTree" ? (
+                    <ReactTree
+                      onClose={() => toggleSidebar("reactTree", "left")}
+                    />
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                          {(horizontalSplit || mobileSplit) && (
-                            <>
-                              <ResizableHandle
-                                withHandle
-                                className="bg-border/40"
-                              />
-                              <ResizablePanel
-                                defaultSize={horizontalSplit ? 50 : undefined}
-                                collapsible={false}
-                                className={
-                                  mobileSplit
-                                    ? "flex items-center justify-center p-4 bg-background"
-                                    : ""
-                                }
-                              >
-                                {mobileSplit ? (
-                                  <div className="relative mx-auto h-[852px] w-[393px] flex-shrink-0 overflow-hidden rounded-[40px] border-[10px] border-black bg-black shadow-xl ring-1 ring-gray-500/30">
-                                    <div className="absolute top-0 left-0 right-0 h-[44px] bg-black px-6 flex items-center justify-between text-white text-xs z-10">
-                                      <div>1:10</div>
-                                      <div className="absolute left-1/2 -translate-x-1/2 h-[25px] w-[95px] bg-black rounded-[20px] flex items-center justify-center mt-1">
-                                        <div className="h-[4px] w-[4px] rounded-full bg-green-500"></div>
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <div>5G</div>
-                                        <div>100%</div>
-                                      </div>
-                                    </div>
-                                    <div className="h-full w-full overflow-hidden rounded-[30px]">
-                                      <div className="flex h-full flex-col">
-                                        <div className="h-[44px]"></div>
-                                        <IFrameWrapper mobile>
-                                          <></>
-                                        </IFrameWrapper>
-                                        <div className="flex flex-col bg-[#f2f2f7] border-t border-gray-200">
-                                          <div className="flex items-center px-3 h-11 bg-[#f2f2f7] border-b border-gray-200">
-                                            <div className="flex-1 px-2 py-1">
-                                              <div className="bg-[#e1e1e6] rounded-lg h-8 flex items-center px-3 gap-2">
-                                                <svg
-                                                  xmlns="http://www.w3.org/2000/svg"
-                                                  width="14"
-                                                  height="14"
-                                                  viewBox="0 0 24 24"
-                                                  fill="none"
-                                                  stroke="currentColor"
-                                                  strokeWidth="2"
-                                                  strokeLinecap="round"
-                                                  strokeLinejoin="round"
-                                                  className="text-gray-400"
-                                                >
-                                                  <circle
-                                                    cx="11"
-                                                    cy="11"
-                                                    r="8"
-                                                  />
-                                                  <path d="m21 21-4.3-4.3" />
-                                                </svg>
-                                                <span className="text-sm text-gray-400 flex-1 truncate">
-                                                  next-go-production.up.railway.app
-                                                </span>
-                                              </div>
-                                            </div>
-                                            <button className="w-11 h-11 flex items-center justify-center text-blue-500">
-                                              <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="22"
-                                                height="22"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                              >
-                                                <path d="M18 15v3H6v-3" />
-                                                <path d="M12 3v12" />
-                                                <path d="m17 8-5-5-5 5" />
-                                              </svg>
-                                            </button>
-                                          </div>
-                                          <div className="flex h-14 items-center justify-between px-4">
-                                            <button className="flex flex-col items-center justify-center text-gray-500">
-                                              <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="20"
-                                                height="20"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                              >
-                                                <path d="m9 10-5 5 5 5" />
-                                                <path d="m20 4-5 5 5 5" />
-                                              </svg>
-                                            </button>
-                                            <button className="flex flex-col items-center justify-center text-gray-500">
-                                              <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="20"
-                                                height="20"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                              >
-                                                <path d="M15 18l-6-6 6-6" />
-                                              </svg>
-                                            </button>
-                                            <button className="flex flex-col items-center justify-center text-gray-500">
-                                              <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="20"
-                                                height="20"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                              >
-                                                <path d="M3 15v4c0 1.1.9 2 2 2h4M21 9V5c0-1.1-.9-2-2-2h-4m-8 0H5c-1.1 0-2 .9-2 2v4m18 0V5c0-1.1-.9-2-2-2h-4M21 15v4c0 1.1-.9 2-2 2h-4" />
-                                              </svg>
-                                            </button>
-                                            <button className="flex flex-col items-center justify-center text-gray-500">
-                                              <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="20"
-                                                height="20"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                              >
-                                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                                                <polyline points="22,6 12,13 2,6" />
-                                              </svg>
-                                            </button>
-                                          </div>
+            <div
+              className={cn(
+                "flex h-full flex-1 flex-col overflow-hidden",
+                mobileSplit && "min-w-[750px]",
+              )}
+            >
+              <AnimatePresence mode="wait">
+                {topBarVisible && (
+                  <motion.div
+                    key="top-bar"
+                    initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+                    animate={{
+                      height: "auto",
+                      opacity: 1,
+                      marginBottom: 0,
+                      transition: {
+                        height: { type: "spring", stiffness: 400, damping: 30 },
+                        opacity: { duration: 0.2, delay: 0.05 },
+                      },
+                    }}
+                    exit={{
+                      height: 0,
+                      opacity: 0,
+                      marginBottom: "-1px",
+                      transition: {
+                        height: { duration: 0.2 },
+                        opacity: { duration: 0.15 },
+                      },
+                    }}
+                    className="relative flex-shrink-0 border-b  overflow-hidden bg-background"
+                  >
+                    {/* <TopBarContent
+                      dense={denseTabsEnabled}
+                      tabs={tabs}
+                      activeTabId={activeTab}
+                      onTabSelect={handleTabSelect}
+                      onTabClose={}
+                      onNewTab={handleNewTab}
+                    /> */}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <ResizablePanelGroup direction="vertical" className="h-full">
+                <ResizablePanel
+                  defaultSize={bottomPanelVisible ? 70 : 100}
+                  className="relative"
+                >
+                  <ResizablePanelGroup
+                    direction={
+                      horizontalSplit || mobileSplit ? "horizontal" : "vertical"
+                    }
+                    className="h-full"
+                  >
+                    <ResizablePanel
+                      defaultSize={
+                        devtoolsVisible
+                          ? 70
+                          : horizontalSplit || mobileSplit
+                            ? 50
+                            : 100
+                      }
+                      className="relative"
+                      // minSize={
+                      //   horizontalSplit || mobileSplit
+                      //     ? 20
+                      //     : devtoolsVisible
+                      //       ? 15
+                      //       : topBarVisible
+                      //         ? 0
+                      //         : 100
+                      // }
+                    >
+                      <div className="flex h-full flex-col">
+                        {showHttpClient ? (
+                          <HttpClient onBack={() => setShowHttpClient(false)} />
+                        ) : (
+                          <IFrameWrapper>
+                            <ScreenshotTool />
+                            <BetterToolbar />
+                            <DevtoolsOverlay />
+                            <BetterDrawing />
+                            <Recording />
+                          </IFrameWrapper>
+                        )}
+                      </div>
+                    </ResizablePanel>
+
+                    {(horizontalSplit || mobileSplit) && (
+                      <>
+                        <ResizableHandle withHandle className="bg-border/40" />
+                        <ResizablePanel
+                          defaultSize={horizontalSplit ? 50 : undefined}
+                          // minSize={horizontalSplit ? 20 : undefined}
+                          collapsible={false}
+                          className={
+                            mobileSplit
+                              ? "flex items-center justify-center p-4 bg-background"
+                              : ""
+                          }
+                        >
+                          {mobileSplit ? (
+                            <div className="relative mx-auto h-[852px] w-[393px] flex-shrink-0 overflow-hidden rounded-[40px] border-[10px] border-black bg-black shadow-xl ring-1 ring-gray-500/30">
+                              <div className="absolute top-0 left-0 right-0 h-[44px] bg-black px-6 flex items-center justify-between text-white text-xs z-10">
+                                <div>1:10</div>
+                                <div className="absolute left-1/2 -translate-x-1/2 h-[25px] w-[95px] bg-black rounded-[20px] flex items-center justify-center mt-1">
+                                  <div className="h-[4px] w-[4px] rounded-full bg-green-500"></div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div>5G</div>
+                                  <div>100%</div>
+                                </div>
+                              </div>
+                              <div className="h-full w-full overflow-hidden rounded-[30px]">
+                                <div className="flex h-full flex-col">
+                                  <div className="h-[44px]"></div>
+                                  <IFrameWrapper mobile>
+                                    <></>
+                                  </IFrameWrapper>
+                                  <div className="flex flex-col bg-[#f2f2f7] border-t border-gray-200">
+                                    <div className="flex items-center px-3 h-11 bg-[#f2f2f7] border-b border-gray-200">
+                                      <div className="flex-1 px-2 py-1">
+                                        <div className="bg-[#e1e1e6] rounded-lg h-8 flex items-center px-3 gap-2">
+                                          <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            className="text-gray-400"
+                                          >
+                                            <circle cx="11" cy="11" r="8" />
+                                            <path d="m21 21-4.3-4.3" />
+                                          </svg>
+                                          <span className="text-sm text-gray-400 flex-1 truncate">
+                                            next-go-production.up.railway.app
+                                          </span>
                                         </div>
                                       </div>
+                                      <button className="w-11 h-11 flex items-center justify-center text-blue-500">
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="22"
+                                          height="22"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M18 15v3H6v-3" />
+                                          <path d="M12 3v12" />
+                                          <path d="m17 8-5-5-5 5" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                    <div className="flex h-14 items-center justify-between px-4">
+                                      <button className="flex flex-col items-center justify-center text-gray-500">
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="20"
+                                          height="20"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="m9 10-5 5 5 5" />
+                                          <path d="m20 4-5 5 5 5" />
+                                        </svg>
+                                      </button>
+                                      <button className="flex flex-col items-center justify-center text-gray-500">
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="20"
+                                          height="20"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M15 18l-6-6 6-6" />
+                                        </svg>
+                                      </button>
+                                      <button className="flex flex-col items-center justify-center text-gray-500">
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="20"
+                                          height="20"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M3 15v4c0 1.1.9 2 2 2h4M21 9V5c0-1.1-.9-2-2-2h-4m-8 0H5c-1.1 0-2 .9-2 2v4m18 0V5c0-1.1-.9-2-2-2h-4M21 15v4c0 1.1-.9 2-2 2h-4" />
+                                        </svg>
+                                      </button>
+                                      <button className="flex flex-col items-center justify-center text-gray-500">
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="20"
+                                          height="20"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                          <polyline points="22,6 12,13 2,6" />
+                                        </svg>
+                                      </button>
                                     </div>
                                   </div>
-                                ) : (
-                                  <div className="flex h-full flex-col">
-                                    <IFrameWrapper>
-                                      <BetterToolbar />
-                                      <DevtoolsOverlay />
-                                    </IFrameWrapper>
-                                  </div>
-                                )}
-                              </ResizablePanel>
-                            </>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex h-full flex-col">
+                              <IFrameWrapper>
+                                <BetterToolbar />
+                                <DevtoolsOverlay />
+                              </IFrameWrapper>
+                            </div>
                           )}
+                        </ResizablePanel>
+                      </>
+                    )}
 
-                          {!horizontalSplit &&
-                            !mobileSplit &&
-                            devtoolsVisible && (
-                              <>
-                                <ResizableHandle
-                                  withHandle
-                                  className="bg-border/40"
-                                />
-                                <ResizablePanel
-                                  defaultSize={30}
-                                  collapsible={true}
-                                  className="relative"
-                                >
-                                  <div className="flex h-full flex-col border-t border-zinc-800/80">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="absolute right-2 top-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
-                                      onClick={() =>
-                                        toggleSidebar("chat", "left")
-                                      }
-                                      disabled={isAnimating}
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <DevTools
-                                      onClose={() =>
-                                        toggleSidebar("chat", "left")
-                                      }
-                                    />
-                                  </div>
-                                </ResizablePanel>
-                              </>
-                            )}
-                        </ResizablePanelGroup>
-                      </ResizablePanel>
-
-                      {bottomPanelVisible && (
-                        <>
-                          <ResizableHandle withHandle />
-                          <ResizablePanel ref={bottomPanelRef} defaultSize={30}>
-                            <BottomPanel
-                              open={() => {
-                                setBottomPanelVisible(true);
-                              }}
-                              isOpen={bottomPanelVisible}
-                              close={() => {
-                                // doesn't work, ill figure it out later idec anymore
-                                bottomPanelRef.current?.resize(0);
-                                setBottomPanelVisible(false);
-                              }}
-                            />
-                          </ResizablePanel>
-                        </>
-                      )}
-                    </ResizablePanelGroup>
-                  </div>
-
-                  <AnimatePresence mode="wait">
-                    {rightSidebar.component && (
-                      <motion.div
-                        key={`right-sidebar-${rightSidebar.component}`}
-                        initial={{ width: 0, opacity: 0, marginLeft: 0 }}
-                        animate={{
-                          width:
-                            rightSidebar.component === "chat" ? "25%" : "16%",
-                          opacity: 1,
-                          marginLeft: 0,
-                          transition: {
-                            width: {
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 30,
-                              mass: 0.8,
-                            },
-                            opacity: { duration: 0.1, delay: 0.05 },
-                          },
-                        }}
-                        exit={{
-                          width: 0,
-                          opacity: 0,
-                          marginLeft: "-1px",
-                          transition: {
-                            width: {
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 30,
-                              mass: 0.8,
-                            },
-                            opacity: { duration: 0.1 },
-                          },
-                        }}
-                        className="h-full flex-shrink-0 border-l  overflow-hidden"
-                        style={{ minWidth: 0 }}
-                      >
-                        {rightSidebar.component === "chat" ? (
-                          <div className="relative flex h-full flex-col">
-                            <Chat
-                              onCloseChat={() => toggleSidebar("chat", "right")}
+                    {!horizontalSplit && !mobileSplit && devtoolsVisible && (
+                      <>
+                        <ResizableHandle withHandle className="bg-border/40" />
+                        <ResizablePanel
+                          defaultSize={30}
+                          // minSize={15}
+                          collapsible={true}
+                          className="relative"
+                        >
+                          <div className="flex h-full flex-col border-t border-zinc-800/80">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-2 top-2 z-10 h-6 w-6 rounded-full hover:bg-background/80"
+                              onClick={() => toggleSidebar("chat", "left")}
+                              disabled={isAnimating}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                            <DevTools
+                              onClose={() => toggleSidebar("chat", "left")}
                             />
                           </div>
-                        ) : rightSidebar.component === "websiteTree" ? (
-                          <ProjectsSidebar onNuke={() => {}} />
-                        ) : rightSidebar.component === "reactTree" ? (
-                          <ReactTree
-                            onClose={() => toggleSidebar("reactTree", "right")}
-                          />
-                        ) : null}
-                      </motion.div>
+                        </ResizablePanel>
+                      </>
                     )}
-                  </AnimatePresence>
-                </div>
-              </div>
-            </>
-          )}
+                  </ResizablePanelGroup>
+                </ResizablePanel>
+
+                {bottomPanelVisible && (
+                  <>
+                    <ResizableHandle withHandle />
+                    <ResizablePanel ref={bottomPanelRef} defaultSize={30}>
+                      <BottomPanel
+                        open={() => {
+                          setBottomPanelVisible(true);
+                        }}
+                        isOpen={bottomPanelVisible}
+                        close={() => {
+                          // doesn't work, ill figure it out later idec anymore
+                          bottomPanelRef.current?.resize(0);
+                          setBottomPanelVisible(false);
+                        }}
+                      />
+                    </ResizablePanel>
+                  </>
+                )}
+                {/* <div
+                  style={
+                    {
+                      // maxHeight: bottomPanelVisible ? "auto" : "0px",
+                    }
+                  }
+                > */}
+
+                {/* </div> */}
+              </ResizablePanelGroup>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {rightSidebar.component && (
+                <motion.div
+                  key={`right-sidebar-${rightSidebar.component}`}
+                  initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+                  animate={{
+                    width: rightSidebar.component === "chat" ? "25%" : "16%",
+                    opacity: 1,
+                    marginLeft: 0,
+                    transition: {
+                      width: {
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                        mass: 0.8,
+                      },
+                      opacity: { duration: 0.1, delay: 0.05 },
+                    },
+                  }}
+                  exit={{
+                    width: 0,
+                    opacity: 0,
+                    marginLeft: "-1px",
+                    transition: {
+                      width: {
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                        mass: 0.8,
+                      },
+                      opacity: { duration: 0.1 },
+                    },
+                  }}
+                  className="h-full flex-shrink-0 border-l  overflow-hidden"
+                  style={{ minWidth: 0 }}
+                >
+                  {rightSidebar.component === "chat" ? (
+                    <div className="relative flex h-full flex-col">
+                      <Chat
+                        onCloseChat={() => toggleSidebar("chat", "right")}
+                      />
+                    </div>
+                  ) : rightSidebar.component === "websiteTree" ? (
+                    <ProjectsSidebar onNuke={() => {}} />
+                  ) : rightSidebar.component === "reactTree" ? (
+                    <ReactTree
+                      onClose={() => toggleSidebar("reactTree", "right")}
+                    />
+                  ) : null}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         <CommandWrapper
@@ -1028,6 +1028,12 @@ export default function Home() {
             toggleSidebar("websiteTree", position)
           }
         />
+
+        {/* Render Leader Key Hints */}
+        {/* <LeaderKeyHints
+          isVisible={showLeaderHints}
+          onClose={() => setShowLeaderHints(false)}
+        /> */}
       </ChatInstanceContext.Provider>
     </main>
   );
@@ -1115,43 +1121,44 @@ const CommandWrapper: React.FC<CommandWrapperProps> = ({
 
       navigator.clipboard.writeText(message.url);
 
+
       // Create a toast notification with a green check mark
-      const toast = document.createElement("div");
-      toast.style.position = "fixed";
-      toast.style.bottom = "20px";
-      toast.style.right = "20px";
-      toast.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
-      toast.style.color = "#fff";
-      toast.style.padding = "10px 15px";
-      toast.style.borderRadius = "4px";
-      toast.style.display = "flex";
-      toast.style.alignItems = "center";
-      toast.style.zIndex = "9999";
-      toast.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.2)";
-      toast.style.transition = "opacity 0.3s ease-in-out";
-      toast.style.cursor = "pointer";
-
-      const checkIcon = document.createElement("span");
-      checkIcon.innerHTML = "✓";
-      checkIcon.style.color = "#4ade80";
-      checkIcon.style.marginRight = "8px";
-      checkIcon.style.fontSize = "18px";
-
-      const text = document.createElement("span");
-      text.textContent = "Copied to clipboard";
-      text.style.fontSize = "14px";
-
+      const toast = document.createElement('div');
+      toast.style.position = 'fixed';
+      toast.style.bottom = '20px';
+      toast.style.right = '20px';
+      toast.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      toast.style.color = '#fff';
+      toast.style.padding = '10px 15px';
+      toast.style.borderRadius = '4px';
+      toast.style.display = 'flex';
+      toast.style.alignItems = 'center';
+      toast.style.zIndex = '9999';
+      toast.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+      toast.style.transition = 'opacity 0.3s ease-in-out';
+      toast.style.cursor = 'pointer';
+      
+      const checkIcon = document.createElement('span');
+      checkIcon.innerHTML = '✓';
+      checkIcon.style.color = '#4ade80';
+      checkIcon.style.marginRight = '8px';
+      checkIcon.style.fontSize = '18px';
+      
+      const text = document.createElement('span');
+      text.textContent = 'Copied to clipboard';
+      text.style.fontSize = '14px';
+      
       toast.appendChild(checkIcon);
       toast.appendChild(text);
-
-      toast.addEventListener("click", () => {
-        window.open(message.url, "_blank");
+      
+      toast.addEventListener('click', () => {
+        window.open(message.url, '_blank');
       });
-
+      
       document.body.appendChild(toast);
-
+      
       setTimeout(() => {
-        toast.style.opacity = "0";
+        toast.style.opacity = '0';
         setTimeout(() => {
           document.body.removeChild(toast);
         }, 300);
