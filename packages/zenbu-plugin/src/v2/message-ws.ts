@@ -146,8 +146,20 @@ export const injectWebSocket = (server: HttpServer) => {
               });
             }
 
+<<<<<<< Updated upstream
             yield* client.effect.pushChatEvent(roomId, event);
             const events = yield* client.effect.getChatEvents(roomId);
+||||||| Stash base
+          const stream = Stream.fromAsyncIterable<
+            TextStreamPart<ToolSet>,
+            ModelError
+          >(fullStream, (e) => new ModelError({ error: e }));
+=======
+          const stream = Stream.fromAsyncIterable<
+            TextStreamPart<{ stupid: any }>,
+            ModelError
+          >(fullStream, (e) => new ModelError({ error: e }));
+>>>>>>> Stashed changes
 
             const messages = yield* server_eventsToMessage(events);
 
