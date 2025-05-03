@@ -1,5 +1,6 @@
 import { chatRouter } from "./routers/chat-router";
 import { daemonRouter } from "./routers/daemon-router";
+import { workspaceRouter } from "./routers/workspace-router";
 import { createTRPCRouter, createCallerFactory } from "./trpc";
 
 /**
@@ -10,6 +11,7 @@ import { createTRPCRouter, createCallerFactory } from "./trpc";
 export const appRouter = createTRPCRouter({
   daemon: daemonRouter,
   project: chatRouter,
+  workspace: workspaceRouter
 });
 
 // export type definition of API

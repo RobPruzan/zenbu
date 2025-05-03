@@ -399,41 +399,6 @@ export const ChatTextArea = () => {
           const blob = new Blob([await fileDataArray[0].arrayBuffer()]);
           formData.append("image", blob);
 
-          /**
-           *
-           * okay so what is there to be done
-           *
-           * upload image
-           *
-           * get url
-           *
-           * what data structure do we need to encapsulate this?
-           *
-           * is this just context? i guess its fine to model it like that for now
-           *
-           * okay so each message has context and a message?
-           *
-           * how is context treated in the system? User message? System prompt? Something else? I suppose user data just combined into one thing
-           *
-           * so you want a message to have context and the message side by side then you will have some function that combines them
-           *
-           * okay so then you have a message that has text and context, do we ever want more data that we can one shot right now?
-           *
-           * i think context is a fine abstraction and then can make that a discriminated union...............
-           *
-           *
-           * does this mean a message has to look like that now? can i just include it in the message itself when it has text parts and then it also has context?
-           *
-           *
-           * and now i fuck myself cause i decided to use the raw type lol
-           *
-           *
-           * its fine i can abstract it i guess?
-           *
-           *
-           * uh does my rpc work for this? idk
-           */
-
           const res = await fetch("http://localhost:5001/upload", {
             body: formData,
             method: "POST",
