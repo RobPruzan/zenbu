@@ -80,7 +80,8 @@ export const ProjectsSidebar = ({ onNuke }: { onNuke: () => void }) => {
             </div>
           ) : (
             projects
-              .toSorted((a, b) => b.createdAt - a.createdAt)
+              .slice()
+              .sort((a, b) => b.createdAt - a.createdAt)
               .map((project) => (
                 <ProjectButton key={project.name} project={project} />
               ))

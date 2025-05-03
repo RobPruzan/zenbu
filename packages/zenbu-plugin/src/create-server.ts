@@ -153,6 +153,39 @@ export const createServer = async () => {
 
       return res;
     })
+    .post("/uploads", async (opts) => {
+      const formData = await opts.req.formData();
+
+      const file = formData.get("file");
+      if (!file) {
+        throw new Error("validation error needs file in form data womp womp");
+      }
+
+      if (!(file instanceof File)) {
+        throw new Error("validation error should be file womp womp");
+      }
+
+      const fileBytes = await file.bytes();
+
+      const now = Date.now();
+      const fileName = `file-${now}-${nanoid()}.${file.name.split('.').pop() || 'bin'}`;
+      const path = `.zenbu/uploads/${fileName}`;
+
+      await writeFile(path, fileBytes);
+
+      return opts.json({
+        success: true,
+        fileName,
+      });
+    })
+    .get("/uploads/:path", async (opts) => {
+      const leafPath = opts.req.param("path");
+      const path = `.zenbu/uploads/${leafPath}`;
+
+      const file = await readFile(path);
+      
+      return new Response(file);
+    })
     .post("/upload", async (opts) => {
       // this may be fire hold up??
       // i guess we want form shit

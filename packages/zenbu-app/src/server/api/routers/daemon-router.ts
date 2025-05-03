@@ -69,7 +69,8 @@ export const daemonRouter = createTRPCRouter({
               })
               .then((res) => res.json()),
           );
-          return Schema.project;
+          return 
+          // return Schema.project;
         }),
       );
 
@@ -100,7 +101,7 @@ export const daemonRouter = createTRPCRouter({
               })
               .then((res) => res.json()),
           );
-          return Schema.project;
+          // return Schema.project;
         }),
       );
 
