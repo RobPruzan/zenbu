@@ -1,3 +1,4 @@
+"use client";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { trpc } from "src/lib/trpc";
 import { Project } from "zenbu-daemon";

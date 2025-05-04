@@ -82,7 +82,9 @@ function ProjectCard({
               }}
               onClick={(e) => {
                 e.stopPropagation();
-                router.push(`/editor/${project.name}`);
+                // router.push(`/editor/${project.name}`);
+                // todo: swap over ui when ready
+                router.push("/");
               }}
             >
               <Edit2Icon className="h-4 w-4" />
@@ -110,7 +112,7 @@ function ProjectCard({
             router.push(`/editor/${project.name}`);
           }}
         >
-          Open in Editor
+          Open in Real Editor
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
@@ -121,7 +123,7 @@ export default function Page() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const uploadBackgroundImage = useUploadBackgroundImage();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const workspaces = ["home", "work", "games"];
+  const workspaces = ["home", "work", "games", "reproductions", "reusable", "os", "productivity"];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
