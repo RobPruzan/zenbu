@@ -9,7 +9,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: #000000;
+      background: blue;
       color: #ffffff;
       font-family:
         -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Oxygen,
@@ -20,7 +20,7 @@
     <div style="text-align: center; max-width: 600px; padding: 0 20px">
       <div class="container">
         <div class="logo">
-          <svg
+          <!-- <svg
             width="180"
             height="180"
             viewBox="0 0 180 180"
@@ -76,11 +76,11 @@
                 <stop offset="1" stop-color="white" stop-opacity="0" />
               </linearGradient>
             </defs>
-          </svg>
+          </svg> -->
         </div>
       </div>
 
-      <div style="margin: 40px 0; text-align: left; color: #aaaaaa">
+      <div style="margin:border border-gray-600 hover:border-gray-400 40px 0; text-align: left; color: #aaaaaa">
         <p
           style="
             margin: 15px 0;
@@ -153,27 +153,77 @@
           Read our docs
         </a>
       </div>
-      
-      <div style="margin-top: 30px; background: #222222; padding: 15px; border-radius: 8px; display: inline-block">
-        <div style="font-size: 14px; color: #aaaaaa; margin-bottom: 5px">Counter</div>
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px">
-          <button id="decrement" style="background: #333; border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer">-</button>
-          <span id="count" style="font-size: 18px; font-weight: bold; min-width: 30px; text-align: center">0</span>
-          <button id="increment" style="background: #333; border: none; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer">+</button>
+
+      <div
+        style="
+          margin-top: 30px;
+          background: #222222;
+          padding: 15px;
+          border-radius: 8px;
+          display: inline-block;
+        "
+      >
+        <div style="font-size: 14px; color: #aaaaaa; margin-bottom: 5px">
+          Counter
+        </div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+          "
+        >
+          <button
+            id="decrement"
+            style="
+              background: #333;
+              border: none;
+              color: white;
+              padding: 5px 10px;
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            -
+          </button>
+          <span
+            id="count"
+            style="
+              font-size: 18px;
+              font-weight: bold;
+              min-width: 30px;
+              text-align: center;
+            "
+            >0</span
+          >
+          <button
+            id="increment"
+            style="
+              background: #333;
+              border: none;
+              color: white;
+              padding: 5px 10px;
+              border-radius: 4px;
+              cursor: pointer;
+            "
+          >
+            +
+          </button>
         </div>
       </div>
     </div>
-    
+
     <script>
       let count = 0;
-      const countElement = document.getElementById('count');
-      
-      document.getElementById('increment').addEventListener('click', () => {
+      const countElement = document.getElementById("count");
+
+      document.getElementById("increment").addEventListener("click", () => {
         count++;
         countElement.textContent = count;
       });
-      
-      document.getElementById('decrement').addEventListener('click', () => {
+
+      document.getElementById("decrement").addEventListener("click", () => {
         count--;
         countElement.textContent = count;
       });

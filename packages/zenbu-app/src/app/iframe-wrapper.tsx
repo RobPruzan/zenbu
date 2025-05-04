@@ -7,6 +7,10 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import {
+  startTransition,
+  unstable_ViewTransition as ViewTransition,
+} from "react";
 // import lastUpdate from "./hot-reload.ts";
 import { InspectorState } from "zenbu-devtools";
 import lastUpdate from "./hot-reload";
@@ -78,35 +82,42 @@ export const IFrameWrapper = ({
       document.removeEventListener("click", handleMouseClick);
     };
   }, []);
+  const project = useChatStore((project) => project.iframe.state.project);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        position: "relative",
-      }}
+    <ViewTransition
+      // key={activeWindow.id}
+      name={`window-${project.name}`}
+      // share="stage-manager-anim"
     >
-      <div className="relative w-full h-full">
-        {children}
-        <iframe
-          id={mobile ? "mobile-iframe" : IFRAME_ID}
-          key={lastUpdate}
-          ref={iframeRef}
-          // src="http://localhost:4200"
-          src={iframe.state.url}
-          // src={"http://localhost:3002"}
-          style={{
-            height: "100%",
-            width: "100%",
-            border: "none",
-          }}
-        />
-        {/* <ScreenshotTool /> */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          height: "100%",
+          position: "relative",
+        }}
+      >
+        <div className="relative w-full h-full">
+          {children}
+          <iframe
+            id={mobile ? "mobile-iframe" : IFRAME_ID}
+            key={lastUpdate}
+            ref={iframeRef}
+            // src="http://localhost:4200"
+            src={iframe.state.url}
+            // src={"http://localhost:3002"}
+            style={{
+              height: "100%",
+              width: "100%",
+              border: "none",
+            }}
+          />
+          {/* <ScreenshotTool /> */}
+        </div>
       </div>
-    </div>
+    </ViewTransition>
   );
 };
 

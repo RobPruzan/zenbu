@@ -62,7 +62,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
               onFocus={(e) => {}}
               value={iframe.state.url}
               onChange={(e) => {
-                iframe.actions.setInspectorState({
+                iframe.actions.setState({
                   url: e.target.value,
                 });
               }}

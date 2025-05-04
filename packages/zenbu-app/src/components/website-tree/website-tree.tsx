@@ -259,7 +259,7 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
       );
 
       // projectsQuery.refetch();
-      iframe.actions.setInspectorState({
+      iframe.actions.setState({
         url: `http://localhost:${result.port}`,
       });
     },
@@ -330,7 +330,7 @@ export const WebsiteTree: React.FC<WebsiteTreeProps> = ({
               ])}
               onClick={() => {
                 // some store set that determines the project url
-                iframe.actions.setInspectorState({
+                iframe.actions.setState({
                   url: `http://localhost:${project.port}`,
                 });
                 onSelect?.(`http://localhost:${project.port}`);

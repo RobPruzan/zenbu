@@ -3,17 +3,17 @@ import { SliceCreator } from "../chat-store";
 
 export type IFrameSliceInitialState = {
   url: string;
-  project: Project
+  project: Project;
 };
 export type IFrameSliceState = {
   url: string;
-  project: Project
+  project: Project;
 };
 
 export type IFrameSlice = {
   state: IFrameSliceInitialState;
   actions: {
-    setInspectorState: (state: Partial<IFrameSliceState>) => void;
+    setState: (state: Partial<IFrameSliceState>) => void;
   };
 };
 
@@ -22,7 +22,7 @@ export const createIFrameSlice =
   (set, get) => ({
     state: initialState,
     actions: {
-      setInspectorState: (inspectorState) =>
+      setState: (inspectorState) =>
         set((state) => {
           state.iframe.state = {
             ...state.iframe.state,

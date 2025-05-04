@@ -62,7 +62,7 @@ const ProjectCommandContent = ({ onClose }: { onClose: () => void }) => {
     port: number;
     pid?: string;
   }) => {
-    iframe.actions.setInspectorState({
+    iframe.actions.setState({
       url: `http://localhost:${project.port}`,
     });
 

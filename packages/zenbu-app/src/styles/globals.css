@@ -4,6 +4,13 @@
 
 @layer base {
   :root {
+    --transition-duration: 450ms;
+    --bezier-x1: 0.23;
+    --bezier-y1: 0.7;
+    --bezier-x2: 0.25;
+    --bezier-y2: 1;
+    /* cubic-bezier(0.35, 0.51, 0.22, 1.00) */
+
     --background: 223.81 0% 98.68%;
     --foreground: 0 0% 0%;
     --card: 223.81 -172.52% 100%;
@@ -174,3 +181,56 @@
   font-weight: 300;
   pointer-events: none;
 }
+
+::view-transition-group(.stage-manager-anim) {
+  animation-duration: var(--transition-duration);
+  animation-timing-function: cubic-bezier(
+    var(--bezier-x1),
+    var(--bezier-y1),
+    var(--bezier-x2),
+    var(--bezier-y2)
+  );
+}
+
+/* Control outgoing element */
+::view-transition-old(.stage-manager-anim) {
+  animation: var(--transition-duration);
+  animation-timing-function: cubic-bezier(
+    var(--bezier-x1),
+    var(--bezier-y1),
+    var(--bezier-x2),
+    var(--bezier-y2)
+  );
+  z-index: 0;
+  /* Remove custom scale animation - we'll let the group handle it */
+}
+
+/* Control incoming element */
+::view-transition-new(.stage-manager-anim) {
+  animation: var(--transition-duration);
+  animation-timing-function: cubic-bezier(
+    var(--bezier-x1),
+    var(--bezier-y1),
+    var(--bezier-x2),
+    var(--bezier-y2)
+  );
+  z-index: 1;
+  /* Remove custom scale animation - we'll let the group handle it */
+}
+/* Basic fade animations */
+/* @keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+} */
