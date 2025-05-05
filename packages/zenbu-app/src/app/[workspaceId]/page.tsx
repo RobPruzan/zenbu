@@ -65,7 +65,7 @@ function ProjectCard({
         <div
           ref={setNodeRef}
           style={cardStyle}
-          className="bg-background rounded-lg shadow-lg flex flex-col min-w-[256px]"
+          className="bg-background rounded-lg shadow-lg flex flex-col min-w-[256px] w-fit"
         >
           <div
             {...listeners}
@@ -123,7 +123,7 @@ export default function Page() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const uploadBackgroundImage = useUploadBackgroundImage();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const workspaces = ["home", "work", "games", "reproductions", "reusable", "os", "productivity"];
+  const workspaces = ["home", "work", "games", "reproductions", "reusable", "os", "productivity", "devtools", "packages"];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -148,7 +148,7 @@ export default function Page() {
           ? `http://localhost:${project.port}`
           : null,
     }))
-    .slice(0, 4);
+    .slice(0, 3);
 
   useEffect(() => {
     const names = projectsWithUrl.map((p) => p.name);
@@ -245,10 +245,7 @@ export default function Page() {
 
         <SortableContext items={items} strategy={rectSortingStrategy}>
           <div
-            className="grid gap-4 p-4"
-            style={{
-              gridTemplateColumns: "repeat(auto-fill, minmax(256px, 1fr))",
-            }}
+            className="flex flex-col gap-4 p-4 w-fit"
           >
             {items.map((id) => {
               const project = projectsWithUrl.find((p) => p.name === id)!;

@@ -1,8 +1,14 @@
 import { SkullIcon } from "lucide-react";
-import { useContext, useMemo, startTransition,  unstable_ViewTransition as ViewTransition, } from "react";
+import {
+  useContext,
+  useMemo,
+  startTransition,
+  unstable_ViewTransition as ViewTransition,
+} from "react";
 import { Project } from "zenbu-daemon";
 import { ProjectContext } from "./context";
-import { THUMBNAIL_WIDTH_PX } from "./editor";
+import { THUMBNAIL_WIDTH_PX, useThumbnailDim } from "../[workspaceId]/hooks";
+import { height } from "tailwindcss/defaultTheme";
 
 export const InactiveProjectPreview = ({
   project,
@@ -13,18 +19,9 @@ export const InactiveProjectPreview = ({
 }) => {
   const { setProject } = useContext(ProjectContext);
 
-  const measuredAspectRatio = useMemo(() => {
-    const { width, height } = measuredSize;
-    return width && height ? height / width : 2 / 3;
-  }, [measuredSize]);
-
-  const thumbnailContainerHeight = useMemo(
-    () => THUMBNAIL_WIDTH_PX * measuredAspectRatio,
-    [measuredAspectRatio],
-  );
-
-  const iframeW = measuredSize.width ?? 800;
-  const iframeH = measuredSize.height ?? iframeW * measuredAspectRatio;
+  const { iframeH, iframeW, thumbnailContainerHeight } = useThumbnailDim({
+    measuredSize,
+  });
 
   if (project.status !== "running") {
     return (

@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --transition-duration: 450ms;
+    --transition-duration: 500ms;
     --bezier-x1: 0.23;
     --bezier-y1: 0.7;
     --bezier-x2: 0.25;

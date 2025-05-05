@@ -10,8 +10,7 @@ import {
 import { Preview } from "./preview";
 import { LeftSidebar } from "./left-sidebar";
 import { SlimSidebar } from "./slim-sidebar";
-
-export const THUMBNAIL_WIDTH_PX = 160;
+import { useThumbnailScaleCalc } from "../[workspaceId]/hooks";
 
 export const Editor = () => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
@@ -20,6 +19,8 @@ export const Editor = () => {
     [projects],
   );
 
+  const { measuredSize, previewContainerRef } = useThumbnailScaleCalc();
+
   const initialProject = runningProjects.at(0);
   if (!initialProject) {
     throw new Error("todo: enforce this invariant somewhere else");
@@ -27,47 +28,6 @@ export const Editor = () => {
   const [currentProject, setCurrentProject] = useState<Project>(initialProject);
 
   const sidebarRouteState = useSidebarRouterInit();
-
-  const previewContainerRef = useRef<HTMLDivElement>(null);
-  const [measuredSize, setMeasuredSize] = useState<{
-    width: number | null;
-    height: number | null;
-  }>({ width: null, height: null });
-
-  const thumbnailScale = useMemo(() => {
-    const width = measuredSize.width ?? 800;
-    return THUMBNAIL_WIDTH_PX / width;
-  }, [measuredSize.width]);
-
-  useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        setMeasuredSize({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
-    const currentRef = previewContainerRef.current;
-    if (currentRef) {
-      setMeasuredSize({
-        width: currentRef.offsetWidth,
-        height: currentRef.offsetHeight,
-      });
-      observer.observe(currentRef);
-    }
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
-      observer.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--thumbnail-scale",
-      thumbnailScale.toString(),
-    );
-  }, [thumbnailScale]);
 
   if (!currentProject) {
     return (
