@@ -13,6 +13,7 @@ import {
   useSidebarRouterInit,
   ProjectContext,
   SidebarRouterContext,
+  useSidebarRouter,
 } from "./context";
 import { Preview } from "./preview";
 import { LeftSidebar } from "./left-sidebar";
@@ -35,6 +36,11 @@ import { CommandMenu } from "./command-menu";
 import { MessageSquareIcon } from "lucide-react";
 import { CommandPalette } from "src/components/command-palette";
 import { CommandWrapper } from "../editor/[projectName]/command-wrapper";
+import dynamic from "next/dynamic";
+// import { BottomPanel } from "./bottom-panel";
+const BottomPanel = dynamic(() => import("src/app/v2/bottom-panel"), {
+  ssr: false,
+});
 
 export const Editor = () => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
@@ -49,11 +55,10 @@ export const Editor = () => {
   if (!initialProject) {
     throw new Error("todo: enforce this invariant somewhere else");
   }
-  const [currentProject, setCurrentProject] = useState<Project>(initialProject);
 
   const sidebarRouteState = useSidebarRouterInit();
 
-  if (!currentProject) {
+  if (!initialProject) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background text-foreground">
         No running projects found. Start one to continue.
@@ -70,10 +75,10 @@ export const Editor = () => {
     <ChatInstanceContext.Provider
       initialValue={{
         iframe: {
-          project: currentProject,
+          project: initialProject,
           url:
-            currentProject.status === "running"
-              ? `http://localhost:${currentProject.port}`
+            initialProject.status === "running"
+              ? `http://localhost:${initialProject.port}`
               : null!,
         },
         toolbar: {
@@ -126,7 +131,7 @@ export const Editor = () => {
           </ViewTransition>
           <div
             ref={previewContainerRef}
-            className="flex-1 flex items-center justify-center overflow-hidden"
+            className="flex flex-col w-full items-center justify-center overflow-hidden"
           >
             <IFrameWrapper>
               <ScreenshotTool />
@@ -135,6 +140,9 @@ export const Editor = () => {
               <BetterDrawing />
               <Recording />
             </IFrameWrapper>
+            <BottomPanel
+        
+            />
           </div>
           <RightSidebar />
         </div>

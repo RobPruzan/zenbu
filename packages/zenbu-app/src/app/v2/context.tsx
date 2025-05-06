@@ -27,20 +27,34 @@ export const ProjectContext = createContext<{
 
 export type LeftSidebarRoute = "projects" | "experiments";
 export type RightSidebarRoute = "chat";
+export type BottomSidebarRoute = "terminal";
 export const SidebarRouterContext = createContext<{
   left: LeftSidebarRoute | null;
   right: RightSidebarRoute | null;
+  bottom: BottomSidebarRoute | null;
   setRightSidebarRoute: (route: RightSidebarRoute | null) => void;
   setLeftSidebarRoute: (route: LeftSidebarRoute | null) => void;
+  setBottomSidebarRoute: (route: BottomSidebarRoute | null) => void;
 }>(null!);
 export const useSidebarRouter = () => useContext(SidebarRouterContext);
 
 export const useSidebarRouterInit = () => {
   const [left, setLeftSidebarRoute] = useState<LeftSidebarRoute | null>(
-    "projects",
-  );
-  const [right, setRightSidebarRoute] = useState<RightSidebarRoute | null>(
+    // "projects",
     null,
   );
-  return { left, right, setRightSidebarRoute, setLeftSidebarRoute };
+  const [right, setRightSidebarRoute] = useState<RightSidebarRoute | null>(
+    "chat",
+  );
+  const [bottom, setBottomSidebarRoute] = useState<BottomSidebarRoute | null>(
+    null,
+  );
+  return {
+    bottom,
+    setBottomSidebarRoute,
+    left,
+    right,
+    setRightSidebarRoute,
+    setLeftSidebarRoute,
+  };
 };

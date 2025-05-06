@@ -1,7 +1,8 @@
 "use client";
-import * as React from "react";
 import { Editor } from "./v2/editor";
 import { trpc } from "src/lib/trpc";
+import { unstable_ViewTransition as ViewTransition } from "react";
+import { css } from "src/lib/utils";
 
 export default function Page() {
   const [[workspace]] = trpc.useSuspenseQueries((t) => [
@@ -22,7 +23,7 @@ export default function Page() {
       }}
       className="h-[100vh] w-[100vw] relative flex justify-center items-center"
     >
-      <Editor />;
+      <Editor />
     </div>
   );
 }

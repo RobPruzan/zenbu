@@ -17,7 +17,7 @@ import {
   DragEndEvent,
   UniqueIdentifier,
 } from "@dnd-kit/core";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -108,7 +108,7 @@ function ProjectCard({
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
-                router.push("/");
+                  router.push("/");
               }}
             >
               <Edit2Icon className="h-4 w-4" />
