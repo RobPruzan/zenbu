@@ -1,5 +1,6 @@
 import { createStore, StateCreator, useStore } from "zustand";
 import { createZustandContext } from "./create-zustant-context";
+import { useZustand } from "use-zustand";
 import { immer } from "zustand/middleware/immer";
 import {
   ChatControlsInitialState,
@@ -31,6 +32,7 @@ import {
   IFrameSlice,
   IFrameSliceInitialState,
 } from "./slices/iframe-slice";
+import { useDeferredValue } from "react";
 
 export type ChatInstanceInitialState = {
   eventLog: EventLogSliceInitialState;
@@ -97,7 +99,13 @@ export function useChatStore(): ChatInstanceStore;
 export function useChatStore<T>(selector: (state: ChatInstanceStore) => T): T;
 export function useChatStore<T>(selector?: (state: ChatInstanceStore) => T) {
   const store = ChatInstanceContext.useContext();
-  return useStore(store, selector!);
+  // return useZustand(store, selector!);
+  const res = useStore(store, selector!);
+
+  const deferred = useDeferredValue(res);
+
+  // to make compatible with view transitions
+  return deferred;
 }
 
 export type SliceCreator<SliceState> = StateCreator<

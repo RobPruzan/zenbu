@@ -12,8 +12,10 @@ import type { eventWithTime } from "@rrweb/types";
  * ofc need to send that back up, but seems like skeleton is implemented
  */
 
+// console.log('oyoy');
+
 window.addEventListener("load", () => {
-  console.log("loaded, sending message");
+  // console.log("loaded, sending message");
 
   setTimeout(() => {
     sendMessage({
@@ -35,6 +37,7 @@ document.addEventListener("mousemove", (e) => {
 
   if (!(target instanceof Element)) {
     currentMouseOverElement = null;
+
     return;
   }
 
@@ -43,6 +46,8 @@ document.addEventListener("mousemove", (e) => {
 
   // console.log("sending update");
 
+  // console.log('noice');
+  
   sendMessage({
     kind: "mouse-position-update",
     rect,

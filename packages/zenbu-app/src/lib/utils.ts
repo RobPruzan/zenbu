@@ -6,3 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const iife = <T>(f: () => T) => f();
+
+
+export const css = (strings: TemplateStringsArray, ...values: any[]) =>
+  String.raw({ raw: strings }, ...values);

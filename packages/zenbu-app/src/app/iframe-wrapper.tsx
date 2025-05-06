@@ -83,41 +83,62 @@ export const IFrameWrapper = ({
     };
   }, []);
   const project = useChatStore((project) => project.iframe.state.project);
+  if (project.status !== "running") {
+    throw new Error("todo");
+  }
 
   return (
-    <ViewTransition
-      // key={activeWindow.id}
-      name={`window-${project.name}`}
-      // share="stage-manager-anim"
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          height: "100%",
-          position: "relative",
-        }}
+    <div className={`w-full h-full overflow-hidden relative bg-black/20 `}>
+      {children}
+      <ViewTransition
+        key={project.name}
+        share="stage-manager-anim"
+        name={`preview-${project.name}`}
+        update={"none"}
       >
-        <div className="relative w-full h-full">
-          {children}
-          <iframe
-            id={mobile ? "mobile-iframe" : IFRAME_ID}
-            key={lastUpdate}
-            ref={iframeRef}
-            // src="http://localhost:4200"
-            src={iframe.state.url}
-            // src={"http://localhost:3002"}
-            style={{
-              height: "100%",
-              width: "100%",
-              border: "none",
-            }}
-          />
-          {/* <ScreenshotTool /> */}
-        </div>
-      </div>
-    </ViewTransition>
+        <iframe
+          id={IFRAME_ID}
+          ref={iframeRef}
+          key={lastUpdate}
+          className="w-full h-full"
+          src={`http://localhost:${project.port}`}
+          title={project.name}
+        />
+      </ViewTransition>
+    </div>
+    // <ViewTransition
+    //   // key={activeWindow.id}
+    //   name={`window-${project.name}`}
+    //   // share="stage-manager-anim"
+    // >
+    //   <div
+    //     style={{
+    //       display: "flex",
+    //       flexDirection: "column",
+    //       width: "100%",
+    //       height: "100%",
+    //       position: "relative",
+    //     }}
+    //   >
+    //     <div className="relative w-full h-full">
+    //       {children}
+    //       <iframe
+    //         id={mobile ? "mobile-iframe" : IFRAME_ID}
+    //         key={lastUpdate}
+    //         ref={iframeRef}
+    //         // src="http://localhost:4200"
+    //         src={iframe.state.url}
+    //         // src={"http://localhost:3002"}
+    //         style={{
+    //           height: "100%",
+    //           width: "100%",
+    //           border: "none",
+    //         }}
+    //       />
+    //       {/* <ScreenshotTool /> */}
+    //     </div>
+    //   </div>
+    // </ViewTransition>
   );
 };
 

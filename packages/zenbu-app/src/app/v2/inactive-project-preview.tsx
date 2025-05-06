@@ -9,6 +9,7 @@ import { Project } from "zenbu-daemon";
 import { ProjectContext } from "./context";
 import { THUMBNAIL_WIDTH_PX, useThumbnailDim } from "../[workspaceId]/hooks";
 import { height } from "tailwindcss/defaultTheme";
+import { useChatStore } from "src/components/chat-store";
 
 export const InactiveProjectPreview = ({
   project,
@@ -17,11 +18,14 @@ export const InactiveProjectPreview = ({
   project: Project;
   measuredSize: { width: number | null; height: number | null };
 }) => {
-  const { setProject } = useContext(ProjectContext);
+  // const { setProject } = useContext(ProjectContext);
+  const iframeActions = useChatStore((state) => state.iframe.actions);
+  const toolbarActions = useChatStore((state) => state.toolbar.actions);
 
   const { iframeH, iframeW, thumbnailContainerHeight } = useThumbnailDim({
     measuredSize,
   });
+  const inspector = useChatStore((state) => state.inspector);
 
   if (project.status !== "running") {
     return (
@@ -37,13 +41,20 @@ export const InactiveProjectPreview = ({
       </div>
     );
   }
-
+  
   return (
     <ViewTransition share="stage-manager-anim" name={`preview-${project.name}`}>
       <div
         onClick={() => {
           startTransition(() => {
-            setProject(project);
+            toolbarActions.setIsDrawing(false);
+            inspector.actions.setInspectorState({
+              kind:
+                inspector.state.kind === "inspecting" ? "off" : "inspecting",
+            });
+            iframeActions.setState({
+              project,
+            });
           });
         }}
         style={{

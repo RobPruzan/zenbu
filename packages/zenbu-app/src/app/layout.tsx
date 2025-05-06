@@ -18,14 +18,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
-        <ViewTransition>
+        {/* <ViewTransition update={"none"}> */}
           <TRPCReactProvider>
             {/* <InspectorStateProvider> */}
             {/* this is literally just for the textarea input, so dumb */}
             <ChatProvider>{children}</ChatProvider>
             {/* </InspectorStateProvider> */}
           </TRPCReactProvider>
-        </ViewTransition>
+        {/* </ViewTransition> */}
       </body>
     </html>
   );

@@ -139,7 +139,7 @@ export function DevtoolsOverlay() {
     const getState = store.getState;
     const canvas = canvasRef.current;
     const iframe = document.getElementById(IFRAME_ID)! as HTMLIFrameElement;
-    if (!canvas || !iframe) return;
+    if (!canvas || !iframe) { return };
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -168,15 +168,18 @@ export function DevtoolsOverlay() {
         //     data.
         //   }
         // }
-       
+
         case "notification": {
           console.log("got notification");
           return;
         }
         case "mouse-position-update": {
           if (getState().inspector.state.kind !== "inspecting") {
+            console.log("naw");
+
             return;
           }
+          console.log("yay");
 
           const now = Date.now();
           const throttleInterval = 50;

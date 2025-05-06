@@ -585,7 +585,7 @@ export default function Home() {
         />
         <div className="flex h-full w-full flex-col overflow-hidden">
           <div className="flex h-full w-full overflow-hidden">
-            <AnimatePresence mode="wait">
+            {/* <AnimatePresence mode="wait">
               {showNextLint && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
@@ -602,7 +602,7 @@ export default function Home() {
                   <NextLint />
                 </motion.div>
               )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
             <AnimatePresence mode="wait">
               {leftSidebar.component && (
