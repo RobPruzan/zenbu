@@ -1,4 +1,6 @@
 import {
+  ArrowLeft,
+  ArrowLeftSquareIcon,
   CameraIcon,
   FolderIcon,
   HomeIcon,
@@ -19,6 +21,7 @@ import {
   TooltipTrigger,
 } from "src/components/ui/tooltip";
 import { useChatStore } from "src/components/chat-store";
+import { flushSync } from "react-dom";
 
 export const SlimSidebar = () => {
   const sidebar = useSidebarRouter();
@@ -30,17 +33,19 @@ export const SlimSidebar = () => {
       <div className="w-12 h-full flex flex-col items-center self-start pt-4 border-r gap-y-1.5">
         <Button
           onClick={() => {
-            router.push("/home");
+            // startTransition(() => {
+              flushSync(() => {
+                router.push("/home");
+              });
+            // });
           }}
           variant="ghost"
           className={cn(
             "h-8 w-8",
-            sidebar.left === "projects"
-              ? "bg-accent text-accent-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-accent/5",
+      
           )}
         >
-          <HomeIcon size={18} />
+          <ArrowLeft size={18} />
         </Button>
         <Button
           onClick={() => {

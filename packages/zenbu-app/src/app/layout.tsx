@@ -5,6 +5,7 @@ import { type Metadata } from "next";
 import { ChatProvider } from "src/components/chat-interface";
 import { TRPCReactProvider } from "src/trpc/react";
 import { unstable_ViewTransition as ViewTransition } from "react";
+import { AppSwitcherStateProvider } from "src/components/app-switcher-context";
 
 export const metadata: Metadata = {
   title: "Zenbu",
@@ -18,12 +19,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
-        <ViewTransition >
+        <ViewTransition default="fast-fade">
           <TRPCReactProvider>
-            {/* <InspectorStateProvider> */}
-            {/* this is literally just for the textarea input, so dumb */}
-            <ChatProvider>{children}</ChatProvider>
-            {/* </InspectorStateProvider> */}
+            <AppSwitcherStateProvider>
+              {/* <InspectorStateProvider> */}
+              {/* this is literally just for the textarea input, so dumb */}
+              <ChatProvider>{children}</ChatProvider>
+              {/* </InspectorStateProvider> */}
+            </AppSwitcherStateProvider>
           </TRPCReactProvider>
         </ViewTransition>
       </body>

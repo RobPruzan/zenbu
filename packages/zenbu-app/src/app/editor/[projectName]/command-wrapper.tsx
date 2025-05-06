@@ -13,16 +13,14 @@ import { useIFrameMessenger } from "src/hooks/use-iframe-listener";
 import { trpc } from "src/lib/trpc";
 import { ChildToParentMessage } from "zenbu-devtools";
 import { getCommandItems } from "./command-items";
+import { useSidebarRouter } from "src/app/v2/context";
 
 interface CommandWrapperProps {
   onToggleChat: (position: "left" | "right") => void;
   onToggleWebsiteTree: (position: "left" | "right") => void;
 }
 
-export const CommandWrapper: React.FC<CommandWrapperProps> = ({
-  onToggleChat,
-  onToggleWebsiteTree,
-}) => {
+export const CommandWrapper = () => {
   const toolbarState = useChatStore((state) => state.toolbar);
   const inspector = useChatStore((state) => state.inspector);
 
@@ -44,26 +42,28 @@ export const CommandWrapper: React.FC<CommandWrapperProps> = ({
     }
   }, []);
 
+  const router = useSidebarRouter();
+
   const utils = trpc.useUtils();
 
   const additionalCommands = [
     {
-      id: "toggle-chat-left",
-      shortcut: "Toggle Chat Left",
-      icon: <MessageSquare className="h-5 w-5" />,
-      onSelect: () => onToggleChat("left"),
-    },
-    {
       id: "toggle-chat-right",
-      shortcut: "Toggle Chat Right",
+      shortcut: "Chat",
       icon: <MessageSquare className="h-5 w-5" />,
-      onSelect: () => onToggleChat("right"),
+      onSelect: () => {
+        router.setRightSidebarRoute(router.right === "chat" ? null : "chat");
+      },
     },
     {
       id: "toggle-website-tree-left",
-      shortcut: "Toggle Website Tree Left",
+      shortcut: "Projects",
       icon: <FileText className="h-5 w-5" />,
-      onSelect: () => onToggleWebsiteTree("left"),
+      onSelect: () => {
+        router.setLeftSidebarRoute(
+          router.left === "projects" ? null : "projects",
+        );
+      },
     },
     {
       id: "toggle-mobile-split",
@@ -76,12 +76,6 @@ export const CommandWrapper: React.FC<CommandWrapperProps> = ({
       shortcut: "Toggle Split",
       icon: <SplitSquareHorizontal className="h-5 w-5" />,
       onSelect: () => window.dispatchEvent(new Event("toggle-split")),
-    },
-    {
-      id: "toggle-website-tree-right",
-      shortcut: "Toggle Website Tree Right",
-      icon: <FileText className="h-5 w-5" />,
-      onSelect: () => onToggleWebsiteTree("right"),
     },
   ];
   const context = useChatStore((state) => state.context);

@@ -11,7 +11,10 @@ import {
   startTransition,
   unstable_ViewTransition as ViewTransition,
 } from "react";
-import { useChatStore } from "src/components/chat-store";
+import {
+  useChatStore,
+  useTransitionChatStore,
+} from "src/components/chat-store";
 import { Button } from "src/components/ui/button";
 import { trpc } from "src/lib/trpc";
 import { cn } from "src/lib/utils";
@@ -30,7 +33,7 @@ export const ProjectsSidebar = ({ onNuke }: { onNuke: () => void }) => {
   const nukeMutation = trpc.daemon.nuke.useMutation();
 
   const iframeActions = useChatStore((state) => state.iframe.actions);
-  const project = useChatStore((state) => state.iframe.state.project);
+  const project = useTransitionChatStore((state) => state.iframe.state.project);
 
   const inactiveProjects = projects.filter((p) => p.name !== project.name);
   const activeProject = projects.find((p) => p.name === project.name);

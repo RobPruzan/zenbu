@@ -9,18 +9,17 @@ const config = {
   experimental: {
     viewTransition: true,
   },
+  devIndicators: false,
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '5001',
-        pathname: '/image/**',
+        protocol: "http",
+        hostname: "localhost",
+        port: "5001",
+        pathname: "/image/**",
       },
     ],
   },
-
 };
-
 
 export default config;

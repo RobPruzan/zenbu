@@ -288,13 +288,13 @@ export const getCommandItems = ({
       window.dispatchEvent(new Event("toggle-website-tree"));
     },
   },
-  {
-    shortcut: "Chat",
-    icon: <MessageSquare size={16} />,
-    onSelect: () => {
-      window.dispatchEvent(new Event("toggle-chat"));
-    },
-  },
+  // {
+  //   shortcut: "Chat",
+  //   icon: <MessageSquare size={16} />,
+  //   onSelect: () => {
+  //     window.dispatchEvent(new Event("toggle-chat"));
+  //   },
+  // },
   {
     shortcut: "Toggle Top Bar",
     icon: <PanelTop size={16} />,

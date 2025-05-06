@@ -313,3 +313,13 @@
     opacity: 1;
   }
 }
+
+
+
+::view-transition-old(.fast-fade) {
+  animation-duration: 150ms;
+}
+
+::view-transition-new(.fast-fade) {
+  animation-duration: 150ms;
+}

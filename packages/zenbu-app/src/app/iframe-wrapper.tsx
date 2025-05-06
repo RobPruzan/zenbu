@@ -14,7 +14,10 @@ import {
 // import lastUpdate from "./hot-reload.ts";
 import { InspectorState } from "zenbu-devtools";
 import lastUpdate from "./hot-reload";
-import { useChatStore } from "src/components/chat-store";
+import {
+  useChatStore,
+  useTransitionChatStore,
+} from "src/components/chat-store";
 import { useMakeRequest } from "src/components/devtools-overlay";
 
 const snapshot = { kind: "off" as const };
@@ -31,7 +34,7 @@ export const IFrameWrapper = ({
   // const { inspectorState, setInspectorState } = useInspectorStateContext();
   const { inspector } = useChatStore();
 
-  const { iframe } = useChatStore();
+  const { iframe } = useTransitionChatStore();
 
   const makeRequest = useMakeRequest();
 
@@ -82,7 +85,9 @@ export const IFrameWrapper = ({
       document.removeEventListener("click", handleMouseClick);
     };
   }, []);
-  const project = useChatStore((project) => project.iframe.state.project);
+  const project = useTransitionChatStore(
+    (project) => project.iframe.state.project,
+  );
   if (project.status !== "running") {
     throw new Error("todo");
   }

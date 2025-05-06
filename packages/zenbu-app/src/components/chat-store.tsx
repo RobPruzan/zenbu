@@ -99,9 +99,16 @@ export function useChatStore(): ChatInstanceStore;
 export function useChatStore<T>(selector: (state: ChatInstanceStore) => T): T;
 export function useChatStore<T>(selector?: (state: ChatInstanceStore) => T) {
   const store = ChatInstanceContext.useContext();
-  // return useZustand(store, selector!);
   const res = useStore(store, selector!);
-
+  return res;
+}
+export function useTransitionChatStore(): ChatInstanceStore;
+export function useTransitionChatStore<T>(selector: (state: ChatInstanceStore) => T): T;
+export function useTransitionChatStore<T>(
+  selector?: (state: ChatInstanceStore) => T,
+) {
+  const store = ChatInstanceContext.useContext();
+  const res = useStore(store, selector!);
   const deferred = useDeferredValue(res);
 
   // to make compatible with view transitions

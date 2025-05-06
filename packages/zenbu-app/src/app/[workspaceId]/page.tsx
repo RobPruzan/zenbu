@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit2Icon, ImageIcon } from "lucide-react";
+import { Edit2Icon, ImageIcon, PlusCircleIcon } from "lucide-react";
 import { Button } from "src/components/ui/button";
 // import { pluginRPC } from "../rpc";
 import { trpc } from "src/lib/trpc";
@@ -31,6 +31,8 @@ import {
   useSortable,
   arrayMove,
 } from "@dnd-kit/sortable";
+import AppSwitcher from "src/components/option-tab-switcher";
+import Link from "next/link";
 // import router from "next/router";
 
 function ProjectCard({
@@ -65,45 +67,53 @@ function ProjectCard({
         <div
           ref={setNodeRef}
           style={cardStyle}
-          className="bg-background rounded-lg shadow-lg flex flex-col min-w-[256px] w-fit"
+          className="flex flex-col w-[200px] gap-2"
         >
           <div
             {...listeners}
             {...attributes}
-            className="p-2 border-b flex items-center justify-between cursor-move"
+            className="bg-background rounded-2xl shadow-[0_8px_16px_rgba(0,0,0,0.2)] overflow-hidden cursor-move"
           >
-            <h3 className="font-medium text-sm">{project.name}</h3>
+            {project.url ? (
+              <div className="w-[200px] h-[200px] overflow-hidden relative">
+                <iframe
+                  src={project.url}
+                  className="absolute top-0 left-0 w-[400px] h-[400px] pointer-events-none"
+                  style={{
+                    transform: "scale(0.5)",
+                    transformOrigin: "top left",
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-900/20" />
+              </div>
+            ) : (
+              <div className="w-[200px] h-[200px] bg-zinc-800 flex items-center justify-center">
+                <div className="text-sm text-zinc-400 font-medium">
+                  Not Running
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between px-1">
+            <div className="bg-background backdrop-blur-sm px-3 py-1 rounded-xl">
+              <h3 className="font-medium text-sm text-zinc-100">
+                {project.name}
+              </h3>
+            </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0"
-              onPointerDown={(e) => {
-                e.stopPropagation();
-              }}
+              className="h-7 w-7 rounded-xl bg-background backdrop-blur-sm hover:bg-zinc-800"
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
-                // router.push(`/editor/${project.name}`);
-                // todo: swap over ui when ready
                 router.push("/");
               }}
             >
               <Edit2Icon className="h-4 w-4" />
             </Button>
           </div>
-          {project.url && (
-            <div className="w-[256px] h-[160px] overflow-hidden relative">
-              <iframe
-                src={project.url}
-                className="absolute top-0 left-0 w-[512px] h-[320px] pointer-events-none"
-                style={{ transform: "scale(0.5)", transformOrigin: "top left" }}
-              />
-            </div>
-          )}
-          {!project.url && (
-            <div className="w-[256px] h-[160px] flex items-center justify-center bg-muted">
-              Project not running
-            </div>
-          )}
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
@@ -123,7 +133,18 @@ export default function Page() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const uploadBackgroundImage = useUploadBackgroundImage();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const workspaces = ["home", "work", "games", "reproductions", "reusable", "os", "productivity", "devtools", "packages"];
+  const createProjectMutation = trpc.daemon.createProject.useMutation();
+  const workspaces = [
+    "home",
+    "work",
+    "games",
+    "reproductions",
+    "reusable",
+    "os",
+    "productivity",
+    "devtools",
+    "packages",
+  ];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -197,6 +218,11 @@ export default function Page() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      <AppSwitcher
+        setProject={(project) => {
+          router.push(`/`);
+        }}
+      />
       <div
         style={{
           backgroundImage: workspace.backgroundImageUrl
@@ -210,15 +236,10 @@ export default function Page() {
       >
         <div className="flex bg-black rounded-lg w-fit mx-4">
           {workspaces.map((name) => (
-            <Button
+            <Link
               key={name}
-              variant="ghost"
-              onClick={() => {
-                if (name !== workspaceId) {
-                  router.push(`/${name}`);
-                }
-              }}
-              className={`rounded-none h-8 px-4 ${
+              href={`/${name}`}
+              className={`inline-flex items-center text-sm justify-center rounded-none h-8 px-4 hover:bg-accent/50 ${
                 name === workspaceId
                   ? name === "home"
                     ? "text-blue-400"
@@ -229,7 +250,7 @@ export default function Page() {
               }`}
             >
               {name}
-            </Button>
+            </Link>
           ))}
         </div>
 
@@ -244,9 +265,7 @@ export default function Page() {
         </Button>
 
         <SortableContext items={items} strategy={rectSortingStrategy}>
-          <div
-            className="flex flex-col gap-4 p-4 w-fit"
-          >
+          <div className="flex flex-col gap-4 p-4 w-fit">
             {items.map((id) => {
               const project = projectsWithUrl.find((p) => p.name === id)!;
               const dimStyle = activeId === id ? { opacity: 0 } : {};
@@ -258,6 +277,14 @@ export default function Page() {
                 />
               );
             })}
+
+            <Button
+              variant={"ghost"}
+              onClick={() => createProjectMutation.mutate()}
+              className="w-fit flex items-center justify-center rounded-full"
+            >
+              <PlusCircleIcon className="h-12 w-12" />
+            </Button>
           </div>
         </SortableContext>
 

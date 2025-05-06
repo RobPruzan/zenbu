@@ -1,5 +1,12 @@
 "use client";
-import { useMemo, useState, useRef, useEffect } from "react";
+import {
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  unstable_ViewTransition as ViewTransition,
+} from "react";
 import { trpc } from "src/lib/trpc";
 import { Project } from "zenbu-daemon";
 import {
@@ -12,13 +19,22 @@ import { LeftSidebar } from "./left-sidebar";
 import { SlimSidebar } from "./slim-sidebar";
 import { useThumbnailScaleCalc } from "../[workspaceId]/hooks";
 import { RightSidebar } from "./right-sidebar";
-import { ChatInstanceContext } from "src/components/chat-store";
+import {
+  ChatInstanceContext,
+  useChatStore,
+  useTransitionChatStore,
+} from "src/components/chat-store";
 import { IFrameWrapper } from "../iframe-wrapper";
 import { DevtoolsOverlay } from "src/components/devtools-overlay";
 import { Recording } from "src/components/recording";
 import { BetterToolbar } from "src/components/slices/better-toolbar";
 import { BetterDrawing } from "../editor/[projectName]/better-drawing";
 import { ScreenshotTool } from "../editor/[projectName]/screenshot-tool";
+import AppSwitcher from "src/components/option-tab-switcher";
+import { CommandMenu } from "./command-menu";
+import { MessageSquareIcon } from "lucide-react";
+import { CommandPalette } from "src/components/command-palette";
+import { CommandWrapper } from "../editor/[projectName]/command-wrapper";
 
 export const Editor = () => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
@@ -44,6 +60,8 @@ export const Editor = () => {
       </div>
     );
   }
+
+  const [open, setOpen] = useState(false);
 
   return (
     // <ProjectContext.Provider
@@ -90,12 +108,22 @@ export const Editor = () => {
       }}
     >
       <SidebarRouterContext.Provider value={sidebarRouteState}>
-        <div className="h-screen w-screen flex bg-background text-foreground">
+        <AppSwitcherWrapper />
+        <CommandMenu
+          items={[{ icon: <MessageSquareIcon />, name: "Chat" }]}
+          open={open}
+          setOpen={setOpen}
+        />
+
+        <div className="h-[99vh] w-[99vw] rounded-lg flex bg-background border-4 border-black">
           <SlimSidebar />
-          <LeftSidebar
-            allProjects={runningProjects}
-            measuredSize={measuredSize}
-          />
+          {/* uh why isn't this working :/ */}
+          <ViewTransition update="none">
+            <LeftSidebar
+              allProjects={runningProjects}
+              measuredSize={measuredSize}
+            />
+          </ViewTransition>
           <div
             ref={previewContainerRef}
             className="flex-1 flex items-center justify-center overflow-hidden"
@@ -112,5 +140,17 @@ export const Editor = () => {
         </div>
       </SidebarRouterContext.Provider>
     </ChatInstanceContext.Provider>
+  );
+};
+
+const AppSwitcherWrapper = () => {
+  const iframeActions = useTransitionChatStore((state) => state.iframe.actions);
+
+  return (
+    <AppSwitcher
+      setProject={(project) => {
+        iframeActions.setState({ project });
+      }}
+    />
   );
 };

@@ -3,7 +3,7 @@ import { Project } from "zenbu-daemon";
 import { useSidebarRouter, ProjectContext } from "./context";
 import { ProjectsSidebar } from "./projects-sidebar";
 import { iife } from "src/lib/utils";
-import { useChatStore } from "src/components/chat-store";
+import { useChatStore, useTransitionChatStore } from "src/components/chat-store";
 
 export const LeftSidebar = ({
   allProjects,
@@ -13,7 +13,7 @@ export const LeftSidebar = ({
   measuredSize: { width: number | null; height: number | null };
 }) => {
   const sidebar = useSidebarRouter();
-  const activeProject = useChatStore((state) => state.iframe.state.project);
+  const activeProject = useTransitionChatStore((state) => state.iframe.state.project);
 
   // if (!sidebar.left) return null;
 
