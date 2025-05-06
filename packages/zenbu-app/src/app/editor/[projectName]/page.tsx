@@ -1026,10 +1026,10 @@ export default function Home() {
         </div>
 
         <CommandWrapper
-        // onToggleChat={(position) => toggleSidebar("chat", position)}
-        // onToggleWebsiteTree={(position) =>
-        //   toggleSidebar("websiteTree", position)
-        // }
+          // onToggleChat={(position) => toggleSidebar("chat", position)}
+          // onToggleWebsiteTree={(position) =>
+          //   toggleSidebar("websiteTree", position)
+          // }
         />
 
         {/* Render Leader Key Hints */}
