@@ -41,7 +41,7 @@ export const ProjectCard = ({
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger>
+      <ContextMenuTrigger className="w-fit h-fit">
         <div
           ref={setNodeRef}
           style={cardStyle}

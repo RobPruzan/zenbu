@@ -398,7 +398,9 @@ export const createServer = async (
         }
       }
     })
-    .post("/create-project", async (opts) => {
+    .post("/create-project",
+      
+      async (opts) => {
       const exit = await Effect.runPromiseExit(
         spawnProject
           .pipe(Effect.provide(NodeContext.layer))

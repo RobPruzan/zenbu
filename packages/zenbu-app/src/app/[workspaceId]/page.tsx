@@ -11,8 +11,9 @@ import { MockWorkspace } from "./mock-workspace";
 export default function Page() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
 
-  const [[workspace]] = trpc.useSuspenseQueries((t) => [
+  const [[workspace, _]] = trpc.useSuspenseQueries((t) => [
     t.workspace.getWorkspace({ workspaceId }),
+    t.workspace.getTags({ workspaceId }),
   ]);
 
   const [isClient, setIsClient] = useState(false);

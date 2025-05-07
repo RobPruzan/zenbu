@@ -61,7 +61,11 @@ export const Workspace = ({
       },
     }),
   );
-  const [[projects]] = trpc.useSuspenseQueries((t) => [t.daemon.getProjects()]);
+  const [[projects, tags]] = trpc.useSuspenseQueries((t) => [
+    t.daemon.getProjects(),
+
+    t.workspace.getTags({ workspaceId: workspace.workspaceId }),
+  ]);
   const projectsWithUrl = projects
     .map((project) => ({
       ...project,
@@ -70,7 +74,13 @@ export const Workspace = ({
           ? `http://localhost:${project.port}`
           : null,
     }))
-    .slice(0, 3);
+    .filter((project) =>
+      tags.some((tag) => tag.fromProjectId === project.name),
+    );
+
+  console.log("uh", tags);
+
+  // .slice(0, 3);
 
   // stupid model lol
   useEffect(() => {
@@ -112,10 +122,14 @@ export const Workspace = ({
       <ContextMenu>
         <ContextMenuTrigger>
           <div className="flex items-center">
-            <div className="flex bg-black rounded-md w-fit mx-4" style={{
-                boxShadow: "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
-                background: "linear-gradient(135deg, #0a0a0a, #121212)"
-              }}>
+            <div
+              className="flex bg-black rounded-md w-fit mx-4"
+              style={{
+                boxShadow:
+                  "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
+                background: "linear-gradient(135deg, #0a0a0a, #121212)",
+              }}
+            >
               {workspaces.map((name) => (
                 <Link
                   key={name}
@@ -134,10 +148,14 @@ export const Workspace = ({
                 </Link>
               ))}
             </div>
-            <div className="flex bg-black rounded-md w-fit ml-auto mr-2" style={{
-                boxShadow: "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
-                background: "linear-gradient(135deg, #0a0a0a, #121212)"
-              }}>
+            <div
+              className="flex bg-black rounded-md w-fit ml-auto mr-2"
+              style={{
+                boxShadow:
+                  "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
+                background: "linear-gradient(135deg, #0a0a0a, #121212)",
+              }}
+            >
               <Link
                 href={"/marketplace"}
                 className={`inline-flex items-center text-sm justify-center rounded-none h-8 px-4 hover:bg-accent/50 text-muted-foreground hover:text-foreground`}
@@ -157,7 +175,7 @@ export const Workspace = ({
           </div>
 
           <SortableContext items={items} strategy={rectSortingStrategy}>
-            <div className="flex flex-col gap-4 p-4 w-fit">
+            <div className="flex flex-col flex-wrap h-screen w-screen gap-12 p-4 content-start items-start">
               {items.map((id) => {
                 const project = projectsWithUrl.find((p) => p.name === id)!;
 
@@ -173,7 +191,11 @@ export const Workspace = ({
 
               <Button
                 variant={"ghost"}
-                onClick={() => createProjectMutation.mutate()}
+                onClick={() =>
+                  createProjectMutation.mutate({
+                    workspaceId: workspace.workspaceId,
+                  })
+                }
                 className="w-fit flex items-center justify-center rounded-full"
               >
                 <PlusCircleIcon className="h-12 w-12" />
@@ -190,18 +212,18 @@ export const Workspace = ({
           </DragOverlay>
         </ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={() => createProjectMutation.mutate()}>
+          <ContextMenuItem
+            onClick={() =>
+              createProjectMutation.mutate({
+                workspaceId: workspace.workspaceId,
+              })
+            }
+          >
             Create App
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => createProjectMutation.mutate()}>
-            Create Package
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => createProjectMutation.mutate()}>
-            Create Model Tool
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => createProjectMutation.mutate()}>
-            Create Editor Tool
-          </ContextMenuItem>
+          <ContextMenuItem>Create Package</ContextMenuItem>
+          <ContextMenuItem>Create Model Tool</ContextMenuItem>
+          <ContextMenuItem>Create Editor Tool</ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
     </DndContext>

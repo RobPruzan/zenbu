@@ -34,28 +34,44 @@ export const daemonRouter = createTRPCRouter({
     }
   }),
 
-  createProject: publicProcedure.mutation(async () => {
-    const exit = await Effect.runPromiseExit(
-      Effect.gen(function* () {
-        const { project } = yield* Effect.tryPromise(() =>
-          daemonRPC["create-project"].$post().then((res) => res.json()),
-        );
-        return project;
+  createProject: publicProcedure
+    .input(
+      z.object({
+        workspaceId: z.string(),
       }),
-    );
+    )
+    .mutation(async (opts) => {
+      const exit = await Effect.runPromiseExit(
+        Effect.gen(function* () {
+          const { project } = yield* Effect.tryPromise(() =>
+            daemonRPC["create-project"].$post().then((res) => res.json()),
+          );
+          return project;
+        }),
+      );
 
-    switch (exit._tag) {
-      case "Success": {
-        return exit.value;
+      switch (exit._tag) {
+        case "Success": {
+          const record = await db
+            .insert(Schema.tag)
+            .values({
+              fromProjectId: exit.value.name,
+              toWorkspaceId: opts.input.workspaceId,
+            })
+            .returning();
+
+          console.log("record", record);
+
+          return exit.value;
+        }
+        case "Failure": {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: exit.toString(),
+          });
+        }
       }
-      case "Failure": {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: exit.toString(),
-        });
-      }
-    }
-  }),
+    }),
   deleteProject: publicProcedure
     .input(z.object({ name: z.string() }))
     .mutation(async (opts) => {
@@ -70,7 +86,7 @@ export const daemonRouter = createTRPCRouter({
               })
               .then((res) => res.json()),
           );
-          return 
+          return;
           // return Schema.project;
         }),
       );

@@ -6,6 +6,20 @@ import { db } from "src/server/db";
 import { eq } from "drizzle-orm";
 import { firstRecord, firstRecordAssert } from "src/server/db/utils";
 export const workspaceRouter = createTRPCRouter({
+  getTags: publicProcedure
+    .input(
+      z.object({
+        workspaceId: z.string(),
+      }),
+    )
+    .query(async (opts) => {
+      const tags = await db
+        .select()
+        .from(Schema.tag)
+        .where(eq(Schema.tag.toWorkspaceId, opts.input.workspaceId));
+
+      return tags;
+    }),
   getWorkspace: publicProcedure
     .input(
       z.object({

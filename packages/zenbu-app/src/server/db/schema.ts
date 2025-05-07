@@ -18,3 +18,11 @@ export const workspace = createTable("workspace", {
   backgroundImageUrl: text("backgroundImageUrl"),
   createdAt: createdAtCol(),
 });
+
+export const tag = createTable("tag", {
+  tagId: primaryIdCol("tagId"),
+  fromProjectId: text("fromProjectId").notNull(),
+  toWorkspaceId: text("workspaceId")
+    .notNull()
+    .references(() => workspace.workspaceId),
+});

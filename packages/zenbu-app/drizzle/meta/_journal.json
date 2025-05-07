@@ -15,6 +15,13 @@
       "when": 1746305910112,
       "tag": "0001_acoustic_tattoo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1746598867953,
+      "tag": "0002_fast_famine",
+      "breakpoints": true
     }
   ]
 }
