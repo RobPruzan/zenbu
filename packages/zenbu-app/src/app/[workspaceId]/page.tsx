@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AppSwitcher from "src/components/option-tab-switcher";
 import { Workspace } from "./workspace";
+import { MockWorkspace } from "./mock-workspace";
 
 export default function Page() {
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -28,7 +29,7 @@ export default function Page() {
   return (
     <>
       <AppSwitcher
-        setProject={(project) => {
+        setProject={(_) => {
           router.push(`/`);
         }}
       />
@@ -43,7 +44,8 @@ export default function Page() {
         }}
         className="h-[100vh] w-[100vw] relative py-2"
       >
-        <Workspace workspaceId={workspace.workspaceId} />
+        <Workspace workspace={workspace} />
+        {/* <MockWorkspace workspace={workspace} /> */}
       </div>
     </>
   );

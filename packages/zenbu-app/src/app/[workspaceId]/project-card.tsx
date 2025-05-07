@@ -1,6 +1,7 @@
 "use client";
 
 import { Edit2Icon } from "lucide-react";
+import { unstable_ViewTransition as ViewTransition } from "react";
 import { Button } from "src/components/ui/button";
 // import { pluginRPC } from "../rpc";
 import { useRouter } from "next/navigation";
@@ -49,18 +50,24 @@ export const ProjectCard = ({
           <div
             {...listeners}
             {...attributes}
-            className="bg-background rounded-2xl shadow-[0_8px_16px_rgba(0,0,0,0.2)] overflow-hidden cursor-move"
+            className="bg-background rounded-lg overflow-hidden cursor-move relative"
+            style={{
+              boxShadow:
+                "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
+              background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
+            }}
           >
             {project.url ? (
               <div className="w-[200px] h-[200px] overflow-hidden relative">
                 <iframe
                   src={project.url}
-                  className="absolute top-0 left-0 w-[400px] h-[400px] pointer-events-none"
+                  className="absolute top-0 left-0 w-[1000px] h-[1000px] pointer-events-none"
                   style={{
-                    transform: "scale(0.5)",
+                    transform: "scale(0.21)",
                     transformOrigin: "top left",
                   }}
                 />
+
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-900/20" />
               </div>
             ) : (
@@ -73,15 +80,27 @@ export const ProjectCard = ({
           </div>
 
           <div className="flex items-center justify-between px-1">
-            <div className="bg-background backdrop-blur-sm px-3 py-1 rounded-xl">
-              <h3 className="font-medium text-sm text-zinc-100">
+            <div
+              className="bg-background backdrop-blur-sm px-3 py-1 rounded-md"
+              style={{
+                boxShadow:
+                  "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
+                background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
+              }}
+            >
+              <h3 className="font-medium text-xs text-zinc-100">
                 {project.name}
               </h3>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 rounded-xl bg-background backdrop-blur-sm hover:bg-zinc-800"
+              className="h-7 w-7 rounded-md bg-background backdrop-blur-sm hover:bg-zinc-800"
+              style={{
+                boxShadow:
+                  "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
+                background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
+              }}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();

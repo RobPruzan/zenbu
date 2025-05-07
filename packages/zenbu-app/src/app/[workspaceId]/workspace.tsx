@@ -28,7 +28,15 @@ import {
 import Link from "next/link";
 import { ProjectCard } from "./project-card";
 
-export const Workspace = ({ workspaceId }: { workspaceId: string }) => {
+export const Workspace = ({
+  workspace,
+}: {
+  workspace: {
+    workspaceId: string;
+    backgroundImageUrl: string | null;
+    createdAt: Date;
+  };
+}) => {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id);
@@ -53,10 +61,7 @@ export const Workspace = ({ workspaceId }: { workspaceId: string }) => {
       },
     }),
   );
-  const [[projects, workspace]] = trpc.useSuspenseQueries((t) => [
-    t.daemon.getProjects(),
-    t.workspace.getWorkspace({ workspaceId }),
-  ]);
+  const [[projects]] = trpc.useSuspenseQueries((t) => [t.daemon.getProjects()]);
   const projectsWithUrl = projects
     .map((project) => ({
       ...project,
@@ -107,13 +112,16 @@ export const Workspace = ({ workspaceId }: { workspaceId: string }) => {
       <ContextMenu>
         <ContextMenuTrigger>
           <div className="flex items-center">
-            <div className="flex bg-black rounded-lg w-fit mx-4">
+            <div className="flex bg-black rounded-md w-fit mx-4" style={{
+                boxShadow: "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
+                background: "linear-gradient(135deg, #0a0a0a, #121212)"
+              }}>
               {workspaces.map((name) => (
                 <Link
                   key={name}
                   href={`/${name}`}
                   className={`inline-flex items-center text-sm justify-center rounded-none h-8 px-4 hover:bg-accent/50 ${
-                    name === workspaceId
+                    name === workspace.workspaceId
                       ? name === "home"
                         ? "text-blue-400"
                         : name === "work"
@@ -126,7 +134,10 @@ export const Workspace = ({ workspaceId }: { workspaceId: string }) => {
                 </Link>
               ))}
             </div>
-            <div className="flex bg-black rounded-lg w-fit ml-auto mr-2">
+            <div className="flex bg-black rounded-md w-fit ml-auto mr-2" style={{
+                boxShadow: "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
+                background: "linear-gradient(135deg, #0a0a0a, #121212)"
+              }}>
               <Link
                 href={"/marketplace"}
                 className={`inline-flex items-center text-sm justify-center rounded-none h-8 px-4 hover:bg-accent/50 text-muted-foreground hover:text-foreground`}
