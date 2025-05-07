@@ -29,21 +29,25 @@ import { IFrameWrapper } from "../iframe-wrapper";
 import { DevtoolsOverlay } from "src/components/devtools-overlay";
 import { Recording } from "src/components/recording";
 import { BetterToolbar } from "src/components/slices/better-toolbar";
-import { BetterDrawing } from "../editor/[projectName]/better-drawing";
-import { ScreenshotTool } from "../editor/[projectName]/screenshot-tool";
+import { BetterDrawing } from "../sunset/[projectName]/better-drawing";
+import { ScreenshotTool } from "../sunset/[projectName]/screenshot-tool";
 import AppSwitcher from "src/components/option-tab-switcher";
 import { CommandMenu } from "./command-menu";
 import { MessageSquareIcon } from "lucide-react";
 import { CommandPalette } from "src/components/command-palette";
-import { CommandWrapper } from "../editor/[projectName]/command-wrapper";
+import { CommandWrapper } from "../sunset/[projectName]/command-wrapper";
 import dynamic from "next/dynamic";
 // import { BottomPanel } from "./bottom-panel";
 const BottomPanel = dynamic(() => import("src/app/v2/bottom-panel"), {
   ssr: false,
 });
 
-export const Editor = () => {
+export const Editor = ({ projectId }: { projectId: string }) => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
+  const project = projects.find((project) => project.name === projectId);
+  if (!project) {
+    throw new Error("invariant, enforce earlier");
+  }
   const runningProjects = useMemo(
     () => projects.filter((project) => project.status === "running"),
     [projects],
@@ -51,20 +55,7 @@ export const Editor = () => {
 
   const { measuredSize, previewContainerRef } = useThumbnailScaleCalc();
 
-  const initialProject = runningProjects.at(0);
-  if (!initialProject) {
-    throw new Error("todo: enforce this invariant somewhere else");
-  }
-
   const sidebarRouteState = useSidebarRouterInit();
-
-  if (!initialProject) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background text-foreground">
-        No running projects found. Start one to continue.
-      </div>
-    );
-  }
 
   const [open, setOpen] = useState(false);
 
@@ -75,10 +66,10 @@ export const Editor = () => {
     <ChatInstanceContext.Provider
       initialValue={{
         iframe: {
-          project: initialProject,
+          project: project,
           url:
-            initialProject.status === "running"
-              ? `http://localhost:${initialProject.port}`
+            project.status === "running"
+              ? `http://localhost:${project.port}`
               : null!,
         },
         toolbar: {
@@ -140,9 +131,7 @@ export const Editor = () => {
               <BetterDrawing />
               <Recording />
             </IFrameWrapper>
-            <BottomPanel
-        
-            />
+            <BottomPanel />
           </div>
           <RightSidebar />
         </div>

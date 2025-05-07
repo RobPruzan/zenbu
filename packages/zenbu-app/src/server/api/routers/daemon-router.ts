@@ -6,7 +6,7 @@ import { iife } from "src/lib/utils";
 import { Project } from "zenbu-daemon";
 import { TRPCError } from "@trpc/server";
 import { Effect } from "effect";
-import { daemonRPC } from "src/app/editor/[projectName]/rpc";
+import { daemonRPC } from "src/app/sunset/[projectName]/rpc";
 // import { daemonRPC } from "src/app/rpc";
 
 export const daemonRouter = createTRPCRouter({

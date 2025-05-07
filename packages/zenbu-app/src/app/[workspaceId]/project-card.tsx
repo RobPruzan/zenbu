@@ -4,7 +4,7 @@ import { Edit2Icon } from "lucide-react";
 import { unstable_ViewTransition as ViewTransition } from "react";
 import { Button } from "src/components/ui/button";
 // import { pluginRPC } from "../rpc";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -20,6 +20,7 @@ export const ProjectCard = ({
   project: Project & { url: string | null };
   style?: React.CSSProperties;
 }) => {
+  const { workspaceId } = useParams<{ workspaceId: string }>();
   const {
     attributes,
     listeners,
@@ -104,7 +105,7 @@ export const ProjectCard = ({
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
-                router.push("/");
+                router.push(`/editor/${workspaceId}/${project.name}`);
               }}
             >
               <Edit2Icon className="h-4 w-4" />

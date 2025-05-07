@@ -123,7 +123,7 @@ export const Workspace = ({
         <ContextMenuTrigger>
           <div className="flex items-center">
             <div
-              className="flex bg-black rounded-md w-fit mx-4"
+              className="flex bg-black rounded-md w-fit mx-4 h-[35px] items-center"
               style={{
                 boxShadow:
                   "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
@@ -175,7 +175,7 @@ export const Workspace = ({
           </div>
 
           <SortableContext items={items} strategy={rectSortingStrategy}>
-            <div className="flex flex-col flex-wrap h-screen w-screen gap-12 p-4 content-start items-start">
+            <div className="flex flex-col h-[calc(100vh-43px)] flex-wrap w-screen gap-12 p-4 content-start items-start">
               {items.map((id) => {
                 const project = projectsWithUrl.find((p) => p.name === id)!;
 
@@ -188,18 +188,6 @@ export const Workspace = ({
                   />
                 );
               })}
-
-              <Button
-                variant={"ghost"}
-                onClick={() =>
-                  createProjectMutation.mutate({
-                    workspaceId: workspace.workspaceId,
-                  })
-                }
-                className="w-fit flex items-center justify-center rounded-full"
-              >
-                <PlusCircleIcon className="h-12 w-12" />
-              </Button>
             </div>
           </SortableContext>
 

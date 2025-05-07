@@ -1,14 +1,16 @@
 "use client";
-import { Editor } from "./v2/editor";
 import { trpc } from "src/lib/trpc";
 import { unstable_ViewTransition as ViewTransition } from "react";
 import { css } from "src/lib/utils";
+import { Editor } from "src/app/v2/editor";
+import { useParams } from "next/navigation";
 
 export default function Page() {
+  const {projectName,workspaceId} = useParams<{projectName:string, workspaceId:string}>()
   const [[workspace]] = trpc.useSuspenseQueries((t) => [
     // t.daemon.getProjects(),
     // need to nest workspace name somehow i guess
-    t.workspace.getWorkspace({ workspaceId: "home" }),
+    t.workspace.getWorkspace({ workspaceId }),
   ]);
 
   return (
@@ -23,7 +25,7 @@ export default function Page() {
       }}
       className="h-[100vh] w-[100vw] relative flex justify-center items-center"
     >
-      <Editor />
+      <Editor projectId={projectName} />
     </div>
   );
 }
