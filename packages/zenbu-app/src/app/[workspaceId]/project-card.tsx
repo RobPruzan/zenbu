@@ -55,7 +55,7 @@ export const ProjectCard = ({
           <div
             {...listeners}
             {...attributes}
-            className="bg-background rounded-sm border-[#222222] border-[0.75px] overflow-hidden cursor-move relative group"
+            className="bg-background rounded-sm  border border-border/60 overflow-hidden cursor-move relative group"
             style={{
               boxShadow: "0 4px 8px 1px rgba(53, 53, 53, 0.06)",
               backdropFilter: "blur(5px)",

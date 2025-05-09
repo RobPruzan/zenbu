@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { PluginServerEvent } from "zenbu-plugin/src/ws/schemas";
+// import { PluginServerEvent } from "zenbu-plugin/src/ws/schemas";
 import { PartialEvent } from "zenbu-redis";
 
 export const useWS = <Message={ event: PartialEvent; projectName: string }>(opts: {

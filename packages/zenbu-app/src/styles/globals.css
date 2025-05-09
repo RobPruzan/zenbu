@@ -376,3 +376,7 @@
 .transition-border[data-border="true"] {
   border: 1px solid rgb(24, 24, 24);
 }
+
+[cmdk-overlay] {
+  transition: none !important;
+}

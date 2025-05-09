@@ -108,7 +108,7 @@ export const Editor = ({ projectId }: { projectId: string }) => {
           setOpen={setOpen}
         />
 
-        <div className="h-[100vh] w-[100vw] flex bg-background">
+        <div className="h-[100vh] w-[100vw] flex bg-background ">
           <SlimSidebar />
           <LeftSidebar
             allProjects={runningProjects}

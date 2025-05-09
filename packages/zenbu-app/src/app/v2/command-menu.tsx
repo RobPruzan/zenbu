@@ -51,10 +51,10 @@ export const CommandMenu = ({
     };
 
     window.addEventListener("message", handleMessage);
-    document.addEventListener("keydown", down);
+    window.addEventListener("keydown", down);
     return () => {
       window.removeEventListener("message", handleMessage);
-      document.removeEventListener("keydown", down);
+      window.removeEventListener("keydown", down);
     };
   }, [open]);
   return (

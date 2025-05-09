@@ -18,6 +18,7 @@ import { flushSync } from "react-dom";
 
 export function Header({ onCloseChat }: { onCloseChat: () => void }) {
   const url = useChatStore((state) => state.iframe.state.url);
+  const name = useChatStore((state) => state.iframe.state.project.name);
   const [copied, setCopied] = useState(false);
   const iframe = useChatStore((state) => state.iframe);
 
@@ -76,28 +77,30 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
           >
             {copied ? (
               <Button
+                size={'icon'}
                 variant={"ghost"}
                 onClick={() => {
                   handleCopy();
                 }}
               >
-                <Check className="h-3.5 w-3.5" />
+                <Check className="" size={5}/>
               </Button>
             ) : (
               <Button
+              size={'icon'}
                 variant={"ghost"}
                 onClick={() => {
                   handleCopy();
                 }}
               >
-                <Copy className="h-3.5 w-3.5 px-0 py-0" />
+                <Copy className=" px-0 py-0" size={5}/>
               </Button>
             )}
           </div>
           <div className="flex-1" />
         </div>
         <div className="flex-1 flex items-center justify-end gap-2">
-          <Button
+          {/* <Button
             onClick={() => {
               onCloseChat();
             }}
@@ -111,81 +114,8 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
             )}
           >
             <PanelRightClose className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            onClick={() => {
-              const iframe = document.getElementById(
-                "child-iframe",
-              ) as HTMLIFrameElement;
-
-              // Get current scale from transform or default to 1
-              const currentTransform = iframe.style.transform || "scale(1)";
-              const currentScale =
-                parseFloat(currentTransform.replace(/[^\d.-]/g, "")) || 1;
-
-              // Scale down by 10% of original scale (not relative to current)
-              const newScale = Math.max(0.1, currentScale - 0.1);
-
-              // Reset dimensions to ensure it fits the container
-              iframe.style.width = "100%";
-              iframe.style.height = "100%";
-              iframe.style.transform = `scale(${newScale})`;
-              iframe.style.transformOrigin = "top left";
-
-              // Adjust container to fit the scaled content
-              const container = iframe.parentElement;
-              if (container) {
-                container.style.overflow = "hidden";
-              }
-            }}
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 w-8 p-0 rounded-full",
-              "bg-accent/5 border",
-              "text-muted-foreground hover:text-foreground",
-              "hover:bg-accent/10 transition-all duration-300",
-            )}
-          >
-            <Minus className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            onClick={() => {
-              const iframe = document.getElementById(
-                "child-iframe",
-              ) as HTMLIFrameElement;
-
-              // Get current scale from transform or default to 1
-              const currentTransform = iframe.style.transform || "scale(1)";
-              const currentScale =
-                parseFloat(currentTransform.replace(/[^\d.-]/g, "")) || 1;
-
-              // Scale up by 10% of original scale (not relative to current)
-              const newScale = currentScale + 0.1;
-
-              // Reset dimensions to ensure it fits the container
-              iframe.style.width = "100%";
-              iframe.style.height = "100%";
-              iframe.style.transform = `scale(${newScale})`;
-              iframe.style.transformOrigin = "top left";
-
-              // Adjust container to fit the scaled content
-              const container = iframe.parentElement;
-              if (container) {
-                container.style.overflow = "hidden";
-              }
-            }}
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 w-8 p-0 rounded-full",
-              "bg-accent/5 border",
-              "text-muted-foreground hover:text-foreground",
-              "hover:bg-accent/10 transition-all duration-300",
-            )}
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </Button>
+          </Button> */}
+          <span className="text-xs truncate">{name}</span>
         </div>
       </div>
     </div>

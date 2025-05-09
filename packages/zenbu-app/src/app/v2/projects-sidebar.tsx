@@ -17,7 +17,7 @@ export const ProjectsSidebar = ({
   const nukeMutation = trpc.daemon.nuke.useMutation();
   const { workspaceId } = useParams<{ workspaceId: string }>();
   return (
-    <div className="flex flex-col gap-4 self-start pt-4 px-2 w-full bg-gradient-to-b from-black to-zinc-950 h-full border-r items-center">
+    <div className="flex flex-col gap-4 self-start pt-4 px-2 w-full bg-gradient-to-b from-black to-zinc-950 h-full border-r items-center overflow-y-auto">
       <div className="flex justify-evenly">
         <Button
           variant={"ghost"}

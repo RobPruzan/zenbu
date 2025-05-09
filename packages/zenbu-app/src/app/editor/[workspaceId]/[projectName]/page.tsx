@@ -16,12 +16,12 @@ export default function Page() {
   return (
     <div
       style={{
-        backgroundImage: workspace.backgroundImageUrl
-          ? `url(${workspace.backgroundImageUrl})`
-          : "",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        // backgroundImage: workspace.backgroundImageUrl
+        //   ? `url(${workspace.backgroundImageUrl})`
+        //   : "",
+        // backgroundSize: "cover",
+        // backgroundPosition: "center",
+        // backgroundRepeat: "no-repeat",
       }}
       className="h-[100vh] w-[100vw] relative flex justify-center items-center"
     >
