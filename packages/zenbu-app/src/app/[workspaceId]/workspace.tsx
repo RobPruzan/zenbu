@@ -27,6 +27,8 @@ import {
 } from "@dnd-kit/sortable";
 import Link from "next/link";
 import { ProjectCard } from "./project-card";
+import { motion } from "framer-motion";
+import { useParams } from "next/navigation";
 
 export const Workspace = ({
   workspace,
@@ -96,20 +98,7 @@ export const Workspace = ({
     });
   }, [projects]);
 
-  const uploadBackgroundImage = useUploadBackgroundImage();
-
   const createProjectMutation = trpc.daemon.createProject.useMutation();
-  const workspaces = [
-    "home",
-    "work",
-    "games",
-    "reproductions",
-    "reusable",
-    "os",
-    "productivity",
-    "devtools",
-    "packages",
-  ];
 
   return (
     <DndContext
@@ -118,64 +107,13 @@ export const Workspace = ({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {" "}
       <ContextMenu>
-        <ContextMenuTrigger>
-          <div className="flex items-center">
-            <div
-              className="flex bg-black rounded-md w-fit mx-4 h-[35px] items-center"
-              style={{
-                boxShadow:
-                  "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
-                background: "linear-gradient(135deg, #0a0a0a, #121212)",
-              }}
-            >
-              {workspaces.map((name) => (
-                <Link
-                  key={name}
-                  href={`/${name}`}
-                  className={`inline-flex items-center text-sm justify-center rounded-none h-8 px-4 hover:bg-accent/50 ${
-                    name === workspace.workspaceId
-                      ? name === "home"
-                        ? "text-blue-400"
-                        : name === "work"
-                          ? "text-orange-400"
-                          : "text-green-400"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {name}
-                </Link>
-              ))}
-            </div>
-            <div
-              className="flex bg-black rounded-md w-fit ml-auto mr-2"
-              style={{
-                boxShadow:
-                  "0 3px 6px -2px rgba(0,0,0,0.2), 0 1px 3px -1px rgba(0,0,0,0.1), inset 0 1px 5px rgba(0,0,0,0.2)",
-                background: "linear-gradient(135deg, #0a0a0a, #121212)",
-              }}
-            >
-              <Link
-                href={"/marketplace"}
-                className={`inline-flex items-center text-sm justify-center rounded-none h-8 px-4 hover:bg-accent/50 text-muted-foreground hover:text-foreground`}
-              >
-                personal marketplace
-              </Link>
-              <Button
-                onClick={async () => {
-                  uploadBackgroundImage.upload();
-                }}
-                className="inline-flex items-center text-sm justify-center rounded-none h-8 px-4 hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                variant="ghost"
-              >
-                <ImageIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
+        <ContextMenuTrigger
+          // todo, why does vh -> % break
+          className="h-[calc(100vh-43px)] w-[calc(100%-400px)]"
+        >
           <SortableContext items={items} strategy={rectSortingStrategy}>
-            <div className="flex flex-col h-[calc(100vh-43px)] flex-wrap w-screen gap-12 p-4 content-start items-start">
+            <div className="flex flex-col flex-wrap h-full w-full gap-6 p-4 content-start items-start">
               {items.map((id) => {
                 const project = projectsWithUrl.find((p) => p.name === id)!;
 
