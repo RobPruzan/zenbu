@@ -46,33 +46,38 @@ export default function Page() {
         style={
           {
             // backgroundImage: workspace.backgroundImageUrl
-            //   ? `url(${workspace.backgroundImageUrl})`
+            //   ? `linear-gradient(rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.95)), url(${workspace.backgroundImageUrl})`
             //   : "",
             // backgroundSize: "cover",
             // backgroundPosition: "center",
             // backgroundRepeat: "no-repeat",
+            // backdropFilter: "grayscale(40%) contrast(80%) brightness(40%)",
+            // WebkitBackdropFilter: "grayscale(40%) contrast(80%) brightness(40%)",
           }
         }
-        className="flex flex-col h-[100vh] w-[100vw] relative py-2  bg-gradient-to-t from-black to-[#0d0d0d72]"
+        className={cn([
+          "flex flex-col h-[100vh] w-[100vw] relative py-2 ",
+
+          "bg-gradient-to-b from-[#050505] to-[#11111172]",
+        ])}
+
+        //
       >
         <TopBar />
         <div className="flex w-full">
           <Workspace workspace={workspace} />
           <div className="w-[400px] p-4 full">
-            <div className="border border-[#131313] rounded-lg h-full bg-background/50 flex flex-col justify-end  bg-gradient-to-t from-[#0b0d0fa5] to-[#0b0d0f00]">
+            <div className="border border-[#131313] rounded-lg h-full bg-background/50 flex flex-col justify-end  bg-gradient-to-t from-[#070808] to-[#090909]">
               <div className="mb-auto w-full flex items-center px-2 py-2 justify-between ">
-                <Button variant={'ghost'} size={'icon'}>
-
-                <SquarePen size={18} color="#686767" />
+                <Button variant={"ghost"} size={"icon"}>
+                  <SquarePen size={18} color="#686767" />
                 </Button>
-                <Button variant={'ghost'} size={'icon'}>
-
-                <PanelRightClose size={18} color="#686767" />
+                <Button variant={"ghost"} size={"icon"}>
+                  <PanelRightClose size={18} color="#686767" />
                 </Button>
-</div>
+              </div>
 
-           <MockChatTextArea/>   
-            
+              <MockChatTextArea />
             </div>
           </div>
         </div>
@@ -86,11 +91,9 @@ const MockChatTextArea = () => (
   <div className="px-4 pb-4 relative w-full">
     <div className="rounded-lg bg-accent/5 border border-border/60 shadow-lg overflow-hidden w-full transition-all duration-300 hover:shadow-xl">
       <div className="flex flex-col text-xs">
-        <div className="relative min-h-[50px] w-full bg-background/5">
+        <div className="relative min-h-[50px] w-full bg-[rgba">
           {/* <ChatTextArea /> */}
-          <div className="w-full text-[13px] chat-input text-foreground caret-foreground font-light leading-relaxed min-h-[50px] pt-2.5 pl-3 pr-4 pb-2 focus:outline-none">
-
-          </div>
+          <div className="w-full text-[13px] chat-input text-foreground caret-foreground font-light leading-relaxed min-h-[50px] pt-2.5 pl-3 pr-4 pb-2 focus:outline-none"></div>
         </div>
 
         <div className="flex items-center justify-end px-4 py-2 border-t border-border/60 bg-accent/5">
@@ -128,6 +131,13 @@ const TopBar = () => {
     "devtools",
     "packages",
   ];
+
+  const utils = trpc.useUtils();
+
+  workspaces.forEach((workspace) => {
+    utils.workspace.getWorkspace.prefetch({ workspaceId: workspace });
+    utils.workspace.getTags.prefetch({ workspaceId: workspace });
+  });
 
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const uploadBackgroundImage = useUploadBackgroundImage();

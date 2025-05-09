@@ -55,7 +55,7 @@ export const ProjectCard = ({
           <div
             {...listeners}
             {...attributes}
-            className="bg-background rounded-sm border-[#222222] border-[0.75px] overflow-hidden cursor-move relative"
+            className="bg-background rounded-sm border-[#222222] border-[0.75px] overflow-hidden cursor-move relative group"
             style={{
               boxShadow: "0 4px 8px 1px rgba(53, 53, 53, 0.06)",
               backdropFilter: "blur(5px)",
@@ -63,10 +63,10 @@ export const ProjectCard = ({
           >
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent pointer-events-none z-20" />
             {project.url ? (
-              <div className="w-[300px] h-[200px] overflow-hidden relative">
+              <div className="w-[350px] h-[215px] overflow-hidden relative">
                 <iframe
                   src={project.url}
-                  className="absolute top-0 left-0 w-[1200px] h-[800px] pointer-events-none"
+                  className="absolute top-0 left-0 w-[1400px] h-[860px] pointer-events-none"
                   style={{
                     transform: "scale(0.25)",
                     transformOrigin: "top left",
@@ -99,7 +99,7 @@ export const ProjectCard = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 rounded-sm bg-background backdrop-blur-sm hover:bg-zinc-800"
+              className="h-7 w-7 rounded-sm bg-background backdrop-blur-sm hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-[opacity] duration-200"
               style={{
                 boxShadow:
                   "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
