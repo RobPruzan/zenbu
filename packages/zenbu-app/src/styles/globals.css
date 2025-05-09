@@ -314,8 +314,6 @@
   }
 }
 
-
-
 ::view-transition-old(.fast-fade) {
   animation-duration: 150ms;
 }
@@ -323,7 +321,6 @@
 ::view-transition-new(.fast-fade) {
   animation-duration: 150ms;
 }
-
 
 ::view-transition-old(.slide-in-back) {
   animation-name: slideOutRight;
@@ -371,4 +368,11 @@
   animation-name: slideInRight;
   animation-duration: 500ms;
   animation-timing-function: ease-in-out;
+}
+.transition-border {
+  transition: border-color 250ms ease-in;
+  border: 0px solid black;
+}
+.transition-border[data-border="true"] {
+  border: 1px solid rgb(24, 24, 24);
 }

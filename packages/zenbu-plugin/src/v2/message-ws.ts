@@ -1,5 +1,12 @@
 import { openai } from "@ai-sdk/openai";
-import { smoothStream, streamText, TextStreamPart, tool, ToolSet } from "ai";
+import {
+  generateText,
+  smoothStream,
+  streamText,
+  TextStreamPart,
+  tool,
+  ToolSet,
+} from "ai";
 import { getProject, getProjects, Project } from "zenbu-daemon";
 import { type Server as HttpServer } from "node:http";
 import { Server, Socket } from "socket.io";
@@ -34,6 +41,7 @@ import {
 } from "./shared-utils";
 import { indexCodebase } from "src/tools/code-base-search";
 import { execSync } from "node:child_process";
+import { google } from "@ai-sdk/google";
 
 util.inspect.defaultOptions.depth = 5;
 
@@ -99,6 +107,7 @@ export const injectWebSocket = (server: HttpServer) => {
       "message",
       async (e: { event: ClientEvent; projectName: string }) => {
         const { event, projectName } = e;
+        console.log("got message");
 
         const exit = await Effect.runPromiseExit(
           Effect.gen(function* () {
@@ -156,11 +165,22 @@ export const injectWebSocket = (server: HttpServer) => {
              */
 
             const HARD_CODED_BASE = "/Users/robby/zenbu/packages/zenbu-daemon/";
-            const { fullStream } = streamText({
+            const { fullStream, response } = streamText({
+              onError: () => {
+                console.log("error?");
+              },
+              onFinish: () => {
+                console.log("naw");
+              },
+
+              onChunk: () => {
+                console.log("hello?");
+              },
+              // model: google("gemini-2.5-flash-preview-04-17"),
               model: openai("gpt-4.1"),
               abortSignal: abortController.signal,
               maxSteps: 50,
-              experimental_transform: smoothStream(),
+              // experimental_transform: smoothStream(),
               messages: [
                 {
                   role: "system",
@@ -300,12 +320,14 @@ export const injectWebSocket = (server: HttpServer) => {
               TextStreamPart<Record<string, any>>,
               ModelError
             >(fullStream, (e) => new ModelError({ error: e }));
+            console.log("stream?");
 
             const result = yield* stream.pipe(
               Stream.runForEach((chunk) =>
                 Effect.gen(function* () {
                   chunk.type === "text-delta" &&
                     console.log("mode lis chunking", chunk);
+                  console.log("what the shit", chunk);
 
                   const { client } = yield* RedisContext;
                   const modelEvent: ModelEvent = {
@@ -323,6 +345,7 @@ export const injectWebSocket = (server: HttpServer) => {
                 })
               )
             );
+            console.log("now we start");
           })
             .pipe(Effect.provideService(RedisContext, { client: redisClient }))
             .pipe(Effect.provide(NodeContext.layer))

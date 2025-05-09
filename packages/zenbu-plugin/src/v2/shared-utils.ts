@@ -40,7 +40,7 @@ const getGroupId = (event: ClientEvent | ModelEvent) => {
 type ModelMessage = {
   kind: "model-message";
   // text: string;
-  chunks: Array<TextStreamPart<{ stupid: any }>>;
+  chunks: Array<TextStreamPart<Record<string,any>>>;
   timestamp: ModelEvent["timestamp"];
   id: ModelEvent["id"];
 };
@@ -119,7 +119,7 @@ export const accumulateEvents = (events: Array<ClientEvent | ModelEvent>) =>
         } satisfies FullEvent,
       ];
     }
-    const sortedEvents = events.toSorted((a, b) => a.timestamp - b.timestamp);
+    const sortedEvents = events.slice().sort((a, b) => a.timestamp - b.timestamp);
 
     let accumulatedEvents: Array<ModelEvent | ClientEvent> = [sortedEvents[0]];
 

@@ -1,68 +1,53 @@
-import React from "react";
-import { unstable_ViewTransition as ViewTransition } from "react";
-import { cn, css } from "src/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
 
-export const AnimatedSidebar = ({
-  isOpen,
-  className,
-  children,
+export const AnimatedSidebar = <T,>({
+  // children,
+  renderSidebarContent,
+  width, 
+  data
 }: {
-  isOpen: boolean;
-  className?: string;
-  children: React.ReactNode;
-}) => {
+  renderSidebarContent:(data: T) => React.ReactNode;
+  width: string | number;
+  data: T | undefined | null
+  }) => {
+
   return (
-    <>
-      <style>{css`
-        @keyframes slide-in {
-          from {
-            transform: translateX(-100%);
-          }
-          to {
-            transform: translateX(0%);
-          }
-        }
-
-        @keyframes slide-out {
-          from {
-            transform: translateX(0%);
-          }
-          to {
-            transform: translateX(-100%);
-          }
-        }
-
-        ::view-transition-group(.slide-in),
-        ::view-transition-group(.slide-out) {
-          animation: none;
-          mix-blend-mode: normal;
-          overflow: hidden;
-        }
-
-        ::view-transition-old(.slide-out) {
-          animation: 150ms cubic-bezier(0.25, 0.1, 0.25, 1) both slide-out;
-        }
-
-        ::view-transition-new(.slide-in) {
-          animation: 150ms cubic-bezier(0.25, 0.1, 0.25, 1) both slide-in;
-        }
-      `}</style>
-
-      {isOpen && (
-        <ViewTransition
-          enter="slide-in" 
-          exit="slide-out" 
-        >
-          <div
-            className={cn([
-              " h-full",
-              className,
-            ])}
-          >
-            {children}
-          </div>
-        </ViewTransition>
-      )}
-    </>
+    <AnimatePresence>
+      {data && <motion.div
+        className="h-full"
+        initial={{
+          width: 0,
+          opacity: 0,
+          marginRight: 0,
+        }}
+        animate={{
+          width,
+          opacity: 1,
+          transition: {
+            width: {
+              type: "spring",
+              bounce: 0.1,
+              duration: 0.2,
+            },
+            opacity: { duration: 0.1, delay: 0.05 },
+          },
+        }}
+        exit={{
+          width: 0,
+          opacity: 0,
+          transition: {
+            width: {
+              type: "spring",
+              bounce: 0.1,
+              duration: 0.2,
+            },
+            opacity: { duration: 0.1 },
+          },
+        }}
+      >
+        {renderSidebarContent(data)}
+      </motion.div>}
+      
+    </AnimatePresence>
   );
 };

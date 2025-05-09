@@ -183,9 +183,9 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
         socket,
       }}
     >
-      <div className="flex h-full flex-col relative overflow-hidden">
+      <div className="flex h-full flex-col relative overflow-hidden ">
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute inset-0 bg-background/95 backdrop-blur-xl" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black to-zinc-950" />
         </div>
 
         <Header onCloseChat={onCloseChat} />

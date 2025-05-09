@@ -3,7 +3,12 @@ import { Project } from "zenbu-daemon";
 import { useSidebarRouter, ProjectContext } from "./context";
 import { ProjectsSidebar } from "./projects-sidebar";
 import { iife } from "src/lib/utils";
-import { useChatStore, useTransitionChatStore } from "src/components/chat-store";
+import {
+  useChatStore,
+  useTransitionChatStore,
+} from "src/components/chat-store";
+import { AnimatePresence, motion } from "framer-motion";
+import { AnimatedSidebar } from "./animated-sidebar";
 
 export const LeftSidebar = ({
   allProjects,
@@ -13,7 +18,9 @@ export const LeftSidebar = ({
   measuredSize: { width: number | null; height: number | null };
 }) => {
   const sidebar = useSidebarRouter();
-  const activeProject = useTransitionChatStore((state) => state.iframe.state.project);
+  const activeProject = useTransitionChatStore(
+    (state) => state.iframe.state.project,
+  );
 
   // if (!sidebar.left) return null;
 
@@ -24,27 +31,29 @@ export const LeftSidebar = ({
 
   return (
     <div className="w-fit">
-      {iife(() => {
-        switch (sidebar.left) {
-          case "experiments": {
-            return (
-              <div className="w-[200px] self-start pt-4 px-2 text-muted-foreground">
-                Experiments
-              </div>
-            );
+      <AnimatedSidebar
+        data={sidebar.left}
+        renderSidebarContent={(left) => {
+          switch (left) {
+            case "experiments": {
+              return (
+                <div className="w-[200px] self-start pt-4 px-2 text-muted-foreground">
+                  Experiments
+                </div>
+              );
+            }
+            case "projects": {
+              return (
+                <ProjectsSidebar
+                  inactiveProjects={inactiveProjects}
+                  measuredSize={measuredSize}
+                />
+              );
+            }
           }
-          case "projects": {
-            return (
-              <ProjectsSidebar
-                inactiveProjects={inactiveProjects}
-                measuredSize={measuredSize}
-              />
-            );
-          }
-          default:
-            return null;
-        }
-      })}
+        }}
+        width={"200px"}
+      />
     </div>
   );
 };

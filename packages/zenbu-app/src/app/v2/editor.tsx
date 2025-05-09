@@ -113,13 +113,11 @@ export const Editor = ({ projectId }: { projectId: string }) => {
 
         <div className="h-[99vh] w-[99vw] rounded-lg flex bg-background border-4 border-black">
           <SlimSidebar />
-          {/* uh why isn't this working :/ */}
-          <ViewTransition update="none">
-            <LeftSidebar
-              allProjects={runningProjects}
-              measuredSize={measuredSize}
-            />
-          </ViewTransition>
+          <LeftSidebar
+            allProjects={runningProjects}
+            measuredSize={measuredSize}
+          />
+
           <div
             ref={previewContainerRef}
             className="flex flex-col w-full items-center justify-center overflow-hidden"
@@ -134,6 +132,7 @@ export const Editor = ({ projectId }: { projectId: string }) => {
             <BottomPanel />
           </div>
           <RightSidebar />
+          {/* <RightSidebar /> */}
         </div>
       </SidebarRouterContext.Provider>
     </ChatInstanceContext.Provider>

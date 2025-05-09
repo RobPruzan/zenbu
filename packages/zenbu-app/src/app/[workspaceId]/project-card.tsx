@@ -54,7 +54,7 @@ export const ProjectCard = ({
             className="bg-background rounded-lg overflow-hidden cursor-move relative"
             style={{
               boxShadow:
-                "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
+                "0 5px 10px -3px rgba(0,0,0,0.3), 0 3px 5px -2px rgba(0,0,0,0.1), inset 0 2px 8px rgba(0,0,0,0.4)",
               background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
             }}
           >

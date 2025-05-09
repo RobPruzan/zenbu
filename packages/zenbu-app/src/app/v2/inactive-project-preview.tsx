@@ -68,13 +68,14 @@ export const InactiveProjectPreview = ({
             });
           });
         }}
+        data-border={showBorder ? "true" : "false"}
         style={{
           width: `${THUMBNAIL_WIDTH_PX}px`,
           height: `${thumbnailContainerHeight}px`,
         }}
         className={cn([
-          "overflow-hidden cursor-pointer  bg-black/50 relative rounded-lg",
-          showBorder && "border border-border/50",
+          "overflow-hidden cursor-pointer  bg-black/50 relative rounded-lg transition-border",
+          // showBorder && "border border-border/50",
         ])}
         title={`Switch to ${project.name}`}
       >

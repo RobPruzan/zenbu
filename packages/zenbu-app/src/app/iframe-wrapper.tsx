@@ -105,7 +105,7 @@ export const IFrameWrapper = ({
           id={IFRAME_ID}
           ref={iframeRef}
           key={lastUpdate}
-          className="w-full h-full"
+          className="w-full h-full select-none"
           src={`http://localhost:${project.port}`}
           title={project.name}
         />

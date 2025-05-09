@@ -26,12 +26,14 @@ import {
   TooltipTrigger,
 } from "src/components/ui/tooltip";
 import { flushSync } from "react-dom";
+import { useParams } from "next/navigation";
 
 export const ProjectsSidebar = ({ onNuke }: { onNuke: () => void }) => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
   const createProjectMutation = trpc.daemon.createProject.useMutation();
   const nukeMutation = trpc.daemon.nuke.useMutation();
 
+  const { workspaceId } = useParams<{ workspaceId: string }>();
   const iframeActions = useChatStore((state) => state.iframe.actions);
   const project = useTransitionChatStore((state) => state.iframe.state.project);
 
@@ -54,7 +56,11 @@ export const ProjectsSidebar = ({ onNuke }: { onNuke: () => void }) => {
                   size="icon"
                   variant="ghost"
                   className="h-6 w-6"
-                  onClick={() => createProjectMutation.mutate()}
+                  onClick={() =>
+                    createProjectMutation.mutate({
+                      workspaceId,
+                    })
+                  }
                 >
                   {createProjectMutation.isPending ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
