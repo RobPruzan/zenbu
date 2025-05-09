@@ -34,10 +34,7 @@ import { ScreenshotTool } from "../sunset/[projectName]/screenshot-tool";
 import AppSwitcher from "src/components/option-tab-switcher";
 import { CommandMenu } from "./command-menu";
 import { MessageSquareIcon } from "lucide-react";
-import { CommandPalette } from "src/components/command-palette";
-import { CommandWrapper } from "../sunset/[projectName]/command-wrapper";
 import dynamic from "next/dynamic";
-// import { BottomPanel } from "./bottom-panel";
 const BottomPanel = dynamic(() => import("src/app/v2/bottom-panel"), {
   ssr: false,
 });

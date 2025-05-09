@@ -29,7 +29,6 @@ import { CoreMessage, DataContent, Message } from "ai";
 import { RedisValidationError } from "../../../zenbu-daemon/src/daemon";
 import { server_eventsToMessage } from "./server-utils";
 import { nanoid } from "nanoid";
-import { iife } from "src/tools/message-runtime";
 import { write } from "node:console";
 import * as util from "util";
 import {

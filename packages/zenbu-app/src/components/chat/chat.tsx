@@ -5,7 +5,7 @@ import { useChatStore } from "../chat-store";
 import { nanoid } from "nanoid";
 import { SendIcon, Clock, ArrowRightLeft } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
-import { ChatMessage } from "zenbu-plugin/src/ws/utils";
+// import { ChatMessage } from "zenbu-plugin/src/ws/utils";
 import { CoreMessage } from "ai";
 import { Header } from "./header";
 import { AssistantMessage } from "./assistant-message";
@@ -14,7 +14,7 @@ import { Socket } from "socket.io-client";
 import { ChatTextArea } from "./context-input";
 import { useWS } from "src/app/ws";
 import { iife, cn } from "src/lib/utils";
-import { ClientTaskEvent } from "zenbu-plugin/src/ws/schemas";
+// import { ClientTaskEvent } from "zenbu-plugin/src/ws/schemas";
 import { trpc } from "src/lib/trpc";
 import { client_eventToMessages } from "zenbu-plugin/src/v2/client-utils";
 import { Effect } from "effect";
@@ -97,13 +97,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     },
   });
 
-  const [mainThreadMessages, setMainThreadMessages] = useState<
-    Array<ChatMessage>
-  >([]);
-
-  const [otherThreadMessages, setOtherThreadMessages] = useState<
-    Array<Array<ChatMessage>>
-  >([]);
+  const [mainThreadMessages, setMainThreadMessages] = useState<Array<any>>([]);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.currentTarget;
@@ -164,8 +158,11 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     mainThreadMessages[mainThreadMessages.length - 1].role === "user";
 
   const visibleDerivedMessages = derivedMessages.slice(-visibleMessagesCount);
-
-  const findRawEvent = (derivedMsg: ChatMessage) => {
+  // rewrite this idek what it does
+  const findRawEvent = (derivedMsg: {
+    content: any[];
+    role: "user" | "assistant";
+  }) => {
     if (derivedMsg.role === "user" && typeof derivedMsg.content === "object") {
       const textPart = derivedMsg.content.find((part) => part.type === "text");
       if (textPart) {

@@ -15,11 +15,9 @@ import { z } from "zod";
 
 import { ContextItem } from "../slices/context-slice";
 import { iife } from "src/lib/utils";
-import { ClientMessageEvent } from "zenbu-plugin/src/ws/schemas";
 import { ClientEvent } from "zenbu-redis";
 import { trpc } from "src/lib/trpc";
 
-// Props for the MentionMenu component
 interface MentionMenuProps {
   onSelect: (item: string) => void;
   selectedIndex: number;
@@ -27,7 +25,6 @@ interface MentionMenuProps {
   filteredItems: string[];
 }
 
-// MentionMenu component with keyboard navigation (Arrow keys + Ctrl+N/P)
 const MentionMenu = ({
   onSelect,
   selectedIndex,
@@ -76,13 +73,11 @@ const MentionMenu = ({
 export const ChatTextArea = () => {
   const items = ["react-scan", "console", "network", "localstorage"];
   const [showMenu, setShowMenu] = useState<boolean>(false);
-  // const [contextItems, setContextItems] = useState<ContextItem[]>([]);
   const {
     state: { items: contextItems },
     actions,
   } = useChatStore((state) => state.context);
   const utils = trpc.useUtils();
-  // im so stupid
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [query, setQuery] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<string[]>(items);
@@ -91,32 +86,8 @@ export const ChatTextArea = () => {
   const { eventLog, inspector, chatControls, context, toolbar } =
     useChatStore();
   const { socket } = useWSContext();
-
   // there should be no sync this was dumb design by grok
-  const syncSelectedItems = () => {
-    // if (Math.random() > 0) {
-    //   return;
-    // }
-    // const chatInput = chatInputRef.current;
-    // if (!chatInput) return;
-    // const mentionSpans = chatInput.querySelectorAll(".mention");
-    // const currentMentions: string[] = Array.from(mentionSpans)
-    //   .map((span) => span.textContent?.replace(/^@/, "") || "")
-    //   .filter((name) => name);
-    // setContextItems((prev) => {
-    //   const newItems: ContextItem[] = [];
-    //   currentMentions.forEach((mentionName) => {
-    //     const existingItem = prev.find((item) => item.name === mentionName);
-    //     if (existingItem) {
-    //       newItems.push(existingItem);
-    //     } else {
-    //       newItems.push({ kind: "react-scan", name: mentionName });
-    //     }
-    //   });
-    //   return newItems;
-    // });
-  };
-
+  const syncSelectedItems = () => {};
   const handleInput = () => {
     const chatInput = chatInputRef.current;
     if (!chatInput) return;
@@ -228,20 +199,10 @@ export const ChatTextArea = () => {
     const mentionSpans = chatInputRef.current?.querySelectorAll(".mention");
 
     if (mentionSpans && index < mentionSpans.length) {
-      // actions.removeItem(mentionSpans[index])
-      // mentionSpans[index].remove();
       mentionSpans[index].remove();
     }
 
     actions.setItems(newItems);
-    // setContextItems((prev) => {
-    //   const newItems = prev.filter((_, i) => i !== index);
-    //   const mentionSpans = chatInputRef.current?.querySelectorAll(".mention");
-    //   if (mentionSpans && index < mentionSpans.length) {
-    //     mentionSpans[index].remove();
-    //   }
-    //   return newItems;
-    // });
     // wut
     syncSelectedItems();
   };

@@ -1,10 +1,10 @@
 "use client";
 
-import { ChatMessage } from "zenbu-plugin/src/ws/utils";
 import { RefreshCw } from "lucide-react";
 import { cn, iife } from "src/lib/utils";
 
-export function UserMessage({ message }: { message: ChatMessage }) {
+// todo: types
+export function UserMessage({ message }: { message: { content: Array<any> } }) {
   return (
     <div className="group mb-6 max-w-full">
       <div

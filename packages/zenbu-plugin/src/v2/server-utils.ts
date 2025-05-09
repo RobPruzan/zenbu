@@ -106,7 +106,7 @@ export const server_eventsToMessage = (
   });
 };
 
-const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
+const stringifyChunks = (chunks: Array<TextStreamPart<Record<string,any>>>) => {
   const textChunks = transformToolCallDeltas(chunks).map((chunk) => {
     switch (chunk.type) {
       case "text-delta": {

@@ -84,7 +84,11 @@ export const client_eventToMessages = (
             return {
               role: "assistant" as const,
               content: [
-                { type: "text" as const, text: stringifyChunks(event.chunks), chunks:event.chunks },
+                {
+                  type: "text" as const,
+                  text: stringifyChunks(event.chunks),
+                  chunks: event.chunks,
+                },
               ],
             };
           }
@@ -96,7 +100,9 @@ export const client_eventToMessages = (
   });
 };
 
-const stringifyChunks = (chunks: Array<TextStreamPart<{ stupid: any }>>) => {
+const stringifyChunks = (
+  chunks: Array<TextStreamPart<Record<string, any>>>
+) => {
   const textChunks = transformToolCallDeltas(chunks).map((chunk) => {
     switch (chunk.type) {
       case "text-delta": {
@@ -177,7 +183,7 @@ const transformToolCallDeltas = (
       if (curr.type === "tool-call") {
         const lastEvent = prev.at(-1);
         if (lastEvent?.type !== "tool-call") {
-          return prev /// same thing as above, not sure why text delta is showing there
+          return prev; /// same thing as above, not sure why text delta is showing there
           throw new Error(
             JSON.stringify({
               reason: "invariant but the second one client",
