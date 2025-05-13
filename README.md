@@ -7,7 +7,7 @@
 
 # What is this?
 
-Zenbu is a code editor that builds itself- the more it's used, the more useful it is
+Zenbu is a development enviornment that builds itself- the more it's used, the more useful it is
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/dec5e2ba-f291-4215-b067-07f2962300e3" width="400" />
