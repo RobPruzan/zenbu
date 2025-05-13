@@ -14,6 +14,7 @@ import {
 import { Project } from "zenbu-daemon";
 import { useSortable } from "@dnd-kit/sortable";
 import { motion } from "framer-motion";
+import { trpc } from "src/lib/trpc";
 export const ProjectCard = ({
   project,
   style = {},
@@ -30,6 +31,8 @@ export const ProjectCard = ({
     transition,
     isDragging,
   } = useSortable({ id: project.name });
+
+  const deleteProjectMutation = trpc.daemon.deleteProject.useMutation();
 
   const cardStyle: React.CSSProperties = {
     ...style,
@@ -118,10 +121,10 @@ export const ProjectCard = ({
       <ContextMenuContent>
         <ContextMenuItem
           onSelect={() => {
-            router.push(`/editor/${project.name}`);
+            deleteProjectMutation.mutate({ name: project.name });
           }}
         >
-          Open in Real Editor
+          Delete Project
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

@@ -115,7 +115,7 @@ export const Workspace = ({
           <motion.div
             className="w-full h-full"
             initial={{
-              opacity: .3,
+              opacity: 0.3,
             }}
             animate={{
               opacity: 1,
@@ -123,18 +123,20 @@ export const Workspace = ({
           >
             <SortableContext items={items} strategy={rectSortingStrategy}>
               <div className="flex flex-col flex-wrap h-full w-full gap-6 p-4 content-start items-start">
-                {items.map((id) => {
-                  const project = projectsWithUrl.find((p) => p.name === id)!;
-
-                  const dimStyle = activeId === id ? { opacity: 0 } : {};
-                  return (
-                    <ProjectCard
-                      key={project.name}
-                      project={project}
-                      style={dimStyle}
-                    />
-                  );
-                })}
+                {items
+                  .map((id) => projectsWithUrl.find((p) => p.name === id))
+                  .filter((project) => !!project)
+                  .map((project) => {
+                    const dimStyle =
+                      activeId === project.name ? { opacity: 0 } : {};
+                    return (
+                      <ProjectCard
+                        key={project.name}
+                        project={project}
+                        style={dimStyle}
+                      />
+                    );
+                  })}
               </div>
             </SortableContext>
 

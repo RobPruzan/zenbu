@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import { trpc } from "src/lib/trpc";
-import { iife } from "src/lib/utils";
+import { cn, iife } from "src/lib/utils";
+import { TopBar } from "../[workspaceId]/workspace-top-bar";
 
 const chartData = Array.from({ length: 20 }, (_, i) => ({
   name: i.toString(),
@@ -62,7 +63,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
 
   const toolUi = iife(() => {
     switch (tool.uiType) {
-      case 'redux': {
+      case "redux": {
         return (
           <div
             className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
@@ -83,7 +84,9 @@ const ToolUI = ({ tool }: ToolUIProps) => {
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                 <span className="text-xs text-zinc-400">SET_USER</span>
-                <span className="text-[10px] px-1 rounded bg-blue-400/20 text-blue-400">@12:42:01</span>
+                <span className="text-[10px] px-1 rounded bg-blue-400/20 text-blue-400">
+                  @12:42:01
+                </span>
               </div>
               <div className="pl-4 text-xs font-mono">
                 <span className="text-zinc-500">state: </span>
@@ -104,9 +107,9 @@ const ToolUI = ({ tool }: ToolUIProps) => {
               </div>
             </div>
           </div>
-        )
+        );
       }
-      case 'mobx': {
+      case "mobx": {
         return (
           <div
             className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
@@ -127,7 +130,9 @@ const ToolUI = ({ tool }: ToolUIProps) => {
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full bg-purple-400"></div>
                 <span className="text-xs text-zinc-400">todoStore</span>
-                <span className="text-[10px] px-1 rounded bg-purple-400/20 text-purple-400">observable</span>
+                <span className="text-[10px] px-1 rounded bg-purple-400/20 text-purple-400">
+                  observable
+                </span>
               </div>
               <div className="pl-4 text-xs font-mono">
                 <span className="text-zinc-500">state: </span>
@@ -155,7 +160,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
               </div>
             </div>
           </div>
-        )
+        );
       }
       case "console":
         return (
@@ -743,10 +748,42 @@ const ToolUI = ({ tool }: ToolUIProps) => {
     }
   });
 
-  const el = toolUi ?  React.cloneElement(toolUi, {
-    onClick: tool.onClick,
-  }) : null;
+  const el = toolUi
+    ? React.cloneElement(toolUi, {
+        onClick: tool.onClick,
+      })
+    : null;
   return el;
+};
+
+const MarketplaceLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div
+      className={cn([
+        "flex flex-col h-[100vh] w-[100vw] relative py-2",
+        "bg-gradient-to-b from-[#080808cb] to-[#11111172]",
+      ])}
+    >
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          backgroundImage: `
+              linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)
+            `,
+          backgroundSize: "32px 32px",
+        }}
+      />
+
+      <TopBar />
+      <div className="flex w-full justify-between">
+        {children}
+        {/* <Workspace workspace={workspace} />
+          <WorkspaceChat /> */}
+      </div>
+      {/* <BottomBar/> */}
+    </div>
+  );
 };
 
 export default function MarketplacePage() {
@@ -757,80 +794,82 @@ export default function MarketplacePage() {
 
   const router = useRouter();
   return (
-    <div className="relative flex flex-col min-h-screen w-screen">
-      <div
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-[#080808cb] to-[#11111172]"
-        style={{
-          backgroundImage: `
+    <MarketplaceLayout>
+      <div className="relative flex flex-col min-h-screen w-screen">
+        <div
+          className="absolute inset-0 -z-10 bg-gradient-to-b from-[#080808cb] to-[#11111172]"
+          style={{
+            backgroundImage: `
             linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)
           `,
-          backgroundSize: "32px 32px",
-        }}
-      />
-      <div className="flex-1 p-6 pt-8">
-        <div
-          className="masonry-grid"
-          style={{
-            columnCount: 5,
-            columnGap: "1rem",
-            maxWidth: "1800px",
-            margin: "0 auto",
+            backgroundSize: "32px 32px",
           }}
-        >
-          {enhancedDevTools.map((tool) => (
-            <div
-              key={tool.id}
-              className="mb-4 break-inside-avoid"
-              style={{
-                display: "inline-block",
-                width: "100%",
-                height: tool.height,
-              }}
-            >
+        />
+        <div className="flex-1 p-6 pt-8">
+          <div
+            className="masonry-grid"
+            style={{
+              columnCount: 5,
+              columnGap: "1rem",
+              maxWidth: "1800px",
+              margin: "0 auto",
+            }}
+          >
+            {enhancedDevTools.map((tool) => (
               <div
-                className="relative overflow-hidden rounded-sm border border-border/60 bg-background/20 backdrop-blur-sm cursor-pointer transition-all duration-200 hover:translate-y-[-2px]"
+                key={tool.id}
+                className="mb-4 break-inside-avoid"
                 style={{
-                  height: "100%",
-                  boxShadow: "0 4px 8px 1px rgba(0, 0, 0, 0.15)",
+                  display: "inline-block",
+                  width: "100%",
+                  height: tool.height,
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent pointer-events-none z-10" />
-
-                <div className="h-full">
-                  <ToolUI
-                    tool={{
-                      ...tool,
-                      onClick: () => {
-                        router.push(
-                          `/editor/${workspaces[0].workspaceId}/${projects[0].name}`,
-                        );
-                      },
-                    }}
-                  />
-                </div>
-
                 <div
-                  className="absolute bottom-2 left-2 right-2 px-3 py-1 backdrop-blur-sm bg-background/95 rounded-sm flex justify-between items-center z-20"
+                  className="relative overflow-hidden rounded-sm border border-border/60 bg-background/20 backdrop-blur-sm cursor-pointer transition-all duration-200 hover:translate-y-[-2px]"
                   style={{
-                    boxShadow:
-                      "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
-                    background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
+                    height: "100%",
+                    boxShadow: "0 4px 8px 1px rgba(0, 0, 0, 0.15)",
                   }}
                 >
-                  <span className="font-medium text-xs text-zinc-100">
-                    {tool.name}
-                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent pointer-events-none z-10" />
+
+                  <div className="h-full">
+                    <ToolUI
+                      tool={{
+                        ...tool,
+                        onClick: () => {
+                          router.push(
+                            `/editor/${workspaces[0].workspaceId}/${projects[0].name}`,
+                          );
+                        },
+                      }}
+                    />
+                  </div>
+
                   <div
-                    className="rounded-full w-2 h-2 ml-2"
-                    style={{ backgroundColor: tool.color }}
-                  />
+                    className="absolute bottom-2 left-2 right-2 px-3 py-1 backdrop-blur-sm bg-background/95 rounded-sm flex justify-between items-center z-20"
+                    style={{
+                      boxShadow:
+                        "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
+                      background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
+                    }}
+                  >
+                    <span className="font-medium text-xs text-zinc-100">
+                      {tool.name}
+                    </span>
+                    <div
+                      className="rounded-full w-2 h-2 ml-2"
+                      style={{ backgroundColor: tool.color }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </MarketplaceLayout>
   );
 }

@@ -145,6 +145,8 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     eventLog.actions.pushEvent(clientEvent);
     console.log("sending", chatControls.state.input);
     chatControls.actions.setInput("");
+    console.log("sending at", project.name);
+
     socket.emit("message", { event: clientEvent, projectName: project.name });
     updateInputSize();
   };
