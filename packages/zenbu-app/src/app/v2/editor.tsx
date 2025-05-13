@@ -102,11 +102,11 @@ export const Editor = ({ projectId }: { projectId: string }) => {
     >
       <SidebarRouterContext.Provider value={sidebarRouteState}>
         <AppSwitcherWrapper />
-        <CommandMenu
+        {/* <CommandMenu
           items={[{ icon: <MessageSquareIcon />, name: "Chat" }]}
           open={open}
           setOpen={setOpen}
-        />
+        /> */}
 
         <div className="h-[100vh] w-[100vw] flex bg-background ">
           <SlimSidebar />

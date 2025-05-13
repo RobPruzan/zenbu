@@ -182,7 +182,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     >
       <div className="flex h-full flex-col relative overflow-hidden ">
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-black to-zinc-950" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#070808] to-[#090909]" />
         </div>
 
         <Header onCloseChat={onCloseChat} />

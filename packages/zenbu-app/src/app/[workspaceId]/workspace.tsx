@@ -112,30 +112,40 @@ export const Workspace = ({
           // todo, why does vh -> % break
           className="h-[calc(100vh-43px)] w-[calc(100%-400px)]"
         >
-          <SortableContext items={items} strategy={rectSortingStrategy}>
-            <div className="flex flex-col flex-wrap h-full w-full gap-6 p-4 content-start items-start">
-              {items.map((id) => {
-                const project = projectsWithUrl.find((p) => p.name === id)!;
+          <motion.div
+            className="w-full h-full"
+            initial={{
+              opacity: .3,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+          >
+            <SortableContext items={items} strategy={rectSortingStrategy}>
+              <div className="flex flex-col flex-wrap h-full w-full gap-6 p-4 content-start items-start">
+                {items.map((id) => {
+                  const project = projectsWithUrl.find((p) => p.name === id)!;
 
-                const dimStyle = activeId === id ? { opacity: 0 } : {};
-                return (
-                  <ProjectCard
-                    key={project.name}
-                    project={project}
-                    style={dimStyle}
-                  />
-                );
-              })}
-            </div>
-          </SortableContext>
+                  const dimStyle = activeId === id ? { opacity: 0 } : {};
+                  return (
+                    <ProjectCard
+                      key={project.name}
+                      project={project}
+                      style={dimStyle}
+                    />
+                  );
+                })}
+              </div>
+            </SortableContext>
 
-          <DragOverlay dropAnimation={null}>
-            {activeId ? (
-              <ProjectCard
-                project={projectsWithUrl.find((p) => p.name === activeId)!}
-              />
-            ) : null}
-          </DragOverlay>
+            <DragOverlay dropAnimation={null}>
+              {activeId ? (
+                <ProjectCard
+                  project={projectsWithUrl.find((p) => p.name === activeId)!}
+                />
+              ) : null}
+            </DragOverlay>
+          </motion.div>
         </ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem

@@ -12,12 +12,14 @@ export const WorkspaceChat = () => {
 
   return (
     <motion.div
+    
       layout
       transition={{ duration: 0.45, bounce: 0.19, type: "spring" }}
       className={cn([open ? "w-[400px]" : "w-[90px] h-[100px]", "p-4 full"])}
     >
       {open ? (
-        <div className="border border-[#131313] rounded-lg h-full bg-background/50 flex flex-col justify-end bg-gradient-to-t from-[#070808] to-[#090909]">
+        // <div className="border border-[#131313] rounded-lg h-full bg-background/50 flex flex-col justify-end bg-gradient-to-t from-[#070808] to-[#090909]">
+         <div className="border border-[#131313] rounded-lg h-full bg-background/50 flex flex-col justify-end bg-gradient-to-t from-[#070808] to-[#090909]">
           <div className="mb-auto w-full flex items-center px-2 py-2 justify-between ">
             <Button variant={"ghost"} size={"icon"}>
               <SquarePen size={18} color="#686767" />

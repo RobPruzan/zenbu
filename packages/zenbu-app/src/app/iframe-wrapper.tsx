@@ -19,6 +19,7 @@ import {
   useTransitionChatStore,
 } from "src/components/chat-store";
 import { useMakeRequest } from "src/components/devtools-overlay";
+import { motion } from "framer-motion";
 
 const snapshot = { kind: "off" as const };
 
@@ -101,7 +102,14 @@ export const IFrameWrapper = ({
         name={`preview-${project.name}`}
         update={"none"}
       >
-        <iframe
+        <motion.iframe
+          // animate={{
+
+          // }}
+          // transition={{
+          //   duration: 1,
+          // }}
+          layoutId={`preview-iframe-${project.name}`}
           id={IFRAME_ID}
           ref={iframeRef}
           key={lastUpdate}

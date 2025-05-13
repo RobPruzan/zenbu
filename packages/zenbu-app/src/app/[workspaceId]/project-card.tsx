@@ -13,6 +13,7 @@ import {
 } from "src/components/ui/context-menu";
 import { Project } from "zenbu-daemon";
 import { useSortable } from "@dnd-kit/sortable";
+import { motion } from "framer-motion";
 export const ProjectCard = ({
   project,
   style = {},
@@ -41,30 +42,27 @@ export const ProjectCard = ({
   const router = useRouter();
   if (!project.url) {
     // todo
-    return null
+    return null;
   }
 
   return (
     <ContextMenu>
       <ContextMenuTrigger className="w-fit h-fit">
-        <div
-          ref={setNodeRef}
-          style={cardStyle}
-          className="flex flex-col gap-2"
-        >
+        <div ref={setNodeRef} style={cardStyle} className="flex flex-col gap-2">
           <div
             {...listeners}
             {...attributes}
-            className="bg-background rounded-sm  border border-border/60 overflow-hidden cursor-move relative group"
+            className="bg-paper rounded-sm  border border-border/60 overflow-hidden cursor-move relative group"
             style={{
               boxShadow: "0 4px 8px 1px rgba(53, 53, 53, 0.06)",
               backdropFilter: "blur(5px)",
             }}
           >
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent pointer-events-none z-20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent pointer-events-none z-20" />
             {project.url ? (
               <div className="w-[350px] h-[215px] overflow-hidden relative">
-                <iframe
+                <motion.iframe
+                  // layoutId={`preview-iframe-${project.name}`}
                   src={project.url}
                   className="absolute top-0 left-0 w-[1400px] h-[860px] pointer-events-none"
                   style={{
@@ -83,39 +81,38 @@ export const ProjectCard = ({
               </div>
             )}
 
-          <div className="flex items-center justify-between px-1 absolute z-50 bottom-1 w-full">
-            <div
-              className="bg-background backdrop-blur-sm px-3 py-1 rounded-sm"
-              style={{
-                boxShadow:
-                  "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
-                background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
-              }}
-            >
-              <h3 className="font-medium text-xs text-zinc-100">
-                {project.name}
-              </h3>
+            <div className="flex items-center justify-between px-1 absolute z-50 bottom-1 w-full">
+              <div
+                className="bg-background backdrop-blur-sm px-3 py-1 rounded-sm"
+                style={{
+                  boxShadow:
+                    "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
+                  background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
+                }}
+              >
+                <h3 className="font-medium text-xs text-zinc-100">
+                  {project.name}
+                </h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 rounded-sm bg-background backdrop-blur-sm hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-[opacity] duration-200"
+                style={{
+                  boxShadow:
+                    "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
+                  background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/editor/${workspaceId}/${project.name}`);
+                }}
+              >
+                <Edit2Icon className="h-4 w-4" />
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 rounded-sm bg-background backdrop-blur-sm hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-[opacity] duration-200"
-              style={{
-                boxShadow:
-                  "0 20px 30px -8px rgba(0,0,0,0.7), 0 10px 15px -5px rgba(0,0,0,0.3), inset 0 8px 25px rgba(0,0,0,0.8)",
-                background: "linear-gradient(135deg, #1a1a1a, #2a2a2a)",
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/editor/${workspaceId}/${project.name}`);
-              }}
-            >
-              <Edit2Icon className="h-4 w-4" />
-            </Button>
           </div>
-          </div>
-
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>

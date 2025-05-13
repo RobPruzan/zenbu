@@ -163,7 +163,7 @@ export default function AppSwitcher({
     altDownTimestampRef,
   ]);
 
-  const items = getSortedSwitcherItems();
+  const items = getSortedSwitcherItems().slice(0,5);
 
   if (!showAppSwitcher || items.length === 0) {
     return null;

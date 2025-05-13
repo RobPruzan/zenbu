@@ -7,6 +7,8 @@ import { TRPCReactProvider } from "src/trpc/react";
 import { unstable_ViewTransition as ViewTransition } from "react";
 import { AppSwitcherStateProvider } from "src/components/app-switcher-context";
 import { WorkspaceCommandMenu } from "./[workspaceId]/command-menu";
+import { cn } from "src/lib/utils";
+import { TopBar } from "./[workspaceId]/workspace-top-bar";
 
 export const metadata: Metadata = {
   title: "Zenbu",
@@ -28,7 +30,33 @@ export default function RootLayout({
             <ChatProvider>
               <WorkspaceCommandMenu />
 
-              {children}
+              <div
+        className={cn([
+          "flex flex-col h-[100vh] w-[100vw] relative py-2",
+          "bg-gradient-to-b from-[#080808cb] to-[#11111172]",
+        ])}
+      >
+        <div
+          className="absolute inset-0 -z-10"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: "32px 32px",
+          }}
+        />
+
+        <TopBar />
+        <div className="flex w-full justify-between">
+        {children}
+          {/* <Workspace workspace={workspace} />
+          <WorkspaceChat /> */}
+        </div>
+        {/* <BottomBar/> */}
+      </div>
+
+        
             </ChatProvider>
             {/* </InspectorStateProvider> */}
           </AppSwitcherStateProvider>
