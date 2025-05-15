@@ -7,7 +7,7 @@
 
 # What is this?
 
-Zenbu is a development enviornment that builds itself- the more it's used, the more useful it is
+Zenbu is a development enviornment that builds itself
 
 <p align="center" style="margin-top: 40px;">
   <img src="https://github.com/user-attachments/assets/4690ef2b-b1d7-42b3-8a5e-e203cb0a205c" width="600" />
