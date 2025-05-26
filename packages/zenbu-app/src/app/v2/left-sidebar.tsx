@@ -9,6 +9,7 @@ import {
 } from "src/components/chat-store";
 import { AnimatePresence, motion } from "framer-motion";
 import { AnimatedSidebar } from "./animated-sidebar";
+import { MobileSplit } from "./mobile-split";
 
 export const LeftSidebar = ({
   allProjects,

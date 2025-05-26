@@ -4,6 +4,7 @@
 import { trpc } from "src/lib/trpc";
 import { useParams, useRouter } from "next/navigation";
 import AppSwitcher from "src/components/option-tab-switcher";
+
 import { Workspace } from "./workspace";
 import { WorkspaceChat } from "./workspace-chat";
 import { TopBar } from "./workspace-top-bar";
@@ -55,7 +56,7 @@ export default function Page() {
           />
 
           <Workspace workspace={workspace} />
-          <WorkspaceChat />
+          {/* <WorkspaceChat /> */}
           {/* <Workspace workspace={workspace} />
           <WorkspaceChat /> */}
         </div>

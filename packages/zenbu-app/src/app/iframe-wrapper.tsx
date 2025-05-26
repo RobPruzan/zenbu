@@ -20,6 +20,7 @@ import {
 } from "src/components/chat-store";
 import { useMakeRequest } from "src/components/devtools-overlay";
 import { motion } from "framer-motion";
+import { cn } from "src/lib/utils";
 
 const snapshot = { kind: "off" as const };
 
@@ -94,7 +95,13 @@ export const IFrameWrapper = ({
   }
 
   return (
-    <div className={`w-full h-full overflow-hidden relative bg-black/20 `}>
+    <div
+      className={
+        !mobile
+          ? `w-full h-full overflow-hidden relative bg-black/20 `
+          : ""
+      }
+    >
       {children}
       <ViewTransition
         key={project.name}
@@ -110,10 +117,10 @@ export const IFrameWrapper = ({
           //   duration: 1,
           // }}
           layoutId={`preview-iframe-${project.name}`}
-          id={IFRAME_ID}
           ref={iframeRef}
           key={lastUpdate}
-          className="w-full h-full select-none"
+          className={cn("w-full h-full select-none")}
+          style={mobile ? { width: "390px", height: "844px" } : undefined}
           src={`http://localhost:${project.port}`}
           title={project.name}
         />

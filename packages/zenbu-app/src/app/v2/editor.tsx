@@ -35,6 +35,7 @@ import AppSwitcher from "src/components/option-tab-switcher";
 import { CommandMenu } from "./command-menu";
 import { MessageSquareIcon } from "lucide-react";
 import dynamic from "next/dynamic";
+import { WithMobileSplit } from "./mobile-split";
 const BottomPanel = dynamic(() => import("src/app/v2/bottom-panel"), {
   ssr: false,
 });
@@ -71,6 +72,9 @@ export const Editor = ({ projectId }: { projectId: string }) => {
         },
         toolbar: {
           state: {
+            mobileSplit: {
+              active: false,
+            },
             activeRoute: "off",
             drawing: {
               active: false,
@@ -119,13 +123,22 @@ export const Editor = ({ projectId }: { projectId: string }) => {
             ref={previewContainerRef}
             className="flex flex-col w-full items-center justify-center overflow-hidden"
           >
-            <IFrameWrapper>
-              <ScreenshotTool />
-              <BetterToolbar />
-              <DevtoolsOverlay />
-              <BetterDrawing />
-              <Recording />
-            </IFrameWrapper>
+            {/* 
+            need an abstraction here thats a component to read context so we can split mobile and have the emulation
+
+            along with the resizable
+            
+            */}
+            <WithMobileSplit>
+              <IFrameWrapper>
+                <ScreenshotTool />
+                <BetterToolbar />
+                <DevtoolsOverlay />
+                <BetterDrawing />
+                <Recording />
+              </IFrameWrapper>
+            </WithMobileSplit>
+
             <BottomPanel />
           </div>
           <RightSidebar />

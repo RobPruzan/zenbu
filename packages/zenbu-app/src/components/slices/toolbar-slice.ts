@@ -1,4 +1,4 @@
-import { Editor } from "tldraw";
+import { Editor, StateNode } from "tldraw";
 import { SliceCreator } from "../chat-store";
 
 export type Route = "network" | "console" | "performance" | "off";
@@ -36,6 +36,14 @@ export type ToolbarState = {
     | {
         active: true;
       };
+
+  mobileSplit:
+    | {
+        active: false;
+      }
+    | {
+        active: true;
+      };
 };
 
 export type ToolbarSlice = {
@@ -47,6 +55,7 @@ export type ToolbarSlice = {
     setRoute: (route: Route) => void;
     setGetEditor: (getEditor: () => Editor) => void;
     setIsRecording: (isRecording: boolean) => void;
+    setMobileSplitActive: (mobileSplitActive: boolean) => void;
   };
 };
 
@@ -55,6 +64,10 @@ export const createToolbarSLice =
   (set) => ({
     state: initialState.state,
     actions: {
+      setMobileSplitActive: (mobileSplitActive) =>
+        set((state) => {
+          state.toolbar.state.mobileSplit.active = mobileSplitActive;
+        }),
       setIsRecording: (isRecording) =>
         set((state) => {
           state.toolbar.state.recording.active = isRecording;

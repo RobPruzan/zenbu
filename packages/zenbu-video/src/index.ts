@@ -26,26 +26,46 @@ declare global {
     replayer: any;
   }
 }
+const html = (strings: TemplateStringsArray, ...values: any[]) => {
+  return strings.reduce((result, string, i) => {
+    return result + string + (values[i] || "");
+  }, "");
+};
 
-const pageHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Live Mirror</title>
-    <style>
-        body { margin: 0; padding: 0; background: transparent; }
-        .replayer-wrapper { background: transparent!important; }
-        .message { font-size: 1.5em; color: #333; }
-        #replay-container { width: 100vw; height: 100vh; background: white; border: 1px solid #ccc; box-sizing: border-box; }
-    </style>
-   
-</head>
-<body>
-    <div class="message" style="display: none;">Waiting for rrweb events...</div>
-    <div id="replay-container"></div>
-  
-</body>
-</html>
+const pageHtml = html`
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>Live Mirror</title>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          background: transparent;
+        }
+        .replayer-wrapper {
+          background: transparent !important;
+        }
+        .message {
+          font-size: 1.5em;
+          color: #333;
+        }
+        #replay-container {
+          width: 100vw;
+          height: 100vh;
+          background: white;
+          border: 1px solid #ccc;
+          box-sizing: border-box;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="message" style="display: none;">
+        Waiting for rrweb events...
+      </div>
+      <div id="replay-container"></div>
+    </body>
+  </html>
 `;
 
 const framesToFolder = Effect.fn("framesToFolder")(function* () {
@@ -88,17 +108,14 @@ const pngDirToVideo = ({ path, fps }: { path: string; fps: number }) =>
   Effect.fn("pngDirToVideo")(function* () {
     const fs = yield* FileSystem.FileSystem;
 
-    // Create recordings directory if it doesn't exist
     const recordingsDir = yield* fs.makeDirectory("recordings", {
       recursive: true,
     });
 
-    // Generate a unique filename with timestamp
     const timestamp = Date.now();
     const videoFilename = `recording-${timestamp}.mp4`;
     const outputPath = `recordings/${videoFilename}`;
 
-    // Construct ffmpeg command
     const ffmpeg = "ffmpeg";
 
     return yield* Effect.tryPromise(

@@ -7,7 +7,6 @@ import { eq } from "drizzle-orm";
 import { firstRecord, firstRecordAssert } from "src/server/db/utils";
 export const workspaceRouter = createTRPCRouter({
   getWorkspaces: publicProcedure.query(() => db.select().from(Schema.workspace)),
-
   getTags: publicProcedure
     .input(
       z.object({

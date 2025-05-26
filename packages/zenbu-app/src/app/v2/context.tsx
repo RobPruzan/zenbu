@@ -25,7 +25,7 @@ export const ProjectContext = createContext<{
   setProject: Dispatch<SetStateAction<Project>>;
 }>(null!);
 
-export type LeftSidebarRoute = "projects" | "experiments";
+export type LeftSidebarRoute = "projects" | "experiments"  ;
 export type RightSidebarRoute = "chat";
 export type BottomSidebarRoute = "terminal";
 export const SidebarRouterContext = createContext<{
