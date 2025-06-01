@@ -8,6 +8,7 @@ import {
   MessageSquareIcon,
   MonitorSmartphoneIcon,
   Pencil,
+  TerminalIcon,
   VideoIcon,
 } from "lucide-react";
 import { Button } from "src/components/ui/button";
@@ -190,6 +191,26 @@ export const SlimSidebar = () => {
           </TooltipTrigger>
           <TooltipContent side="right">
             <p>Mobile Split</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-8 w-8",
+                // state.mobileSplit.active && "bg-accent text-accent-foreground",
+              )}
+              onClick={() => {
+                // actions.setMobileSplitActive(!state.recording.active);
+              }}
+            >
+              <TerminalIcon className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>Terminal</p>
           </TooltipContent>
         </Tooltip>
       </div>

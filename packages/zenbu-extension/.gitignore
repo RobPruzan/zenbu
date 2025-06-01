@@ -1,0 +1,16 @@
+out
+dist
+node_modules
+.vscode-test/
+*.vsix
+.DS_Store
+*.log
+.env
+
+# Ignore compiled config files
+vite.config.js
+vite.config.js.map
+*.config.js.map
+
+# Build status file
+.build-status 

@@ -1,0 +1,552 @@
+/* Zenbu Workspace - Extensible UI System */
+
+.zenbu-workspace {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+
+/* Header */
+.workspace-header {
+  padding: 12px 16px;
+  background: var(--vscode-titleBar-activeBackground);
+  border-bottom: 1px solid var(--vscode-widget-border);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.blueprint-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.blueprint-selector label {
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.blueprint-selector select {
+  padding: 4px 8px;
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  border: 1px solid var(--vscode-dropdown-border);
+  border-radius: 2px;
+  font-size: 13px;
+  min-width: 300px;
+}
+
+.layout-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layout-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.layout-buttons button {
+  padding: 4px 12px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  border-radius: 2px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.layout-buttons button:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.layout-buttons button.active {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+/* Workspace Grid */
+.workspace-grid {
+  flex: 1;
+  overflow: hidden;
+}
+
+.workspace-canvas {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.workspace-canvas.active {
+  box-shadow: inset 0 0 0 1px var(--vscode-focusBorder);
+}
+
+.canvas-header {
+  padding: 8px 12px;
+  background: var(--vscode-editor-background);
+  border-bottom: 1px solid var(--vscode-widget-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.canvas-icon {
+  font-size: 16px;
+}
+
+.canvas-title {
+  flex: 1;
+}
+
+.canvas-action {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 14px;
+}
+
+.canvas-action:hover {
+  opacity: 1;
+}
+
+.canvas-content {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+/* Canvas Types */
+
+/* Chat Canvas */
+.canvas-chat {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+}
+
+.blueprint-context {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  padding: 4px 8px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin: 16px 0;
+}
+
+.ai-suggestion {
+  padding: 12px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.chat-input {
+  margin-top: auto;
+}
+
+.chat-input textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+/* Visual Canvas */
+.canvas-visual {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.visual-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.visual-toolbar button {
+  padding: 6px 12px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  border-radius: 2px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.visual-editor {
+  flex: 1;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.mock-editor {
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.line-decorator {
+  display: inline-block;
+  margin-left: 20px;
+  padding: 2px 8px;
+  background: var(--vscode-editorGutter-commentRangeForeground);
+  color: var(--vscode-editor-foreground);
+  border-radius: 2px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.color-decorator {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  margin: 0 4px;
+  vertical-align: middle;
+  border: 1px solid var(--vscode-widget-border);
+}
+
+/* Command Canvas */
+.command-builder {
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.command-builder h3 {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+}
+
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  background: var(--vscode-input-background);
+  border-radius: 4px;
+}
+
+.keys {
+  font-family: monospace;
+  font-size: 12px;
+  padding: 2px 6px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-radius: 2px;
+}
+
+.action {
+  font-size: 13px;
+}
+
+.add-shortcut {
+  padding: 8px 16px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px dashed var(--vscode-widget-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* Preview Canvas */
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.preview-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.6;
+}
+
+.preview-content {
+  background: var(--vscode-sideBar-background);
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  padding: 16px;
+  min-height: 200px;
+}
+
+.mock-sidebar {
+  font-size: 13px;
+}
+
+.sidebar-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--vscode-sideBarTitle-foreground);
+}
+
+.tree-item {
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.tree-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.mock-editor-preview {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.code-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.line-number {
+  color: var(--vscode-editorLineNumber-foreground);
+  width: 30px;
+  text-align: right;
+}
+
+.code {
+  color: var(--vscode-editor-foreground);
+}
+
+.color-preview {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--vscode-widget-border);
+}
+
+/* DevTools Canvas */
+.devtools-tabs {
+  display: flex;
+  gap: 16px;
+  border-bottom: 1px solid var(--vscode-widget-border);
+  margin-bottom: 16px;
+}
+
+.devtools-tabs button {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+  border-bottom: 2px solid transparent;
+}
+
+.devtools-tabs button.active {
+  color: var(--vscode-foreground);
+  border-bottom-color: var(--vscode-focusBorder);
+}
+
+.element-tree {
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.element {
+  padding: 2px 0;
+  color: var(--vscode-textLink-foreground);
+}
+
+.element.nested {
+  margin-left: 20px;
+}
+
+/* Diff Canvas */
+.diff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.diff-header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.diff-header button {
+  padding: 4px 8px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  border-radius: 2px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.version-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.version-item {
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.version-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.version-number {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.version-time {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.version-changes {
+  margin-bottom: 12px;
+}
+
+.change-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 2px 0;
+}
+
+.change-type {
+  padding: 0 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.change-type.add {
+  background: var(--vscode-diffEditor-insertedLineBackground);
+  color: var(--vscode-diffEditor-insertedTextForeground);
+}
+
+.change-type.modify {
+  background: var(--vscode-diffEditor-modifiedLineBackground);
+  color: var(--vscode-diffEditor-modifiedTextForeground);
+}
+
+.change-type.delete {
+  background: var(--vscode-diffEditor-removedLineBackground);
+  color: var(--vscode-diffEditor-removedTextForeground);
+}
+
+.change-path {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.revert-button {
+  padding: 4px 12px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  border-radius: 2px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.current-changes {
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.change-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.added {
+  color: var(--vscode-gitDecoration-addedResourceForeground);
+}
+
+.modified {
+  color: var(--vscode-gitDecoration-modifiedResourceForeground);
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .workspace-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .blueprint-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .blueprint-selector select {
+    width: 100%;
+    min-width: auto;
+  }
+}
