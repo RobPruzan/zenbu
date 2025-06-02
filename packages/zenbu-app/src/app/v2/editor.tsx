@@ -41,7 +41,16 @@ import { WithMobileSplit } from "./mobile-split";
 //   ssr: false,
 // });
 
-export const Editor = ({ projectId }: { projectId: string }) => {
+export const Editor = ({
+  projectId,
+  Container,
+  defaultSidebarOpen,
+}: {
+  projectId: string;
+
+  Container?: ({ children }: { children: React.ReactNode }) => React.ReactNode;
+  defaultSidebarOpen?: "chat";
+}) => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
   const project = projects.find((project) => project.name === projectId);
   if (!project) {
@@ -54,7 +63,7 @@ export const Editor = ({ projectId }: { projectId: string }) => {
 
   const { measuredSize, previewContainerRef } = useThumbnailScaleCalc();
 
-  const sidebarRouteState = useSidebarRouterInit();
+  const sidebarRouteState = useSidebarRouterInit({ defaultSidebarOpen });
 
   const [open, setOpen] = useState(false);
 
@@ -130,7 +139,7 @@ export const Editor = ({ projectId }: { projectId: string }) => {
             
             */}
             <WithMobileSplit>
-              <IFrameWrapper>
+              <IFrameWrapper Container={Container}>
                 <ScreenshotTool />
                 <BetterToolbar />
                 <DevtoolsOverlay />

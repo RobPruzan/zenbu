@@ -11,7 +11,7 @@ export function UserMessage({ message }: { message: { content: Array<any> } }) {
         className={cn(
           "rounded-lg bg-accent/5 backdrop-blur-xl border border-border/50",
           "shadow-sm overflow-hidden max-w-full",
-          "transform hover:translate-y-[-1px] transition-all duration-300",
+          "transform transition-all duration-300",
           "hover:shadow-md hover:border-border/60",
         )}
       >

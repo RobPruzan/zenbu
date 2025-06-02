@@ -1,52 +1,12 @@
 import React, { Suspense } from "react";
-import { Button } from "~/components/ui/button";
-import { vscodeAPI } from "./rpc/webview-rpc";
-import { ChatInstanceContext } from "~/components/chat-store";
 import { Editor } from "~/app/v2/editor";
+import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
 
-// Loading component for suspense
-const EditorLoading = () => (
-  <div style={{ padding: "20px", textAlign: "center" }}>
-    <p>Loading editor...</p>
-  </div>
-);
+export const EditorApp = () => {
+  const [projects] = api.daemon.getProjects.useSuspenseQuery();
 
-// Separate component that uses the Editor from zenbu-app
-const EditorContent = ({ projectId }: { projectId: string }) => {
-  return (
-    <Suspense fallback={<EditorLoading />}>
-      <Editor projectId={projectId} />
-    </Suspense>
-  );
-};
-
-export const EditorApp: React.FC = () => {
-  // Use regular query instead of suspense query
-  const {
-    data: projects,
-    isLoading,
-    error,
-  } = api.daemon.getProjects.useQuery();
-
-  const currentProject = projects?.[0]; // For now, just use the first project
-
-  const handleOpenSidebar = async () => {
-    await vscodeAPI.openSidebar();
-  };
-
-  if (isLoading) {
-    return <EditorLoading />;
-  }
-
-  if (error) {
-    return (
-      <div style={{ padding: "20px" }}>
-        <h1>Error loading projects</h1>
-        <p>{error.message}</p>
-      </div>
-    );
-  }
+  const currentProject = projects.at(1);
 
   if (!currentProject) {
     return (
@@ -57,5 +17,24 @@ export const EditorApp: React.FC = () => {
     );
   }
 
-  return <EditorContent projectId={currentProject.name} />;
+  return (
+    <Suspense fallback={<>loading editor...</>}>
+      <Editor
+        Container={({ children }) => (
+          <div className="w-full h-full flex items-center justify-center flex-col">
+            <div className="mb-auto h-[20px] flex justify-end w-full gap-x-2 p-1">
+              <Button
+               variant={'secondary'} 
+                className="text-xs">Editor</Button>
+              <Button
+               variant={'ghost'} 
+                className="text-xs">Sidebar</Button>
+            </div>
+            <div className="h-[93%] w-[300px] mb-auto">{children}</div>
+          </div>
+        )}
+        projectId={currentProject.name}
+      />
+    </Suspense>
+  );
 };

@@ -25,8 +25,8 @@ export const ProjectContext = createContext<{
   setProject: Dispatch<SetStateAction<Project>>;
 }>(null!);
 
-export type LeftSidebarRoute = "projects" | "experiments" | "chat" ;
-export type RightSidebarRoute =never 
+export type LeftSidebarRoute = "projects" | "experiments" | "chat";
+export type RightSidebarRoute = never;
 export type BottomSidebarRoute = "terminal";
 export const SidebarRouterContext = createContext<{
   left: LeftSidebarRoute | null;
@@ -38,14 +38,18 @@ export const SidebarRouterContext = createContext<{
 }>(null!);
 export const useSidebarRouter = () => useContext(SidebarRouterContext);
 
-export const useSidebarRouterInit = () => {
+export const useSidebarRouterInit = ({
+  defaultSidebarOpen,
+}: {
+  defaultSidebarOpen?: "chat";
+}) => {
   const [left, setLeftSidebarRoute] = useState<LeftSidebarRoute | null>(
-    "chat",
+    defaultSidebarOpen ? "chat" : null,
     // null,
   );
   const [right, setRightSidebarRoute] = useState<RightSidebarRoute | null>(
     // "chat",
-    null
+    null,
   );
   const [bottom, setBottomSidebarRoute] = useState<BottomSidebarRoute | null>(
     null,

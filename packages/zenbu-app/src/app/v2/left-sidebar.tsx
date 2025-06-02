@@ -51,12 +51,12 @@ export const LeftSidebar = ({
                 />
               );
             }
-            case 'chat': {
-              return <ChatSidebar/>
+            case "chat": {
+              return <ChatSidebar className="border-r" />;
             }
           }
         }}
-        width={sidebar.left === 'chat' ? "350px" : "200px"}
+        width={sidebar.left === "chat" ? "350px" : "200px"}
       />
     </div>
   );

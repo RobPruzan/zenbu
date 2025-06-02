@@ -27,9 +27,11 @@ const snapshot = { kind: "off" as const };
 export const IFrameWrapper = ({
   children,
   mobile = false,
+  Container = ({ children }) => <>{children}</>,
 }: {
   children: React.ReactNode;
   mobile?: boolean;
+  Container?: ({ children }: { children: React.ReactNode }) => React.ReactNode;
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const refEventCatcher = useRef<HTMLDivElement | null>(null);
@@ -97,9 +99,7 @@ export const IFrameWrapper = ({
   return (
     <div
       className={
-        !mobile
-          ? `w-full h-full overflow-hidden relative bg-black/20 `
-          : ""
+        !mobile ? `w-full h-full overflow-hidden relative bg-black/20 ` : ""
       }
     >
       {children}
@@ -109,21 +109,23 @@ export const IFrameWrapper = ({
         name={`preview-${project.name}`}
         update={"none"}
       >
-        <motion.iframe
-          // animate={{
+        <Container>
+          <motion.iframe
+            // animate={{
 
-          // }}
-          // transition={{
-          //   duration: 1,
-          // }}
-          layoutId={`preview-iframe-${project.name}`}
-          ref={iframeRef}
-          key={lastUpdate}
-          className={cn("w-full h-full select-none")}
-          style={mobile ? { width: "390px", height: "844px" } : undefined}
-          src={`http://localhost:${project.port}`}
-          title={project.name}
-        />
+            // }}
+            // transition={{
+            //   duration: 1,
+            // }}
+            layoutId={`preview-iframe-${project.name}`}
+            ref={iframeRef}
+            key={lastUpdate}
+            className={cn("w-full h-full select-none")}
+            style={mobile ? { width: "390px", height: "844px" } : undefined}
+            src={`http://localhost:${project.port}`}
+            title={project.name}
+          />
+        </Container>
       </ViewTransition>
     </div>
     // <ViewTransition

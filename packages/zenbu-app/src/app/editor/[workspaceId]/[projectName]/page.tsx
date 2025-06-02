@@ -21,7 +21,7 @@ import { motion } from "framer-motion";
  *
  *
  * okay so if we need the 2 way communication anyways, it may be fun to use that webworker library
- * 
+ *
  */
 
 export default function Page() {
@@ -59,9 +59,7 @@ export default function Page() {
       }
       className="relative flex justify-center items-center"
     >
-      <Editor projectId={projectName} />
+      <Editor defaultSidebarOpen="chat" projectId={projectName} />
     </motion.div>
   );
 }
-
-

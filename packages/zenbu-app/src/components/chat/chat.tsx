@@ -29,7 +29,15 @@ export const WSContext = createContext<{
 
 export const useWSContext = () => useContext(WSContext);
 
-export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
+export function Chat({
+  onCloseChat,
+  slots,
+}: {
+  onCloseChat: () => void;
+  slots?: {
+    inputArea?: React.ReactNode;
+  };
+}) {
   const { eventLog, inspector, chatControls, context, toolbar } =
     useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(
@@ -185,7 +193,7 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
     >
       <div className="flex h-full flex-col relative overflow-hidden ">
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-t from-[#070808] to-[#090909]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/95 to-background" />
         </div>
 
         <Header onCloseChat={onCloseChat} />
@@ -288,7 +296,8 @@ export function Chat({ onCloseChat }: { onCloseChat: () => void }) {
                 <ChatTextArea />
               </div>
 
-              <div className="flex items-center justify-end px-4 py-2 border-t bg-accent/5">
+              <div className="flex items-center justify-end px-4 py-2 border-t bg-accent/5 gap-x-2">
+                {slots?.inputArea}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={sendMessage}
