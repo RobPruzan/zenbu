@@ -1,34 +1,30 @@
 import * as vscode from "vscode";
-import { EditorProvider } from "./providers/editor-provider";
 import { SidebarProvider } from "./providers/sidebar-provider";
+import { EditorProvider } from "./providers/editor-provider";
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log("Zenbu Extension V2 is now active!");
-
-  const sidebarProvider = new SidebarProvider(context);
-  const editorProvider = new EditorProvider(context);
-
+  // Register sidebar provider
+  const sidebarProvider = new SidebarProvider(context.extensionUri, context);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
-      "zenbu.sidebar",
-      sidebarProvider,
-      {
-        webviewOptions: {
-          retainContextWhenHidden: true,
-        },
-      }
+      SidebarProvider.viewType,
+      sidebarProvider
     )
   );
 
+  // Create editor provider instance
+  const editorProvider = new EditorProvider(context.extensionUri, context);
+
+  // Register commands
   context.subscriptions.push(
     vscode.commands.registerCommand("zenbu.openSidebar", () => {
-      vscode.commands.executeCommand("zenbu.sidebar.focus");
+      vscode.commands.executeCommand("workbench.view.extension.zenbu-sidebar");
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("zenbu.openInEditor", () => {
-      editorProvider.createOrShow();
+      editorProvider.openInEditor();
     })
   );
 }

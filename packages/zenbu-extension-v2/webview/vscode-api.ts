@@ -1,10 +1,17 @@
 // VSCode API wrapper
 declare global {
-  const vscode: {
+  function acquireVsCodeApi(): {
     postMessage: (message: any) => void;
+    getState: () => any;
+    setState: (state: any) => void;
   };
 }
 
+let vscodeApi: ReturnType<typeof acquireVsCodeApi> | undefined;
+
 export function getVSCodeAPI() {
-  return vscode;
+  if (!vscodeApi) {
+    vscodeApi = acquireVsCodeApi();
+  }
+  return vscodeApi;
 }
