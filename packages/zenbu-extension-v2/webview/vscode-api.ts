@@ -5,13 +5,15 @@ declare global {
     getState: () => any;
     setState: (state: any) => void;
   };
+
+  interface Window {
+    __vscodeApi?: ReturnType<typeof acquireVsCodeApi>;
+  }
 }
 
-let vscodeApi: ReturnType<typeof acquireVsCodeApi> | undefined;
-
 export function getVSCodeAPI() {
-  if (!vscodeApi) {
-    vscodeApi = acquireVsCodeApi();
+  if (!window.__vscodeApi) {
+    window.__vscodeApi = acquireVsCodeApi();
   }
-  return vscodeApi;
+  return window.__vscodeApi;
 }

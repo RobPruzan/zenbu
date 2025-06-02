@@ -1,8 +1,16 @@
 import React from "react";
 import { Button } from "~/components/ui/button";
 import { vscodeAPI } from "./rpc/webview-rpc";
+import { api } from "./lib/trpc";
 
 export const SidebarApp: React.FC = () => {
+  // Example tRPC query - get all workspaces
+  const {
+    data: workspaces,
+    isLoading,
+    error,
+  } = api.workspace.getWorkspaces.useQuery();
+
   const handleOpenEditor = async () => {
     await vscodeAPI.openInEditor();
   };
@@ -39,7 +47,7 @@ export const SidebarApp: React.FC = () => {
   return (
     <div style={{ padding: "20px" }}>
       <h1>Zenbu VSCode Extension</h1>
-      <p>Now powered by BiRPC!</p>
+      <p>Now powered by BiRPC & tRPC!</p>
 
       <div
         style={{
@@ -52,6 +60,28 @@ export const SidebarApp: React.FC = () => {
         <Button onClick={handleOpenEditor} variant="default" size="lg">
           Open in Editor
         </Button>
+
+        <hr style={{ margin: "10px 0", opacity: 0.2 }} />
+
+        <h3>tRPC Data:</h3>
+        {isLoading && <p>Loading workspaces...</p>}
+        {error && <p style={{ color: "red" }}>Error: {error.message}</p>}
+        {workspaces && (
+          <div
+            style={{
+              padding: "10px",
+              borderRadius: "4px",
+            }}
+          >
+            <p>Found {workspaces.length} workspaces</p>
+            {workspaces.map((ws) => (
+              <div key={ws.workspaceId} style={{ marginTop: "5px" }}>
+                <strong>{ws.workspaceId}</strong>
+                {ws.backgroundImageUrl && <span> (has background)</span>}
+              </div>
+            ))}
+          </div>
+        )}
 
         <hr style={{ margin: "10px 0", opacity: 0.2 }} />
 
@@ -92,7 +122,9 @@ export const SidebarApp: React.FC = () => {
       </div>
 
       <p style={{ marginTop: "20px", fontSize: "14px", color: "#666" }}>
-        All VSCode API calls are now type-safe with BiRPC!
+        All VSCode API calls are type-safe with BiRPC!
+        <br />
+        tRPC queries are fully typed from zenbu-app!
       </p>
     </div>
   );

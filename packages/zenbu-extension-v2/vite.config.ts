@@ -53,6 +53,8 @@ export default defineConfig({
       "~": path.resolve(__dirname, "../zenbu-app/src"),
       src: path.resolve(__dirname, "../zenbu-app/src"),
       "src/lib/utils": path.resolve(__dirname, "webview/utils.ts"),
+      react: path.resolve(__dirname, "node_modules/react"),
+      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
     },
   },
   optimizeDeps: {

@@ -1,7 +1,11 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom/client";
 import { EditorApp } from "./editor";
+import { TRPCProvider } from "./providers/trpc-provider";
 import "./styles.css";
 
-const root = createRoot(document.getElementById("root")!);
-root.render(<EditorApp />);
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <TRPCProvider>
+    <EditorApp />
+  </TRPCProvider>
+);

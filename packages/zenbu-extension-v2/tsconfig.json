@@ -15,7 +15,9 @@
     "isolatedModules": true,
     "paths": {
       "@/*": ["./webview/*"],
-      "~/*": ["../zenbu-app/src/*"]
+      "~/*": ["../zenbu-app/src/*"],
+      "zenbu-app/*": ["../zenbu-app/*"],
+      "src/*": ["../zenbu-app/src/*"]
     }
   },
   "include": ["src/**/*", "webview/**/*"],

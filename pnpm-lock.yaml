@@ -547,6 +547,15 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.1.1
         version: 1.1.2(@types/react@19.1.6)(react@19.1.0)
+      '@tanstack/react-query':
+        specifier: ^5.50.0
+        version: 5.68.0(react@19.1.0)
+      '@trpc/client':
+        specifier: ^11.0.0-rc.446
+        version: 11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2)
+      '@trpc/react-query':
+        specifier: ^11.0.0-rc.446
+        version: 11.0.0-rc.833(@tanstack/react-query@5.68.0(react@19.1.0))(@trpc/client@11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.2)
       birpc:
         specifier: ^2.3.0
         version: 2.3.0
@@ -556,6 +565,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      superjson:
+        specifier: ^2.2.1
+        version: 2.2.2
       tailwind-merge:
         specifier: ^2.5.5
         version: 2.6.0
@@ -11017,6 +11029,11 @@ snapshots:
       '@tanstack/query-core': 5.68.0
       react: 0.0.0-experimental-f7396427-20250501
 
+  '@tanstack/react-query@5.68.0(react@19.1.0)':
+    dependencies:
+      '@tanstack/query-core': 5.68.0
+      react: 19.1.0
+
   '@tiptap/core@2.11.6(@tiptap/pm@2.11.6)':
     dependencies:
       '@tiptap/pm': 2.11.6
@@ -11276,6 +11293,15 @@ snapshots:
       '@trpc/server': 11.0.0-rc.833(typescript@5.8.2)
       react: 0.0.0-experimental-f7396427-20250501
       react-dom: 0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501)
+      typescript: 5.8.2
+
+  '@trpc/react-query@11.0.0-rc.833(@tanstack/react-query@5.68.0(react@19.1.0))(@trpc/client@11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.2)':
+    dependencies:
+      '@tanstack/react-query': 5.68.0(react@19.1.0)
+      '@trpc/client': 11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2)
+      '@trpc/server': 11.0.0-rc.833(typescript@5.8.2)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
       typescript: 5.8.2
 
   '@trpc/server@11.0.0-rc.833(typescript@5.8.2)':

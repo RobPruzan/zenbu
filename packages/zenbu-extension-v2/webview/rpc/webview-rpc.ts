@@ -2,12 +2,14 @@ import { createBirpc } from "birpc";
 import type { ExtensionRPC, WebviewRPC } from "../../src/rpc/types";
 import { getVSCodeAPI } from "../vscode-api";
 
-let rpcInstance: ReturnType<
-  typeof createBirpc<ExtensionRPC, WebviewRPC>
-> | null = null;
+declare global {
+  interface Window {
+    __rpcInstance?: ReturnType<typeof createBirpc<ExtensionRPC, WebviewRPC>>;
+  }
+}
 
 export function getWebviewRPC() {
-  if (!rpcInstance) {
+  if (!window.__rpcInstance) {
     const vscode = getVSCodeAPI();
 
     // Webview-side implementations (functions the extension can call)
@@ -23,24 +25,27 @@ export function getWebviewRPC() {
       },
     };
 
-    rpcInstance = createBirpc<ExtensionRPC, WebviewRPC>(webviewFunctions, {
-      post: (data) => {
-        vscode.postMessage({ type: "rpc", data });
-      },
-      on: (fn) => {
-        const handler = (event: MessageEvent) => {
-          const message = event.data;
-          if (message.type === "rpc") {
-            fn(message.data);
-          }
-        };
-        window.addEventListener("message", handler);
-        return () => window.removeEventListener("message", handler);
-      },
-    });
+    window.__rpcInstance = createBirpc<ExtensionRPC, WebviewRPC>(
+      webviewFunctions,
+      {
+        post: (data) => {
+          vscode.postMessage({ type: "rpc", data });
+        },
+        on: (fn) => {
+          const handler = (event: MessageEvent) => {
+            const message = event.data;
+            if (message.type === "rpc") {
+              fn(message.data);
+            }
+          };
+          window.addEventListener("message", handler);
+          return () => window.removeEventListener("message", handler);
+        },
+      }
+    );
   }
 
-  return rpcInstance;
+  return window.__rpcInstance;
 }
 
 // Export a convenient API object

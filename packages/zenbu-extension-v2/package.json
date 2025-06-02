@@ -72,9 +72,13 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.1",
+    "@tanstack/react-query": "^5.50.0",
+    "@trpc/client": "^11.0.0-rc.446",
+    "@trpc/react-query": "^11.0.0-rc.446",
     "birpc": "^2.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "superjson": "^2.2.1",
     "tailwind-merge": "^2.5.5",
     "zenbu-app": "workspace:*"
   }
