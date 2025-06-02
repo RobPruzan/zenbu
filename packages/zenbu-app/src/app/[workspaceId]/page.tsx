@@ -50,6 +50,7 @@ export default function Page() {
         <TopBar />
         <div className="flex w-full justify-between">
           <AppSwitcher
+            push={router.push}
             setProject={(_) => {
               router.push(`/`);
             }}

@@ -46,6 +46,10 @@ export function createExtensionRPC(
       await vscode.commands.executeCommand("zenbu.openInEditor");
     },
 
+    openSidebar: async () => {
+      await vscode.commands.executeCommand("zenbu.openSidebar");
+    },
+
     // State management
     getState: async () => {
       return context.globalState.get("zenbuState", {});

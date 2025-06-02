@@ -35,6 +35,7 @@ export interface ExtensionRPC {
 
   // Custom commands
   openInEditor: () => Promise<void>;
+  openSidebar: () => Promise<void>;
 
   // State management
   getState: () => Promise<any>;
@@ -53,3 +54,4 @@ export interface WebviewRPC {
   // Theme changes
   onThemeChanged: (theme: string) => void;
 }
+ 

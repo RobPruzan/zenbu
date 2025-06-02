@@ -35,8 +35,9 @@ const handler = async (req: NextRequest) => {
   response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   response.headers.set(
     "Access-Control-Allow-Headers",
-    "Content-Type, x-trpc-source",
+    "Content-Type, x-trpc-source, trpc-accept",
   );
+  response.headers.set("Access-Control-Allow-Credentials", "true");
 
   return response;
 };
@@ -48,7 +49,9 @@ export async function OPTIONS(req: NextRequest) {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, x-trpc-source",
+      "Access-Control-Allow-Headers":
+        "Content-Type, x-trpc-source, trpc-accept",
+      "Access-Control-Allow-Credentials": "true",
     },
   });
 }

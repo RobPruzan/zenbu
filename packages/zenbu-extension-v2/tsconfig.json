@@ -14,11 +14,13 @@
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "paths": {
+      "src/lib/trpc": ["./webview/shims/trpc-shim"],
       "@/*": ["./webview/*"],
       "~/*": ["../zenbu-app/src/*"],
       "zenbu-app/*": ["../zenbu-app/*"],
       "src/*": ["../zenbu-app/src/*"]
-    }
+    },
+    "types": ["react/experimental"]
   },
   "include": ["src/**/*", "webview/**/*"],
   "exclude": ["node_modules", "dist"]

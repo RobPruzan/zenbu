@@ -1,17 +1,61 @@
-import React from "react";
+import React, { Suspense } from "react";
+import { Button } from "~/components/ui/button";
+import { vscodeAPI } from "./rpc/webview-rpc";
+import { ChatInstanceContext } from "~/components/chat-store";
+import { Editor } from "~/app/v2/editor";
+import { api } from "~/trpc/react";
+
+// Loading component for suspense
+const EditorLoading = () => (
+  <div style={{ padding: "20px", textAlign: "center" }}>
+    <p>Loading editor...</p>
+  </div>
+);
+
+// Separate component that uses the Editor from zenbu-app
+const EditorContent = ({ projectId }: { projectId: string }) => {
+  return (
+    <Suspense fallback={<EditorLoading />}>
+      <Editor projectId={projectId} />
+    </Suspense>
+  );
+};
 
 export const EditorApp: React.FC = () => {
-  return (
-    <div style={{ padding: "40px", textAlign: "center" }}>
-      <h1 style={{ fontSize: "48px", marginBottom: "20px" }}>
-        🎉 Yay I'm in editor wooo! 🎉
-      </h1>
-      <p style={{ fontSize: "20px", color: "#666" }}>
-        This is the editor view with hot reload enabled!
-      </p>
-      <div style={{ marginTop: "40px" }}>
-        <p>Edit this file and see it update instantly!</p>
+  // Use regular query instead of suspense query
+  const {
+    data: projects,
+    isLoading,
+    error,
+  } = api.daemon.getProjects.useQuery();
+
+  const currentProject = projects?.[0]; // For now, just use the first project
+
+  const handleOpenSidebar = async () => {
+    await vscodeAPI.openSidebar();
+  };
+
+  if (isLoading) {
+    return <EditorLoading />;
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "20px" }}>
+        <h1>Error loading projects</h1>
+        <p>{error.message}</p>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (!currentProject) {
+    return (
+      <div style={{ padding: "20px" }}>
+        <h1>No projects available</h1>
+        <p>Please start a project first.</p>
+      </div>
+    );
+  }
+
+  return <EditorContent projectId={currentProject.name} />;
 };

@@ -34,11 +34,12 @@ import { ScreenshotTool } from "../sunset/[projectName]/screenshot-tool";
 import AppSwitcher from "src/components/option-tab-switcher";
 import { CommandMenu } from "./command-menu";
 import { MessageSquareIcon } from "lucide-react";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import { WithMobileSplit } from "./mobile-split";
-const BottomPanel = dynamic(() => import("src/app/v2/bottom-panel"), {
-  ssr: false,
-});
+// import { useRouter } from "next/router";
+// const BottomPanel = dynamic(() => import("src/app/v2/bottom-panel"), {
+//   ssr: false,
+// });
 
 export const Editor = ({ projectId }: { projectId: string }) => {
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
@@ -105,7 +106,7 @@ export const Editor = ({ projectId }: { projectId: string }) => {
       }}
     >
       <SidebarRouterContext.Provider value={sidebarRouteState}>
-        <AppSwitcherWrapper />
+        {/* <AppSwitcherWrapper /> */}
         {/* <CommandMenu
           items={[{ icon: <MessageSquareIcon />, name: "Chat" }]}
           open={open}
@@ -137,8 +138,8 @@ export const Editor = ({ projectId }: { projectId: string }) => {
                 <Recording />
               </IFrameWrapper>
             </WithMobileSplit>
-
-            <BottomPanel />
+            {/*  */}
+            {/* <BottomPanel /> */}
           </div>
           <SlimSidebar />
           <RightSidebar />
@@ -149,14 +150,16 @@ export const Editor = ({ projectId }: { projectId: string }) => {
   );
 };
 
-const AppSwitcherWrapper = () => {
-  const iframeActions = useTransitionChatStore((state) => state.iframe.actions);
+// const AppSwitcherWrapper = () => {
+//   const iframeActions = useTransitionChatStore((state) => state.iframe.actions);
+//   const push = useRouter().push;
 
-  return (
-    <AppSwitcher
-      setProject={(project) => {
-        iframeActions.setState({ project });
-      }}
-    />
-  );
-};
+//   return (
+//     <AppSwitcher
+//       push={push}
+//       setProject={(project) => {
+//         iframeActions.setState({ project });
+//       }}
+//     />
+//   );
+// };

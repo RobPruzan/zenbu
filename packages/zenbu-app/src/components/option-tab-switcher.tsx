@@ -19,8 +19,10 @@ const QUICK_SWITCH_DURATION = 150;
 
 export default function AppSwitcher({
   setProject,
+  push
 }: {
   setProject: (project: ProjectWithPort) => void;
+  push: (route: string) => void 
 }) {
   const {
     showAppSwitcher,
@@ -34,12 +36,11 @@ export default function AppSwitcher({
 
   const tabPressedWhileAltHeldRef = useRef(false);
 
-  const router = useRouter();
   const { data: projects = [] } = trpc.daemon.getProjects.useQuery();
 
   const performSwitch = (item: SwitcherItem) => {
     if (item.type === "home") {
-      router.push("/home");
+      push("/home");
     } else {
       setProject(item);
     }
@@ -156,7 +157,6 @@ export default function AppSwitcher({
     projects,
     recentlyUsed,
     setProject,
-    router,
     setShowAppSwitcher,
     setSwitcherIndex,
     updateRecentlyUsed,

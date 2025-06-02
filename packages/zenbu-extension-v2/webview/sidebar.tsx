@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "~/components/ui/button";
 import { vscodeAPI } from "./rpc/webview-rpc";
-import { api } from "./lib/trpc";
+import { api } from "~/trpc/react";
 
 export const SidebarApp: React.FC = () => {
   // Example tRPC query - get all workspaces

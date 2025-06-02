@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "src/components/ui/button";
 import { useSidebarRouter } from "./context";
-import { useParams, useRouter } from "next/navigation";
+// import { useParams, useRouter } from "next/navigation";
 import { cn } from "src/lib/utils";
 import { startTransition } from "react";
 import {
@@ -27,11 +27,11 @@ import { flushSync } from "react-dom";
 
 export const SlimSidebar = () => {
   const sidebar = useSidebarRouter();
-  const router = useRouter();
-  const { workspaceId } = useParams<{
-    projectName: string;
-    workspaceId: string;
-  }>();
+  // const router = useRouter();
+  // const { workspaceId } = useParams<{
+  //   projectName: string;
+  //   workspaceId: string;
+  // }>();
   const { actions, state } = useChatStore((state) => state.toolbar);
   const inspector = useChatStore((state) => state.inspector);
   return (
@@ -40,9 +40,9 @@ export const SlimSidebar = () => {
         <Button
           onClick={() => {
             // startTransition(() => {
-            flushSync(() => {
-              router.push(`/${workspaceId}`);
-            });
+            // flushSync(() => {
+            //   router.push(`/${workspaceId}`);
+            // });
             // });
           }}
           variant="ghost"

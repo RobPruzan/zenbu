@@ -7,7 +7,6 @@ import type { AppRouter } from "zenbu-app";
 // Create the tRPC React client
 export const api = createTRPCReact<AppRouter>();
 
-
 // Create the tRPC client
 export const createTRPCClient = () => {
   return api.createClient({

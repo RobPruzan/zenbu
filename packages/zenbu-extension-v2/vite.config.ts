@@ -55,6 +55,7 @@ export default defineConfig({
       "src/lib/utils": path.resolve(__dirname, "webview/utils.ts"),
       react: path.resolve(__dirname, "node_modules/react"),
       "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
+      "src/lib/trpc": path.resolve(__dirname, "webview/shims/trpc-shim.ts"),
     },
   },
   optimizeDeps: {

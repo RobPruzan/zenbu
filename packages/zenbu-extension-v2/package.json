@@ -63,8 +63,8 @@
     "concurrently": "^9.1.2",
     "eslint": "^8.57.0",
     "postcss": "^8.5.4",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "0.0.0-experimental-f7396427-20250501",
+    "react-dom": "0.0.0-experimental-f7396427-20250501",
     "tailwindcss": "^3.4.3",
     "tsup": "^8.0.1",
     "typescript": "^5.5.3",
@@ -78,8 +78,11 @@
     "birpc": "^2.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "immer": "^10.1.1",
     "superjson": "^2.2.1",
     "tailwind-merge": "^2.5.5",
-    "zenbu-app": "workspace:*"
+    "use-zustand": "^0.2.0",
+    "zenbu-app": "workspace:*",
+    "zustand": "^5.0.3"
   }
 }
