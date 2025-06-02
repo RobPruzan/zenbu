@@ -36,7 +36,7 @@ export const SlimSidebar = () => {
   const inspector = useChatStore((state) => state.inspector);
   return (
     <TooltipProvider>
-      <div className="w-12 h-full flex flex-col items-center self-start pt-4 border-l gap-y-1.5">
+      <div className="w-12 h-full flex flex-col items-center self-start pt-4 border-l border-border/30 gap-y-1.5">
         <Button
           onClick={() => {
             // startTransition(() => {

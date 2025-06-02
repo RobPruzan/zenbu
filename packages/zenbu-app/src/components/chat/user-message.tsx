@@ -9,7 +9,7 @@ export function UserMessage({ message }: { message: { content: Array<any> } }) {
     <div className="group mb-6 max-w-full">
       <div
         className={cn(
-          "rounded-lg bg-accent/5 backdrop-blur-xl border border-border/50",
+          "rounded-lg bg-accent/5 backdrop-blur-xl border border-border/30",
           "shadow-sm overflow-hidden max-w-full",
           "transform transition-all duration-300",
           "hover:shadow-md hover:border-border/60",
@@ -28,7 +28,7 @@ export function UserMessage({ message }: { message: { content: Array<any> } }) {
                       switch (content.type) {
                         case "image": {
                           return (
-                            <div className="my-2 rounded-lg overflow-hidden border border-border/50 bg-background/50">
+                            <div className="my-2 rounded-lg overflow-hidden border border-border/30 bg-background/50">
                               <img
                                 src={(content.image as URL).href}
                                 alt="User shared image"
@@ -39,7 +39,7 @@ export function UserMessage({ message }: { message: { content: Array<any> } }) {
                         }
                         case "file": {
                           return (
-                            <div className="my-2 rounded-lg overflow-hidden border border-border/50 bg-background/50">
+                            <div className="my-2 rounded-lg overflow-hidden border border-border/30 bg-background/50">
                               <video
                                 controls
                                 src={(content.data as URL).toString()}
@@ -66,7 +66,7 @@ export function UserMessage({ message }: { message: { content: Array<any> } }) {
           })}
         </div>
 
-        <div className="flex items-center justify-between text-[10px] px-4 py-2 text-muted-foreground bg-background/50 border-t border-border/50">
+        <div className="flex items-center justify-between text-[10px] px-4 py-2 text-muted-foreground bg-background/50 border-t border-border/30">
           <div className="flex items-center ml-auto">
             <button className="hover:text-foreground transition-colors flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-accent/10">
               <RefreshCw className="h-2.5 w-2.5" />

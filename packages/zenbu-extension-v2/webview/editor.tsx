@@ -21,16 +21,44 @@ export const EditorApp = () => {
     <Suspense fallback={<>loading editor...</>}>
       <Editor
         Container={({ children }) => (
-          <div className="w-full h-full flex items-center justify-center flex-col">
+          <div className="w-full h-full flex items-center justify-center flex-col bg-background">
             <div className="mb-auto h-[20px] flex justify-end w-full gap-x-2 p-1">
               <Button
-               variant={'secondary'} 
+               variant={'ghost'} 
                 className="text-xs">Editor</Button>
               <Button
-               variant={'ghost'} 
+               variant={'secondary'} 
                 className="text-xs">Sidebar</Button>
             </div>
-            <div className="h-[93%] w-[300px] mb-auto">{children}</div>
+            <div className="h-[93%] w-[375px] mb-auto bg-background border border-border/20 rounded-sm overflow-hidden shadow-sm flex">
+              <div className="w-12 bg-background flex flex-col items-center py-2 gap-1 border-r border-border/20">
+                <div className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded cursor-pointer">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M13 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1ZM3 3h10v10H3V3Z"/>
+                  </svg>
+                </div>
+                <div className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded cursor-pointer">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="m7.177 3.073 2.083-2.083L8.75.479A1.75 1.75 0 0 0 7.396 0H1.75A1.75 1.75 0 0 0 0 1.75v12.5C0 15.216.784 16 1.75 16h12.5A1.75 1.75 0 0 0 16 14.25V4.604a1.75 1.75 0 0 0-.512-1.236L10.177 8.073a.25.25 0 0 1-.177.073H7.177a.25.25 0 0 1-.177-.427Z"/>
+                  </svg>
+                </div>
+                <div className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded cursor-pointer">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm6.5-2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H7a.5.5 0 0 1-.5-.5v-2Z"/>
+                  </svg>
+                </div>
+                <div className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded cursor-pointer">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M1.75 1A1.75 1.75 0 0 0 0 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0 0 16 13.25V2.75A1.75 1.75 0 0 0 14.25 1H1.75ZM1.5 2.75a.25.25 0 0 1 .25-.25h12.5a.25.25 0 0 1 .25.25v10.5a.25.25 0 0 1-.25.25H1.75a.25.25 0 0 1-.25-.25V2.75Z"/>
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col bg-background">
+                <div className="flex-1 bg-background">
+                  {children}
+                </div>
+              </div>
+            </div>
           </div>
         )}
         projectId={currentProject.name}

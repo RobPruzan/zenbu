@@ -215,7 +215,7 @@ export function Chat({
                 >
                   <button
                     onClick={() => setVisibleMessagesCount((prev) => prev + 5)}
-                    className="px-3 py-1 rounded-md text-xs font-light bg-accent/10 border border-border/50 hover:bg-accent/20 text-foreground transition-colors duration-200"
+                    className="px-3 py-1 rounded-md text-xs font-light bg-accent/10 border border-border/30 hover:bg-accent/20 text-foreground transition-colors duration-200"
                   >
                     Show More
                   </button>
@@ -289,14 +289,14 @@ export function Chat({
             // initial={{ opacity: 0, y: 20 }}
             // animate={{ opacity: 1, y: 0 }}
             // transition={{ duration: 0.4 }}
-            className="rounded-lg backdrop-blur-xl bg-accent/5 border shadow-lg overflow-hidden w-full transition-all duration-300 hover:shadow-xl"
+            className="rounded-lg backdrop-blur-xl bg-accent/5 border border-border/30 shadow-lg overflow-hidden w-full transition-all duration-300 hover:shadow-xl"
           >
             <div className="flex flex-col text-xs">
               <div className="relative min-h-[50px] w-full bg-background/5">
                 <ChatTextArea />
               </div>
 
-              <div className="flex items-center justify-end px-4 py-2 border-t bg-accent/5 gap-x-2">
+              <div className="flex items-center justify-end px-4 py-2 border-t border-border/30 bg-accent/5 gap-x-2">
                 {slots?.inputArea}
                 <div className="flex items-center gap-2">
                   <button
@@ -304,7 +304,7 @@ export function Chat({
                     disabled={!chatControls.state.input.trim()}
                     className={cn(
                       "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
-                      "bg-accent/10 border hover:bg-accent/20 text-foreground",
+                      "bg-accent/10 border border-border/30 hover:bg-accent/20 text-foreground",
                       "transition-all duration-300",
                       !chatControls.state.input.trim() &&
                         "opacity-50 cursor-not-allowed",
