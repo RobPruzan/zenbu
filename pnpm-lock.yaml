@@ -135,7 +135,7 @@ importers:
         version: 11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2)
       '@trpc/next':
         specifier: ^11.1.0
-        version: 11.1.0(@tanstack/react-query@5.68.0(react@0.0.0-experimental-f7396427-20250501))(@trpc/client@11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2))(@trpc/react-query@11.0.0-rc.833(@tanstack/react-query@5.68.0(react@0.0.0-experimental-f7396427-20250501))(@trpc/client@11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(typescript@5.8.2))(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(next@15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(typescript@5.8.2)
+        version: 11.1.0(qkdh5u5ckaafvi2hfa5pchgdee)
       '@trpc/react-query':
         specifier: ^11.0.0-rc.446
         version: 11.0.0-rc.833(@tanstack/react-query@5.68.0(react@0.0.0-experimental-f7396427-20250501))(@trpc/client@11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(typescript@5.8.2)
@@ -180,7 +180,7 @@ importers:
         version: 12.6.3(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
       geist:
         specifier: ^1.3.0
-        version: 1.3.1(next@15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501))
+        version: 1.3.1(next@15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501))
       hono:
         specifier: ^4.7.4
         version: 4.7.6
@@ -198,7 +198,7 @@ importers:
         version: 5.1.4
       next:
         specifier: 15.3.1
-        version: 15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
+        version: 15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
       next-themes:
         specifier: ^0.4.4
         version: 0.4.6(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
@@ -222,7 +222,7 @@ importers:
         version: 2.1.7(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
       react-scan:
         specifier: file:/Users/robby/im-so-stupid/react-scan/packages/scan/react-scan-0.3.9.tgz
-        version: file:../im-so-stupid/react-scan/packages/scan/react-scan-0.3.9.tgz(@types/react@19.1.2)(next@15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(rollup@4.35.0)
+        version: file:../im-so-stupid/react-scan/packages/scan/react-scan-0.3.9.tgz(@types/react@19.1.2)(next@15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(rollup@4.35.0)
       react-syntax-highlighter:
         specifier: ^15.6.1
         version: 15.6.1(react@0.0.0-experimental-f7396427-20250501)
@@ -541,6 +541,64 @@ importers:
       webpack-cli:
         specifier: ^5.0.1
         version: 5.1.4(webpack@5.99.9)
+
+  packages/zenbu-extension-v2:
+    dependencies:
+      zenbu-app:
+        specifier: workspace:*
+        version: link:../zenbu-app
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.10
+        version: 20.17.24
+      '@types/react':
+        specifier: ^19.1.2
+        version: 19.1.6
+      '@types/react-dom':
+        specifier: ^19.1.3
+        version: 19.1.5(@types/react@19.1.6)
+      '@types/vscode':
+        specifier: ^1.74.0
+        version: 1.100.0
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.1.0
+        version: 8.26.1(@typescript-eslint/parser@8.26.1(eslint@8.57.1)(typescript@5.8.2))(eslint@8.57.1)(typescript@5.8.2)
+      '@typescript-eslint/parser':
+        specifier: ^8.1.0
+        version: 8.26.1(eslint@8.57.1)(typescript@5.8.2)
+      '@vitejs/plugin-react':
+        specifier: ^4.5.0
+        version: 4.5.0(vite@6.3.5(@types/node@20.17.24)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(tsx@4.19.3)(yaml@2.7.0))
+      autoprefixer:
+        specifier: ^10.4.21
+        version: 10.4.21(postcss@8.5.4)
+      concurrently:
+        specifier: ^9.1.2
+        version: 9.1.2
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.1
+      postcss:
+        specifier: ^8.5.4
+        version: 8.5.4
+      react:
+        specifier: ^19.1.0
+        version: 19.1.0
+      react-dom:
+        specifier: ^19.1.0
+        version: 19.1.0(react@19.1.0)
+      tailwindcss:
+        specifier: ^3.4.3
+        version: 3.4.17(ts-node@10.9.2(@types/node@20.17.24)(typescript@5.8.2))
+      tsup:
+        specifier: ^8.0.1
+        version: 8.4.0(jiti@2.4.2)(postcss@8.5.4)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.7.0)
+      typescript:
+        specifier: ^5.5.3
+        version: 5.8.2
+      vite:
+        specifier: ^6.3.5
+        version: 6.3.5(@types/node@20.17.24)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(tsx@4.19.3)(yaml@2.7.0)
 
   packages/zenbu-plugin:
     dependencies:
@@ -11167,11 +11225,11 @@ snapshots:
       '@trpc/server': 11.0.0-rc.833(typescript@5.8.2)
       typescript: 5.8.2
 
-  '@trpc/next@11.1.0(@tanstack/react-query@5.68.0(react@0.0.0-experimental-f7396427-20250501))(@trpc/client@11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2))(@trpc/react-query@11.0.0-rc.833(@tanstack/react-query@5.68.0(react@0.0.0-experimental-f7396427-20250501))(@trpc/client@11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(typescript@5.8.2))(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(next@15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(typescript@5.8.2)':
+  '@trpc/next@11.1.0(qkdh5u5ckaafvi2hfa5pchgdee)':
     dependencies:
       '@trpc/client': 11.0.0-rc.833(@trpc/server@11.0.0-rc.833(typescript@5.8.2))(typescript@5.8.2)
       '@trpc/server': 11.0.0-rc.833(typescript@5.8.2)
-      next: 15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
+      next: 15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
       react: 0.0.0-experimental-f7396427-20250501
       react-dom: 0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501)
       typescript: 5.8.2
@@ -11618,6 +11676,18 @@ snapshots:
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
       vite: 6.3.5(@types/node@16.18.126)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(tsx@4.19.3)(yaml@2.7.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@vitejs/plugin-react@4.5.0(vite@6.3.5(@types/node@20.17.24)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(tsx@4.19.3)(yaml@2.7.0))':
+    dependencies:
+      '@babel/core': 7.26.10
+      '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.26.10)
+      '@babel/plugin-transform-react-jsx-source': 7.27.1(@babel/core@7.26.10)
+      '@rolldown/pluginutils': 1.0.0-beta.9
+      '@types/babel__core': 7.20.5
+      react-refresh: 0.17.0
+      vite: 6.3.5(@types/node@20.17.24)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.40.0)(tsx@4.19.3)(yaml@2.7.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -13450,9 +13520,9 @@ snapshots:
       - encoding
       - supports-color
 
-  geist@1.3.1(next@15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)):
+  geist@1.3.1(next@15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)):
     dependencies:
-      next: 15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
+      next: 15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
 
   gensync@1.0.0-beta.2: {}
 
@@ -14682,6 +14752,33 @@ snapshots:
       react: 0.0.0-experimental-f7396427-20250501
       react-dom: 0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501)
 
+  next@15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501):
+    dependencies:
+      '@next/env': 15.3.1
+      '@swc/counter': 0.1.3
+      '@swc/helpers': 0.5.15
+      busboy: 1.6.0
+      caniuse-lite: 1.0.30001713
+      postcss: 8.4.31
+      react: 0.0.0-experimental-f7396427-20250501
+      react-dom: 0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501)
+      styled-jsx: 5.1.6(@babel/core@7.26.10)(react@0.0.0-experimental-f7396427-20250501)
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 15.3.1
+      '@next/swc-darwin-x64': 15.3.1
+      '@next/swc-linux-arm64-gnu': 15.3.1
+      '@next/swc-linux-arm64-musl': 15.3.1
+      '@next/swc-linux-x64-gnu': 15.3.1
+      '@next/swc-linux-x64-musl': 15.3.1
+      '@next/swc-win32-arm64-msvc': 15.3.1
+      '@next/swc-win32-x64-msvc': 15.3.1
+      '@opentelemetry/api': 1.9.0
+      babel-plugin-react-compiler: 19.0.0-beta-3229e95-20250315
+      sharp: 0.34.1
+    transitivePeerDependencies:
+      - '@babel/core'
+      - babel-plugin-macros
+
   next@15.3.1(@babel/core@7.26.10)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@next/env': 15.3.1
@@ -14707,33 +14804,6 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
     optional: true
-
-  next@15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501):
-    dependencies:
-      '@next/env': 15.3.1
-      '@swc/counter': 0.1.3
-      '@swc/helpers': 0.5.15
-      busboy: 1.6.0
-      caniuse-lite: 1.0.30001713
-      postcss: 8.4.31
-      react: 0.0.0-experimental-f7396427-20250501
-      react-dom: 0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501)
-      styled-jsx: 5.1.6(react@0.0.0-experimental-f7396427-20250501)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 15.3.1
-      '@next/swc-darwin-x64': 15.3.1
-      '@next/swc-linux-arm64-gnu': 15.3.1
-      '@next/swc-linux-arm64-musl': 15.3.1
-      '@next/swc-linux-x64-gnu': 15.3.1
-      '@next/swc-linux-x64-musl': 15.3.1
-      '@next/swc-win32-arm64-msvc': 15.3.1
-      '@next/swc-win32-x64-msvc': 15.3.1
-      '@opentelemetry/api': 1.9.0
-      babel-plugin-react-compiler: 19.0.0-beta-3229e95-20250315
-      sharp: 0.34.1
-    transitivePeerDependencies:
-      - '@babel/core'
-      - babel-plugin-macros
 
   node-abi@3.74.0:
     dependencies:
@@ -15398,7 +15468,7 @@ snapshots:
       react: 0.0.0-experimental-f7396427-20250501
       react-dom: 0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501)
 
-  react-scan@file:../im-so-stupid/react-scan/packages/scan/react-scan-0.3.9.tgz(@types/react@19.1.2)(next@15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(rollup@4.35.0):
+  react-scan@file:../im-so-stupid/react-scan/packages/scan/react-scan-0.3.9.tgz(@types/react@19.1.2)(next@15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501))(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)(rollup@4.35.0):
     dependencies:
       '@babel/core': 7.26.10
       '@babel/generator': 7.26.10
@@ -15420,7 +15490,7 @@ snapshots:
       react-dom: 0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501)
       tsx: 4.19.3
     optionalDependencies:
-      next: 15.3.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
+      next: 15.3.1(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-3229e95-20250315)(react-dom@0.0.0-experimental-f7396427-20250501(react@0.0.0-experimental-f7396427-20250501))(react@0.0.0-experimental-f7396427-20250501)
       unplugin: 2.1.0
     transitivePeerDependencies:
       - '@types/react'
@@ -16159,6 +16229,13 @@ snapshots:
     dependencies:
       inline-style-parser: 0.2.4
 
+  styled-jsx@5.1.6(@babel/core@7.26.10)(react@0.0.0-experimental-f7396427-20250501):
+    dependencies:
+      client-only: 0.0.1
+      react: 0.0.0-experimental-f7396427-20250501
+    optionalDependencies:
+      '@babel/core': 7.26.10
+
   styled-jsx@5.1.6(@babel/core@7.26.10)(react@19.1.0):
     dependencies:
       client-only: 0.0.1
@@ -16166,11 +16243,6 @@ snapshots:
     optionalDependencies:
       '@babel/core': 7.26.10
     optional: true
-
-  styled-jsx@5.1.6(react@0.0.0-experimental-f7396427-20250501):
-    dependencies:
-      client-only: 0.0.1
-      react: 0.0.0-experimental-f7396427-20250501
 
   sucrase@3.35.0:
     dependencies:

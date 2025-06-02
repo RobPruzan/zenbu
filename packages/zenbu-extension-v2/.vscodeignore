@@ -1,0 +1,15 @@
+.vscode/**
+.vscode-test/**
+src/**
+webview/**
+.gitignore
+.yarnrc
+vite.config.ts
+tsup.config.ts
+tailwind.config.ts
+postcss.config.js
+**/*.map
+**/*.ts
+**/tsconfig.json
+node_modules/**
+!dist/** 

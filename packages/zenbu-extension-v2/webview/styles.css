@@ -1,0 +1,198 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Map shadcn/ui variables to VSCode theme variables */
+@layer base {
+  :root {
+    /* Use VSCode's theme colors */
+    --background: var(--vscode-editor-background);
+    --foreground: var(--vscode-editor-foreground);
+
+    --card: var(--vscode-editorWidget-background);
+    --card-foreground: var(--vscode-editorWidget-foreground);
+
+    --popover: var(--vscode-editorWidget-background);
+    --popover-foreground: var(--vscode-editorWidget-foreground);
+
+    --primary: var(--vscode-button-background);
+    --primary-foreground: var(--vscode-button-foreground);
+
+    --secondary: var(--vscode-button-secondaryBackground);
+    --secondary-foreground: var(--vscode-button-secondaryForeground);
+
+    --muted: var(--vscode-input-background);
+    --muted-foreground: var(--vscode-input-placeholderForeground);
+
+    --accent: var(--vscode-list-activeSelectionBackground);
+    --accent-foreground: var(--vscode-list-activeSelectionForeground);
+
+    --destructive: var(--vscode-errorForeground);
+    --destructive-foreground: var(--vscode-editor-background);
+
+    --border: var(--vscode-editorWidget-border, var(--vscode-panel-border));
+    --input: var(
+      --vscode-input-border,
+      var(--vscode-editorWidget-border, var(--vscode-panel-border))
+    );
+    --ring: var(--vscode-focusBorder);
+
+    --radius: 0.25rem;
+  }
+
+  /* Convert VSCode colors to HSL format for Tailwind */
+  * {
+    /* Button hover states */
+    --primary-hover: var(--vscode-button-hoverBackground);
+    --secondary-hover: var(--vscode-button-secondaryHoverBackground);
+  }
+
+  /* Apply input border color to Tailwind's border-input class */
+  .border-input {
+    border-color: var(
+      --vscode-input-border,
+      var(--vscode-editorWidget-border)
+    ) !important;
+  }
+}
+
+/* Override some specific styles for better VSCode integration */
+.dark {
+  /* Dark mode is handled by VSCode theme */
+}
+
+/* Ensure proper text rendering */
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  font-weight: var(--vscode-font-weight);
+  color: var(--vscode-editor-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure all text uses VSCode foreground color */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+div {
+  color: var(--vscode-editor-foreground);
+}
+
+/* Button base styles to ensure text is visible */
+button {
+  color: var(--vscode-button-foreground);
+}
+
+/* Default button (primary) */
+button[class*="bg-primary"] {
+  background-color: var(--vscode-button-background) !important;
+  color: var(--vscode-button-foreground) !important;
+}
+
+button[class*="bg-primary"]:hover {
+  background-color: var(--vscode-button-hoverBackground) !important;
+}
+
+/* Secondary button */
+button[class*="bg-secondary"] {
+  background-color: var(--vscode-button-secondaryBackground) !important;
+  color: var(--vscode-button-secondaryForeground) !important;
+}
+
+button[class*="bg-secondary"]:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground) !important;
+}
+
+/* Outline button - target the actual classes used */
+button.border.border-input {
+  border: 1px solid
+    var(--vscode-input-border, var(--vscode-editorWidget-border)) !important;
+  background-color: transparent !important;
+  color: var(--vscode-editor-foreground) !important;
+}
+
+button.border.border-input:hover {
+  background-color: var(--vscode-list-hoverBackground) !important;
+  color: var(
+    --vscode-list-hoverForeground,
+    var(--vscode-editor-foreground)
+  ) !important;
+  border-color: var(--vscode-focusBorder) !important;
+}
+
+/* Ghost button */
+button.hover\:bg-accent {
+  color: var(--vscode-editor-foreground) !important;
+  background-color: transparent !important;
+}
+
+button.hover\:bg-accent:hover {
+  background-color: var(--vscode-list-hoverBackground) !important;
+  color: var(
+    --vscode-list-hoverForeground,
+    var(--vscode-editor-foreground)
+  ) !important;
+}
+
+/* Link button */
+button[class*="underline-offset"] {
+  color: var(
+    --vscode-textLink-foreground,
+    var(--vscode-editor-foreground)
+  ) !important;
+  background-color: transparent !important;
+}
+
+button[class*="underline-offset"]:hover {
+  color: var(
+    --vscode-textLink-activeForeground,
+    var(--vscode-editor-foreground)
+  ) !important;
+}
+
+/* Destructive button */
+button[class*="bg-destructive"] {
+  background-color: var(
+    --vscode-inputValidation-errorBackground,
+    #5a1d1d
+  ) !important;
+  color: var(--vscode-inputValidation-errorForeground, #ffffff) !important;
+  border: 1px solid
+    var(--vscode-inputValidation-errorBorder, var(--vscode-errorForeground)) !important;
+}
+
+button[class*="bg-destructive"]:hover {
+  opacity: 0.9;
+}
+
+/* VSCode theme detection */
+body {
+  @apply bg-background text-foreground;
+  margin: 0;
+  padding: 0;
+}
+
+/* VSCode specific dark theme detection */
+body[data-vscode-theme-kind="vscode-dark"] {
+  @apply dark;
+}
+
+/* Light theme for VSCode */
+body[data-vscode-theme-kind="vscode-light"] {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+h1 {
+  margin: 0 0 16px 0;
+}
+
+p {
+  margin: 0 0 8px 0;
+}
