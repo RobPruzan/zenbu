@@ -6,7 +6,7 @@ export const ChatSidebar = () => {
   const sidebar = useSidebarRouter();
   const project = useChatStore((state) => state.iframe.state.project);
   return (
-    <div className="w-full h-full border-l">
+    <div className="w-full h-full border-r">
       <Chat
         key={project.name}
         onCloseChat={() => {

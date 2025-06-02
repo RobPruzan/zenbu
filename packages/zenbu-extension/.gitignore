@@ -7,7 +7,6 @@ node_modules
 *.log
 .env
 
-# Ignore compiled config files
 vite.config.js
 vite.config.js.map
 *.config.js.map

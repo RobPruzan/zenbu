@@ -9,7 +9,7 @@ import {
 } from "src/components/chat-store";
 import { AnimatePresence, motion } from "framer-motion";
 import { AnimatedSidebar } from "./animated-sidebar";
-import { MobileSplit } from "./mobile-split";
+import { ChatSidebar } from "./chat-sidebar";
 
 export const LeftSidebar = ({
   allProjects,
@@ -51,9 +51,12 @@ export const LeftSidebar = ({
                 />
               );
             }
+            case 'chat': {
+              return <ChatSidebar/>
+            }
           }
         }}
-        width={"200px"}
+        width={sidebar.left === 'chat' ? "350px" : "200px"}
       />
     </div>
   );

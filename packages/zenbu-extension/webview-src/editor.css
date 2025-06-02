@@ -1,11 +1,72 @@
 /* Editor App Styles */
-.editor-app {
+.editor-container {
   display: flex;
-  flex-direction: column;
   height: 100vh;
   background: var(--vscode-editor-background);
   color: var(--vscode-editor-foreground);
   font-family: var(--vscode-font-family);
+}
+
+.editor-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Editor Right Sidebar */
+.editor-right-sidebar {
+  width: 56px;
+  background: var(--vscode-activityBar-background);
+  border-left: 1px solid var(--vscode-activityBar-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 0;
+  gap: 10px;
+}
+
+.editor-sidebar-btn {
+  width: 42px;
+  height: 42px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: var(--vscode-activityBar-foreground);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  position: relative;
+}
+
+.editor-sidebar-btn:hover {
+  background: var(--vscode-activityBar-hoverBackground);
+  opacity: 1;
+}
+
+.editor-sidebar-btn.active {
+  background: var(--vscode-activityBar-activeBackground);
+  color: var(--vscode-activityBar-activeForeground);
+  opacity: 1;
+}
+
+.editor-sidebar-btn.active::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  background: var(--vscode-activityBar-activeBorder);
+  border-radius: 0 2px 2px 0;
+}
+
+.editor-sidebar-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Header */
@@ -62,12 +123,6 @@
 .browser-button svg {
   width: 16px;
   height: 16px;
-}
-
-/* Content */
-.editor-content {
-  flex: 1;
-  overflow: auto;
 }
 
 /* No Tool State */
@@ -913,21 +968,19 @@ label input[type="checkbox"] {
   font-size: 12px;
 }
 
-/* Remove unused styles */
-.stage-header,
-.mock-editor,
-.editor-tab,
-.tab-close,
-.editor-line,
-.line-num,
-.tool-preview,
-.preview-split,
-.preview-controls,
-.control-group,
-.generate-button,
-.decorator-preview,
-.hover-preview,
-.command-preview,
-.theme-preview {
-  /* Removed - using new simplified preview */
+/* Responsive Design */
+@media (max-width: 280px) {
+  .editor-right-sidebar {
+    width: 50px;
+  }
+
+  .editor-sidebar-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .editor-sidebar-btn svg {
+    width: 18px;
+    height: 18px;
+  }
 }

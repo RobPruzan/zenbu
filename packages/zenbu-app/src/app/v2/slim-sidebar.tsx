@@ -36,7 +36,7 @@ export const SlimSidebar = () => {
   const inspector = useChatStore((state) => state.inspector);
   return (
     <TooltipProvider>
-      <div className="w-12 h-full flex flex-col items-center self-start pt-4 border-r gap-y-1.5">
+      <div className="w-12 h-full flex flex-col items-center self-start pt-4 border-l gap-y-1.5">
         <Button
           onClick={() => {
             // startTransition(() => {
@@ -46,9 +46,9 @@ export const SlimSidebar = () => {
             // });
           }}
           variant="ghost"
-          className={cn("h-8 w-8")}
+          className={cn("h-12 w-12 hover:bg-background ")}
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={20} />
         </Button>
         <Button
           onClick={() => {
@@ -60,29 +60,32 @@ export const SlimSidebar = () => {
           }}
           variant="ghost"
           className={cn(
-            "h-8 w-8",
+            "h-12 w-12 hover:bg-background",
             sidebar.left === "projects"
               ? "bg-accent text-accent-foreground"
               : "text-muted-foreground hover:text-foreground hover:bg-accent/5",
           )}
         >
-          <FolderIcon size={18} />
+          <FolderIcon size={20} />
         </Button>
         <Button
           onClick={() => {
             startTransition(() => {
-              sidebar.setRightSidebarRoute(
-                sidebar.right === "chat" ? null : "chat",
+              sidebar.setLeftSidebarRoute(
+                sidebar.left === "chat" ? null : "chat",
               );
+              // sidebar.setRightSidebarRoute(
+              //   sidebar.right === "chat" ? null : "chat",
+              // );
             });
           }}
           variant="ghost"
           className={cn(
-            "h-8 w-8",
-            sidebar.right === "chat" && "bg-accent text-accent-foreground",
+            "h-12 w-12 hover:bg-background",
+            sidebar.right === "chat" && "bg-accent text-accent-foreground ",
           )}
         >
-          <MessageSquareIcon size={18} />
+          <MessageSquareIcon size={20} />
         </Button>
 
         <Tooltip>
@@ -91,14 +94,14 @@ export const SlimSidebar = () => {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8",
-                state.drawing.active && "bg-accent text-accent-foreground",
+                "h-12 w-12 hover:bg-background",
+                state.drawing.active && "bg-accent text-accent-foreground ",
               )}
               onClick={() => {
                 actions.setIsDrawing(!state.drawing.active);
               }}
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil size={20} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -111,7 +114,7 @@ export const SlimSidebar = () => {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8",
+                "h-12 w-12 hover:bg-background",
                 inspector.state.kind === "inspecting" &&
                   "bg-accent text-accent-foreground",
               )}
@@ -124,7 +127,7 @@ export const SlimSidebar = () => {
                 });
               }}
             >
-              <Inspect className="h-4 w-4" />
+              <Inspect size={20} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -138,7 +141,7 @@ export const SlimSidebar = () => {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8",
+                "h-12 w-12 hover:bg-background",
                 state.screenshotting.active &&
                   "bg-accent text-accent-foreground",
               )}
@@ -146,7 +149,7 @@ export const SlimSidebar = () => {
                 actions.setIsScreenshotting(!state.screenshotting.active);
               }}
             >
-              <CameraIcon className="h-4 w-4" />
+              <CameraIcon size={20} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -159,14 +162,14 @@ export const SlimSidebar = () => {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8",
-                state.recording.active && "bg-accent text-accent-foreground",
+                "h-12 w-12 hover:bg-background",
+                state.recording.active && "bg-accent text-accent-foreground ",
               )}
               onClick={() => {
                 actions.setIsRecording(!state.recording.active);
               }}
             >
-              <VideoIcon className="h-4 w-4" />
+              <VideoIcon size={20} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -179,14 +182,14 @@ export const SlimSidebar = () => {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8",
-                state.mobileSplit.active && "bg-accent text-accent-foreground",
+                "h-12 w-12 hover:bg-background",
+                state.mobileSplit.active && "bg-accent text-accent-foreground ",
               )}
               onClick={() => {
                 actions.setMobileSplitActive(!state.recording.active);
               }}
             >
-              <MonitorSmartphoneIcon className="h-4 w-4" />
+              <MonitorSmartphoneIcon size={20} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -199,14 +202,14 @@ export const SlimSidebar = () => {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8",
-                // state.mobileSplit.active && "bg-accent text-accent-foreground",
+                "h-12 w-12 hover:bg-background",
+                // state.mobileSplit.active && "bg-accent text-accent-foreground ",
               )}
               onClick={() => {
                 // actions.setMobileSplitActive(!state.recording.active);
               }}
             >
-              <TerminalIcon className="h-4 w-4" />
+              <TerminalIcon size={20} />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">

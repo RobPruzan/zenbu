@@ -113,7 +113,6 @@ export const Editor = ({ projectId }: { projectId: string }) => {
         /> */}
 
         <div className="h-[100vh] w-[100vw] flex bg-background ">
-          <SlimSidebar />
           <LeftSidebar
             allProjects={runningProjects}
             measuredSize={measuredSize}
@@ -141,6 +140,7 @@ export const Editor = ({ projectId }: { projectId: string }) => {
 
             <BottomPanel />
           </div>
+          <SlimSidebar />
           <RightSidebar />
           {/* <RightSidebar /> */}
         </div>

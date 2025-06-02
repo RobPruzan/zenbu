@@ -9,13 +9,14 @@ export const RightSidebar = () => {
       <AnimatedSidebar
         width={"350px"}
         data={sidebar.right}
-        renderSidebarContent={(right) => {
-          switch (right) {
-            case "chat": {
-              return <ChatSidebar />;
-            }
-          }
-        }}
+        renderSidebarContent={() => <></>}
+        // renderSidebarContent={(right) => {
+        //   switch (right) {
+        //     case "chat": {
+        //       return <ChatSidebar />;
+        //     }
+        //   }
+        // }}
       />
     </div>
   );
