@@ -32,11 +32,13 @@ export const useWSContext = () => useContext(WSContext);
 export function Chat({
   onCloseChat,
   slots,
+  chatGradient
 }: {
   onCloseChat: () => void;
   slots?: {
     inputArea?: React.ReactNode;
   };
+  chatGradient?:string
 }) {
   const { eventLog, inspector, chatControls, context, toolbar } =
     useChatStore();
@@ -193,7 +195,14 @@ export function Chat({
     >
       <div className="flex h-full flex-col relative overflow-hidden ">
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-t from-background/95 to-background" />
+          <div
+            className={cn([
+              "absolute inset-0 bg-gradient-to-t from-background/5 to-background",
+              chatGradient
+            
+            ])}
+            // className=
+          />
         </div>
 
         <Header onCloseChat={onCloseChat} />

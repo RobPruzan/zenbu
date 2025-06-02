@@ -52,7 +52,12 @@ export const LeftSidebar = ({
               );
             }
             case "chat": {
-              return <ChatSidebar className="border-r" />;
+              return (
+                <ChatSidebar
+                  chatGradient="from-[#070808] to-[#090909]"
+                  className="border-r border-border/50"
+                />
+              );
             }
           }
         }}

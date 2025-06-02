@@ -5,21 +5,21 @@ import { cn } from "src/lib/utils";
 
 export const ChatSidebar = ({
   slots,
-  className
+  className,
+  chatGradient,
 }: {
   slots?: {
     inputArea?: React.ReactNode;
   };
-    className?:string
+  className?: string;
+  chatGradient?: string;
 }) => {
   const sidebar = useSidebarRouter();
   const project = useChatStore((state) => state.iframe.state.project);
   return (
-    <div className={cn([
-      "w-full h-full",
-      className
-    ])}>
+    <div className={cn(["w-full h-full", className])}>
       <Chat
+        chatGradient={chatGradient}
         slots={slots}
         key={project.name}
         onCloseChat={() => {
