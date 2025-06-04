@@ -15,15 +15,15 @@
     /* Use VSCode's theme colors with RGB/HSL format for Tailwind compatibility */
     /* Background and foreground */
     --background: var(--vscode-editor-background);
-    --foreground: var(--vscode-editor-foreground);
+    --foreground: var(--vscode-foreground);
 
     /* Card colors */
     --card: var(--vscode-editorWidget-background);
-    --card-foreground: var(--vscode-editorWidget-foreground);
+    --card-foreground: var(--vscode-foreground);
 
     /* Popover colors */
     --popover: var(--vscode-editorWidget-background);
-    --popover-foreground: var(--vscode-editorWidget-foreground);
+    --popover-foreground: var(--vscode-foreground);
 
     /* Primary colors */
     --primary: var(--vscode-button-background);
@@ -559,21 +559,21 @@ button.border.border-input {
   border: 1px solid
     var(--vscode-input-border, var(--vscode-editorWidget-border)) !important;
   background-color: transparent !important;
-  color: var(--vscode-editor-foreground) !important;
+  color: var(--vscode-foreground) !important;
 }
 
 button.border.border-input:hover {
   background-color: var(--vscode-list-hoverBackground) !important;
   color: var(
     --vscode-list-hoverForeground,
-    var(--vscode-editor-foreground)
+    var(--vscode-foreground)
   ) !important;
   border-color: var(--vscode-focusBorder) !important;
 }
 
 /* Ghost button */
 button.hover\:bg-accent {
-  color: var(--vscode-editor-foreground) !important;
+  color: var(--vscode-foreground) !important;
   background-color: transparent !important;
 }
 
@@ -581,7 +581,7 @@ button.hover\:bg-accent:hover {
   background-color: var(--vscode-list-hoverBackground) !important;
   color: var(
     --vscode-list-hoverForeground,
-    var(--vscode-editor-foreground)
+    var(--vscode-foreground)
   ) !important;
 }
 
@@ -589,7 +589,7 @@ button.hover\:bg-accent:hover {
 button[class*="underline-offset"] {
   color: var(
     --vscode-textLink-foreground,
-    var(--vscode-editor-foreground)
+    var(--vscode-foreground)
   ) !important;
   background-color: transparent !important;
 }
@@ -597,7 +597,7 @@ button[class*="underline-offset"] {
 button[class*="underline-offset"]:hover {
   color: var(
     --vscode-textLink-activeForeground,
-    var(--vscode-editor-foreground)
+    var(--vscode-foreground)
   ) !important;
 }
 
@@ -626,7 +626,7 @@ h6,
 p,
 span,
 div {
-  color: var(--vscode-editor-foreground);
+  color: var(--vscode-foreground);
 }
 
 /* VSCode theme detection */

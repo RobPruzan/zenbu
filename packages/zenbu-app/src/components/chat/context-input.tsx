@@ -254,7 +254,7 @@ export const ChatTextArea = () => {
                         <div className="flex gap-x-1 absolute -top-1 -right-1">
                           <button
                             onClick={() => removeItem(index)}
-                            className="h-4 w-4 rounded-full bg-background/80 border  hover:bg-accent/20 text-foreground"
+                            className="h-4 w-4 rounded-full bg-background border  hover:bg-accent/20 text-foreground"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -278,7 +278,7 @@ export const ChatTextArea = () => {
                         <div className="flex gap-x-1 absolute -top-1 -right-1">
                           <button
                             onClick={() => removeItem(index)}
-                            className="h-4 w-4 rounded-full bg-background/80 border  hover:bg-accent/20 text-foreground"
+                            className="h-4 w-4 rounded-full bg-background border  hover:bg-accent/20 text-foreground"
                           >
                             <X className="h-3 w-3" />
                           </button>

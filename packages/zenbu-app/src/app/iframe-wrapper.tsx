@@ -110,14 +110,14 @@ export const IFrameWrapper = ({
         update={"none"}
       >
         <Container>
-          <motion.iframe
+          <iframe
             // animate={{
 
             // }}
             // transition={{
             //   duration: 1,
             // }}
-            layoutId={`preview-iframe-${project.name}`}
+            // layoutId={`preview-iframe-${project.name}`}
             ref={iframeRef}
             key={lastUpdate}
             className={cn("w-full h-full select-none")}

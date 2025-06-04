@@ -32,14 +32,17 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
 
   const [editUrl, setEditUrl] = useState(false);
   return (
-    <div className="relative z-10 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+    <div className="relative z-10 border-b border-border/50 bg-background backdrop-blur-xl">
       <div className="flex gap-x-1 items-center justify-between h-12 px-3">
         <span className="text-xs truncate font-bold">{name}</span>
         <div className="flex-1" />
         <div className="flex-1 flex items-center justify-end gap-2">
           <Button
             onClick={() => {
-              window.open("cursor://file//Users/robby/bun-react-test", "_blank");
+              window.open(
+                "cursor://file//Users/robby/bun-react-test",
+                "_blank",
+              );
             }}
             variant={"outline"}
             className="text-xs"

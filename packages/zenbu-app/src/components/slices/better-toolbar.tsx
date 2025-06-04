@@ -208,7 +208,7 @@ const ProcessStatsChart = ({ name }: ProcessStatsChartProps) => {
   );
 
   return (
-    <div className="h-[300px] w-[500px] bg-background backdrop-blur-sm rounded-lg border border-border/30 shadow-lg flex flex-col p-3">
+    <div className="h-[300px] w-[500px] bg-background backdrop-blur-sm rounded-lg border border-border/50 shadow-lg flex flex-col p-3">
       <div className="flex justify-between items-center mb-3">
         <div className="flex gap-1.5">
           <Button

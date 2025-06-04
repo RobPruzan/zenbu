@@ -66,7 +66,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "redux": {
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -112,7 +112,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "mobx": {
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -165,7 +165,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "console":
         return (
           <div
-            className="h-full flex flex-col text-xs font-mono text-green-400 p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col text-xs font-mono text-green-400 p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -188,7 +188,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "elements":
         return (
           <div
-            className="h-full text-xs font-mono p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full text-xs font-mono p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -214,7 +214,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "network":
         return (
           <div
-            className="h-full text-xs font-mono p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full text-xs font-mono p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -251,7 +251,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "sources":
         return (
           <div
-            className="h-full text-xs font-mono p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full text-xs font-mono p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -281,7 +281,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "performance":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -313,7 +313,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "memory":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -342,7 +342,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "application":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -371,7 +371,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "security":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -401,7 +401,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "lighthouse":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -438,7 +438,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "coverage":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -479,7 +479,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "accessibility":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -509,7 +509,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "graphql":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -545,7 +545,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "apollo":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -572,7 +572,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "react":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -603,7 +603,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "vue":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -642,7 +642,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "svelte":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -671,7 +671,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "throttle":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
@@ -703,7 +703,7 @@ const ToolUI = ({ tool }: ToolUIProps) => {
       case "logger":
         return (
           <div
-            className="h-full flex flex-col p-3 rounded-sm border border-border/30 overflow-hidden"
+            className="h-full flex flex-col p-3 rounded-sm border border-border/50 overflow-hidden"
             style={panelStyle}
           >
             <div className="flex items-center justify-between mb-2 border-b border-border/20 pb-1">
