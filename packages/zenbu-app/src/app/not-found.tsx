@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "src/components/ui/button";
 import { TopBar } from "./[workspaceId]/workspace-top-bar";
 import { cn } from "src/lib/utils";
+import { WorkspaceContext } from "./v2/context";
 
 export default function NotFound() {
   const router = useRouter();
@@ -27,7 +28,14 @@ export default function NotFound() {
         }}
       />
 
-      <TopBar />
+      <WorkspaceContext
+        value={{
+          setWorkspaceId: () => {},
+          workspaceId: "home",
+        }}
+      >
+        <TopBar />
+      </WorkspaceContext>
       <div className="flex w-full justify-between">
         <div className="h-screen w-screen flex flex-col items-center justify-start pt-14 gap-4">
           <Image

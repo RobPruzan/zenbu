@@ -9,10 +9,11 @@ import { Workspace } from "./workspace";
 import { WorkspaceChat } from "./workspace-chat";
 import { TopBar } from "./workspace-top-bar";
 import { cn } from "src/lib/utils";
-import { useWorkspaceContext } from "../v2/context";
+import { useWorkspaceContext, WorkspaceContext } from "../v2/context";
+import { useState } from "react";
 
 export default function Page() {
-  const { workspaceId } = useWorkspaceContext()
+  const [workspaceId, setWorkspaceId] = useState("home");
   const [[workspace, _]] = trpc.useSuspenseQueries((t) => [
     t.workspace.getWorkspace({ workspaceId }),
     t.workspace.getTags({ workspaceId }),
@@ -31,39 +32,46 @@ export default function Page() {
 
   return (
     <>
-      <div
-        className={cn([
-          "flex flex-col h-[100vh] w-[100vw] relative py-2",
-          "bg-gradient-to-b from-[#080808cb] to-[#11111172]",
-        ])}
+      <WorkspaceContext
+        value={{
+          setWorkspaceId: setWorkspaceId,
+          workspaceId,
+        }}
       >
         <div
-          className="absolute inset-0 -z-10"
-          style={{
-            backgroundImage: `
+          className={cn([
+            "flex flex-col h-[100vh] w-[100vw] relative py-2",
+            "bg-gradient-to-b from-[#080808cb] to-[#11111172]",
+          ])}
+        >
+          <div
+            className="absolute inset-0 -z-10"
+            style={{
+              backgroundImage: `
               linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
               linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)
             `,
-            backgroundSize: "32px 32px",
-          }}
-        />
-
-        <TopBar />
-        <div className="flex w-full justify-between">
-          <AppSwitcher
-            push={router.push}
-            setProject={(_) => {
-              router.push(`/`);
+              backgroundSize: "32px 32px",
             }}
           />
 
-          <Workspace workspace={workspace} />
-          {/* <WorkspaceChat /> */}
-          {/* <Workspace workspace={workspace} />
+          <TopBar />
+          <div className="flex w-full justify-between">
+            <AppSwitcher
+              push={router.push}
+              setProject={(_) => {
+                router.push(`/`);
+              }}
+            />
+
+            <Workspace workspace={workspace} />
+            {/* <WorkspaceChat /> */}
+            {/* <Workspace workspace={workspace} />
           <WorkspaceChat /> */}
+          </div>
+          {/* <BottomBar/> */}
         </div>
-        {/* <BottomBar/> */}
-      </div>
+      </WorkspaceContext>
     </>
   );
 }
