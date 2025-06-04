@@ -31,14 +31,35 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
       setTimeout(() => setCopied(false), 2000);
     }
   };
+  const router = useSidebarRouter();
+  console.log('router wut', router);
+  
 
   const [editUrl, setEditUrl] = useState(false);
   return (
-    <div className="flex gap-x-1 items-center justify-between h-12 px-3 border-b" >
-        <span className="text-xs truncate font-bold">{project.name}</span>
-        <div className="flex-1" />
-        <div className="flex-1 flex items-center justify-end gap-2">
-          {/* <Button
+    <div className="flex gap-x-1 items-center justify-between h-12 px-3 border-b">
+      <span className="text-xs font-bold min-w-fit">{project.name}</span>
+      <div className="w-full flex gap-x-2 just-end items-center "></div>
+      <Button
+        onClick={() => {
+          router.setLeftSidebarRoute("chat");
+        }}
+        size={"sm"}
+        variant={router.left === "chat" ? "secondary" : "ghost"}
+      >
+        Chat
+      </Button>
+      <Button
+        onClick={() => {
+          router.setLeftSidebarRoute("projects");
+        }}
+        size={"sm"}
+        variant={router.left === "projects" ? "secondary" : "ghost"}
+      >
+        projects
+      </Button>
+      {/* <div className="flex-1 flex items-center justify-end gap-2">
+          <Button
             onClick={() => {
               window.open(
                 "cursor://file//Users/robby/bun-react-test",
@@ -50,8 +71,8 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
           >
             <Cursor />
             Open in Cursor
-          </Button> */}
-          {/* <Button
+          </Button>
+          <Button
             onClick={() => {
               onCloseChat();
             }}
@@ -65,9 +86,9 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
             )}
           >
             <PanelRightClose className="h-3.5 w-3.5" />
-          </Button> */}
-        </div>
-      </div>
+          </Button>
+        </div> */}
+    </div>
   );
 }
 
@@ -113,6 +134,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
 import * as React from "react";
 import type { SVGProps } from "react";
 import { useGetProject } from "src/app/[workspaceId]/hooks";
+import { useSidebarRouter } from "src/app/v2/context";
 const Cursor = (props: SVGProps<SVGSVGElement>) => (
   <svg
     height="1em"

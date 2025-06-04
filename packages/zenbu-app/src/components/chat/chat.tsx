@@ -195,121 +195,116 @@ export function Chat({
         socket,
       }}
     >
-      <div className="flex flex-col relative overflow-hidden h-full">
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          <div
-            className={cn([
-              "absolute inset-0 bg-gradient-to-t from-background/5 to-background",
-              chatGradient,
-            ])}
-            // className=
-          />
-        </div>
+      <div
+        className="flex-1 px-4 py-3  z-10 w-full relative h-[calc(100%-110px)] bg-transparent overflow-y-auto"
+        onScroll={handleScroll}
+        ref={scrollAreaRef}
+      >
+        {/* i don't think this is possible in long chats, sad. It would look like background is static which is weird */}
+        {/* <div
+          className={cn([
+            "inset-0 absolute h-full bg-gradient-to-t from-background/20 to-background z-1",
+            chatGradient,
+          ])}
+          // className=
+        /> */}
 
-        <Header onCloseChat={onCloseChat} />
-
-        <div
-          className="flex-1 px-4 py-3 relative z-10 w-full overflow-y-auto"
-          onScroll={handleScroll}
-          ref={scrollAreaRef}
-        >
-          <AnimatePresence mode="wait">
-            <div className="space-y-4 pt-3 pb-2 w-full">
-              {derivedMessages.length > visibleMessagesCount && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-center mb-4"
+        <AnimatePresence mode="wait">
+          <div className="space-y-4 pt-3 pb-2 w-full ">
+            {derivedMessages.length > visibleMessagesCount && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-center mb-4"
+              >
+                <button
+                  onClick={() => setVisibleMessagesCount((prev) => prev + 5)}
+                  className="px-3 py-1 rounded-md text-xs font-light bg-accent/10 border border-border/50 hover:bg-accent/20 text-foreground transition-colors duration-200"
                 >
-                  <button
-                    onClick={() => setVisibleMessagesCount((prev) => prev + 5)}
-                    className="px-3 py-1 rounded-md text-xs font-light bg-accent/10 border border-border/50 hover:bg-accent/20 text-foreground transition-colors duration-200"
-                  >
-                    Show More
-                  </button>
-                </motion.div>
-              )}
+                  Show More
+                </button>
+              </motion.div>
+            )}
 
-              {visibleDerivedMessages.map((message, index) => {
-                const rawEvent = findRawEvent(message);
-                const isTransition =
-                  rawEvent?.kind === "user-message" &&
-                  rawEvent.meta === "tool-transition";
+            {visibleDerivedMessages.map((message, index) => {
+              const rawEvent = findRawEvent(message);
+              const isTransition =
+                rawEvent?.kind === "user-message" &&
+                rawEvent.meta === "tool-transition";
 
-                return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="max-w-full"
-                  >
-                    <div className="overflow-hidden break-words whitespace-normal">
-                      {iife(() => {
-                        switch (message.role) {
-                          case "assistant": {
-                            return <AssistantMessage message={message} />;
-                          }
-                          case "user": {
-                            if (isTransition) {
-                              const textContent = Array.isArray(message.content)
-                                ? message.content.find((p) => p.type === "text")
-                                    ?.text || ""
-                                : "";
-                              return (
-                                <div className="my-2 p-3 rounded-lg border border-dashed border-purple-500/50 bg-purple-900/10 text-purple-300/80 text-xs italic shadow-sm flex items-center gap-2">
-                                  <ArrowRightLeft className="h-4 w-4 flex-shrink-0" />
-                                  <span>{textContent}</span>
-                                </div>
-                              );
-                            } else {
-                              return <UserMessage message={message} />;
-                            }
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="max-w-full"
+                >
+                  <div className="overflow-hidden break-words whitespace-normal">
+                    {iife(() => {
+                      switch (message.role) {
+                        case "assistant": {
+                          return <AssistantMessage message={message} />;
+                        }
+                        case "user": {
+                          if (isTransition) {
+                            const textContent = Array.isArray(message.content)
+                              ? message.content.find((p) => p.type === "text")
+                                  ?.text || ""
+                              : "";
+                            return (
+                              <div className="my-2 p-3 rounded-lg border border-dashed border-purple-500/50 bg-purple-900/10 text-purple-300/80 text-xs italic shadow-sm flex items-center gap-2">
+                                <ArrowRightLeft className="h-4 w-4 flex-shrink-0" />
+                                <span>{textContent}</span>
+                              </div>
+                            );
+                          } else {
+                            return <UserMessage message={message} />;
                           }
                         }
-                      })}
-                    </div>
-                  </motion.div>
-                );
-              })}
-
-              {isLastMessageFromUser && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center space-x-2 pl-4"
-                >
-                  <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse"></div>
-                  <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse delay-150"></div>
-                  <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+                      }
+                    })}
+                  </div>
                 </motion.div>
-              )}
+              );
+            })}
 
-              <div ref={messagesEndRef} />
+            {isLastMessageFromUser && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center space-x-2 pl-4"
+              >
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse"></div>
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse delay-150"></div>
+                <div className="h-2 w-2 rounded-full bg-primary/60 animate-pulse delay-300"></div>
+              </motion.div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+        </AnimatePresence>
+      </div>
+      <div className="px-4 pb-4 relative w-full h-[110px]">
+        <motion.div
+          // initial={{ opacity: 0, y: 20 }}
+          // animate={{ opacity: 1, y: 0 }}
+          // transition={{ duration: 0.4 }}
+          className="rounded-lg backdrop-blur-xl bg-accent/5 border border-border/50 shadow-lg overflow-hidden w-full transition-all duration-300 hover:shadow-xl"
+        >
+          <div className="flex flex-col text-xs">
+            <div className="relative min-h-[50px] w-full bg-background/5">
+              <ChatTextArea />
             </div>
-          </AnimatePresence>
-        </div>
 
-        <div className="px-4 pb-4 relative z-10 w-full">
-          <motion.div
-            // initial={{ opacity: 0, y: 20 }}
-            // animate={{ opacity: 1, y: 0 }}
-            // transition={{ duration: 0.4 }}
-            className="rounded-lg backdrop-blur-xl bg-accent/5 border border-border/50 shadow-lg overflow-hidden w-full transition-all duration-300 hover:shadow-xl"
-          >
-            <div className="flex flex-col text-xs">
-              <div className="relative min-h-[50px] w-full bg-background/5">
-                <ChatTextArea />
-              </div>
-
-              <div className="flex items-center justify-end px-4 py-2 border-t border-border/50 bg-accent/5 gap-x-2">
-                {slots?.inputArea}
-                <div className="flex items-center gap-2">
-                  {/* <button
+            <div className="flex items-center justify-end px-4 py-2 border-t border-border/50 bg-accent/5 gap-x-2">
+              {slots?.inputArea}
+              <div className="flex items-center gap-2">
+                {/* <button
                     onClick={sendMessage}
                     disabled={!chatControls.state.input.trim()}
                     className={cn(
@@ -323,15 +318,14 @@ export function Chat({
                     <span>Send</span>
                     <SendIcon className="ml-1.5 h-3 w-3" />
                   </button> */}
-                  <Button variant={"outline"} size={"sm"}>
-                    Send
-                    <SendIcon className="ml-1.5 h-3 w-3" />
-                  </Button>
-                </div>
+                <Button variant={"outline"} size={"sm"}>
+                  Send
+                  <SendIcon className="ml-1.5 h-3 w-3" />
+                </Button>
               </div>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </WSContext.Provider>
   );

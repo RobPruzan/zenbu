@@ -33,7 +33,13 @@ export const LeftSidebar = ({
   );
 
   return (
-    <div className="w-fit">
+    <div className="w-fit 
+    
+    //overflow-y-auto
+    
+    "
+    
+    >
       <AnimatedSidebar
         data={sidebar.left}
         renderSidebarContent={(left) => {
@@ -63,7 +69,7 @@ export const LeftSidebar = ({
             }
           }
         }}
-        width={sidebar.left === "chat" ? "350px" : "200px"}
+        width={sidebar.left === "chat" ? "100%" : "200px"}
       />
     </div>
   );

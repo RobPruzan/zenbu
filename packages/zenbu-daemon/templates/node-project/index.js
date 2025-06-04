@@ -4,16 +4,22 @@ const path = require("path");
 
 let port = process.env.PORT || 3000;
 const INDEX_HTML_PATH = path.join(__dirname, "index.html");
-const INDEX = fs.readFileSync(INDEX_HTML_PATH);
 
 const server = http.createServer((req, res) => {
   if (req.url === "/" || req.url === "/index.html") {
-    res.writeHead(200, {
-      "Content-Type": "text/html",
-      "Content-Length": INDEX.length,
-      Connection: "close",
+    fs.readFile(INDEX_HTML_PATH, (err, data) => {
+      if (err) {
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Internal Server Error");
+        return;
+      }
+      res.writeHead(200, {
+        "Content-Type": "text/html",
+        "Content-Length": data.length,
+        Connection: "close",
+      });
+      res.end(data);
     });
-    res.end(INDEX);
     return;
   }
   res.writeHead(404, { "Content-Type": "text/plain" });

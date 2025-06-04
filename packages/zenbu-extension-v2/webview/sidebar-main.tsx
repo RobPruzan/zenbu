@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { SidebarApp } from "./sidebar";
 import { GlobalProviders } from "./providers/global-providers";
@@ -9,7 +9,10 @@ import "./utils/init-colors";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <GlobalProviders>
+      <Suspense fallback={<>loading...</>}>
+
       <SidebarApp />
+      </Suspense>
     </GlobalProviders>
   </ErrorBoundary>
 );

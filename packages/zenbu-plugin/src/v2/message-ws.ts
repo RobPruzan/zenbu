@@ -53,11 +53,11 @@ const redisClient = makeRedisClient();
 type ActiveAbortController =
   | { kind: "not-active" }
   | { kind: "active"; abortController: AbortController };
-let codebaseIndexPromptCache: string | null = null;
+let codebaseIndexPromptCache: Map<string, string> = new Map();
 export const getCodebaseIndexPrompt = (path: string) =>
   Effect.gen(function* () {
-    if (codebaseIndexPromptCache) {
-      return codebaseIndexPromptCache;
+    if (codebaseIndexPromptCache.has(path)) {
+      return codebaseIndexPromptCache.get(path)!;
     }
     const fs = yield* FileSystem.FileSystem;
 
@@ -69,7 +69,7 @@ export const getCodebaseIndexPrompt = (path: string) =>
       "{codebaseString}",
       yield* Effect.tryPromise(() => indexCodebase(path))
     );
-    codebaseIndexPromptCache = templated;
+    codebaseIndexPromptCache.set(path, templated);
 
     return templated;
   });
@@ -124,7 +124,9 @@ export const injectWebSocket = (server: HttpServer) => {
             // i should distribute this via context so the project can always be
             // accessed
             // woops yeah this is not gonna work since it's from a diff dir
+
             const project = yield* getProject(projectName);
+            console.log("project name recv vs project", projectName, project);
 
             const MessageService = Effect.provideService(MessageContext, {
               typecheckCommand: "tsc .",
@@ -314,8 +316,7 @@ export const injectWebSocket = (server: HttpServer) => {
                 }),
               },
             });
-            console.log('awaiting stream');
-            
+            console.log("awaiting stream");
 
             const stream = Stream.fromAsyncIterable<
               TextStreamPart<Record<string, any>>,

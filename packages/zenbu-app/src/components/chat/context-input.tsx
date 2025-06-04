@@ -138,6 +138,8 @@ export const ChatTextArea = () => {
   };
   // const project = useChatStore((state) => state.iframe.state.project);
   const { project } = useGetProject();
+  console.log('project fetched', project);
+  
   const insertMention = (mention: string) => {
     const chatInput = chatInputRef.current;
     if (!chatInput) return;

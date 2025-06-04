@@ -71,7 +71,16 @@ export const persistedSingletonRouter = createTRPCRouter({
     }
 
     if (singleton?.currentProjectId) {
-      return singleton.currentProjectId;
+      const projectExists = projects.some(project => project.name === singleton.currentProjectId);
+      if (projectExists) {
+        return singleton.currentProjectId;
+      } else {
+        const defaultProjectId = projects[0].name;
+        await db
+          .update(Schema.persistedSingleton)
+          .set({ currentProjectId: defaultProjectId });
+        return defaultProjectId;
+      }
     }
 
     if (projects.length === 0) {

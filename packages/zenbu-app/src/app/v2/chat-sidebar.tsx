@@ -19,7 +19,7 @@ export const ChatSidebar = ({
   // const project = useChatStore((state) => state.iframe.state.project);
   const {project} = useGetProject()
   return (
-    <div className={cn(["w-full h-screen", className])}>
+    // <div className={cn(["w-full h-[calc(100%-0px)]", className])}>
       <Chat
         chatGradient={chatGradient}
         slots={slots}
@@ -28,6 +28,6 @@ export const ChatSidebar = ({
           sidebar.setRightSidebarRoute(null);
         }}
       />
-    </div>
+    // </div>
   );
 };
