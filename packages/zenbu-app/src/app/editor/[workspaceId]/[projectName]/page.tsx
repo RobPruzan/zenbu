@@ -1,8 +1,9 @@
 "use client";
 import { trpc } from "src/lib/trpc";
 import { Editor } from "src/app/v2/editor";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { ProjectContext, WorkspaceContext } from "src/app/v2/context";
 
 /**
  * alright so what would I actually need here
@@ -25,7 +26,7 @@ import { motion } from "framer-motion";
  */
 
 export default function Page() {
-  const { projectName, workspaceId } = useParams<{
+  const { projectName: projectId, workspaceId } = useParams<{
     projectName: string;
     workspaceId: string;
   }>();
@@ -34,6 +35,7 @@ export default function Page() {
     // need to nest workspace name somehow i guess
     t.workspace.getWorkspace({ workspaceId }),
   ]);
+  const router = useRouter();
 
   return (
     <motion.div
@@ -59,7 +61,35 @@ export default function Page() {
       }
       className="relative flex justify-center items-center"
     >
-      <Editor defaultSidebarOpen="chat" projectId={projectName} />
+      <WorkspaceContext
+        value={{
+          setWorkspaceId: (workspaceIdOrFn) => {
+            if (typeof workspaceIdOrFn === "function") {
+              const newWorkspaceId = workspaceIdOrFn(workspaceId);
+              router.push(`/editor/${newWorkspaceId}/${projectId}`);
+            } else {
+              router.push(`/editor/${workspaceIdOrFn}/${projectId}`);
+            }
+          },
+          workspaceId,
+        }}
+      >
+        <ProjectContext
+          value={{
+            projectId,
+            setProjectId: (projectIdOrFn) => {
+              if (typeof projectIdOrFn === "function") {
+                const newProjectId = projectIdOrFn(projectId);
+                router.push(`/editor/${workspaceId}/${newProjectId}`);
+              } else {
+                router.push(`/editor/${workspaceId}/${projectIdOrFn}`);
+              }
+            },
+          }}
+        >
+          <Editor defaultSidebarOpen="chat" />
+        </ProjectContext>
+      </WorkspaceContext>
     </motion.div>
   );
 }

@@ -3,9 +3,10 @@
 import { useParams } from "next/navigation";
 import { useRef, useState, useMemo, useEffect } from "react";
 import { trpc } from "src/lib/trpc";
+import { useWorkspaceContext } from "../v2/context";
 
 export const useUploadBackgroundImage = () => {
-  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const { workspaceId } = useWorkspaceContext();
 
   const setBackgroundImageMutation =
     trpc.workspace.setBackgroundImage.useMutation();

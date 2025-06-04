@@ -9,6 +9,7 @@ import { useUploadBackgroundImage } from "./hooks";
 import { useState, useEffect } from "react";
 import { ResponsiveContainer, Area, AreaChart } from "recharts";
 import Link from "next/link";
+import { useWorkspaceContext } from "../v2/context";
 
 export const TopBar = () => {
   const workspaces = [
@@ -30,7 +31,7 @@ export const TopBar = () => {
     utils.workspace.getTags.prefetch({ workspaceId: workspace });
   });
 
-  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const { workspaceId } = useWorkspaceContext()
   const uploadBackgroundImage = useUploadBackgroundImage();
 
   return (

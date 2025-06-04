@@ -9,9 +9,10 @@ import { Workspace } from "./workspace";
 import { WorkspaceChat } from "./workspace-chat";
 import { TopBar } from "./workspace-top-bar";
 import { cn } from "src/lib/utils";
+import { useWorkspaceContext } from "../v2/context";
 
 export default function Page() {
-  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const { workspaceId } = useWorkspaceContext()
   const [[workspace, _]] = trpc.useSuspenseQueries((t) => [
     t.workspace.getWorkspace({ workspaceId }),
     t.workspace.getTags({ workspaceId }),

@@ -1,9 +1,17 @@
 import React, {
   Suspense,
+  useState,
   unstable_ViewTransition as ViewTransition,
 } from "react";
 
+/**
+ *
+ * what do i need to get this going
+ *
+ * need to get rid of the use params, maybe have that controllable by the global state? Like the iframe that has the project set anyways?
+ */
 import { flushSync } from "react-dom";
+import { ProjectContext, WorkspaceContext } from "~/app/v2/context";
 import { Editor } from "~/app/v2/editor";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
@@ -109,6 +117,8 @@ export const EditorApp = () => {
 
   const currentProject = projects.at(1);
 
+  const [projectId, setProjectId] = useState(currentProject?.name!);
+  const [workspaceId, setWorkspaceId] = useState("home"); // hard coded for now, will have workspaces inside vsc later
   if (!currentProject) {
     return (
       <div style={{ padding: "20px" }}>
@@ -120,16 +130,29 @@ export const EditorApp = () => {
 
   return (
     <Suspense fallback={<>loading editor...</>}>
-      <Editor
-        Container={(props) => (
-          <EditorContainer
-            {...props}
-            selectedView={selectedView}
-            setSelectedView={setSelectedView}
+      <WorkspaceContext
+        value={{
+          setWorkspaceId,
+          workspaceId,
+        }}
+      >
+        <ProjectContext
+          value={{
+            projectId,
+            setProjectId,
+          }}
+        >
+          <Editor
+            Container={(props) => (
+              <EditorContainer
+                {...props}
+                selectedView={selectedView}
+                setSelectedView={setSelectedView}
+              />
+            )}
           />
-        )}
-        projectId={currentProject.name}
-      />
+        </ProjectContext>
+      </WorkspaceContext>
     </Suspense>
   );
 };

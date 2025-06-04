@@ -14,6 +14,7 @@ import {
   ProjectContext,
   SidebarRouterContext,
   useSidebarRouter,
+  useProjectContext,
 } from "./context";
 import { Preview } from "./preview";
 import { LeftSidebar } from "./left-sidebar";
@@ -41,16 +42,17 @@ import { WithMobileSplit } from "./mobile-split";
 //   ssr: false,
 // });
 
+
 export const Editor = ({
-  projectId,
+  // projectId,
   Container,
   defaultSidebarOpen,
 }: {
-  projectId: string;
-
+  // projectId: string;
   Container?: ({ children }: { children: React.ReactNode }) => React.ReactNode;
   defaultSidebarOpen?: "chat";
 }) => {
+  const {projectId} = useProjectContext()
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
   const project = projects.find((project) => project.name === projectId);
   if (!project) {
