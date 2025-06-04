@@ -2,6 +2,7 @@ import { Chat } from "src/components/chat/chat";
 import { useSidebarRouter } from "./context";
 import { useChatStore } from "src/components/chat-store";
 import { cn } from "src/lib/utils";
+import { useGetProject } from "../[workspaceId]/hooks";
 
 export const ChatSidebar = ({
   slots,
@@ -15,9 +16,10 @@ export const ChatSidebar = ({
   chatGradient?: string;
 }) => {
   const sidebar = useSidebarRouter();
-  const project = useChatStore((state) => state.iframe.state.project);
+  // const project = useChatStore((state) => state.iframe.state.project);
+  const {project} = useGetProject()
   return (
-    <div className={cn(["w-full h-full", className])}>
+    <div className={cn(["w-full h-screen", className])}>
       <Chat
         chatGradient={chatGradient}
         slots={slots}

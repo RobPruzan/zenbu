@@ -7,7 +7,7 @@ import {
   matchQuery,
   queryOptions,
 } from "@tanstack/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 import { UseTRPCQueryResult } from "@trpc/react-query/shared";
 import { AppRouter } from "src/server/api/root";
@@ -25,6 +25,9 @@ export const trpc = createTRPCNext<AppRouter>({
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
+        }),
+        loggerLink({
+          enabled: (opts) => false,
         }),
       ],
     };

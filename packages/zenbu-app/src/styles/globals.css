@@ -559,7 +559,7 @@
   animation-timing-function: ease-in-out;
 }
 .transition-border {
-  transition: border-color 250ms ease-in;
+  transition: border-color 250ms ease-in, border-width 250ms ease-in;
   border: 0px solid black;
 }
 .transition-border[data-border="true"] {

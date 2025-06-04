@@ -19,10 +19,12 @@ import { Button } from "src/components/ui/button";
 import { trpc } from "src/lib/trpc";
 import { cn } from "src/lib/utils";
 import { Project } from "zenbu-daemon";
-import { ProjectContext } from "./context";
+import { useGetProject } from "../[workspaceId]/hooks";
+// import { ProjectContext } from "./context";
 
 export const Preview = () => {
-  const project = useChatStore(state => state.iframe.state.project)
+  // const project = useChatStore(state => state.iframe.state.project)
+  const {project} = useGetProject()
 
   if (!project || project.status !== "running") {
     console.error("Preview rendered with invalid project state", project);

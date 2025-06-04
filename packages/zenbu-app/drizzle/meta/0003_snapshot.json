@@ -1,0 +1,114 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "431b43b8-66e7-4a14-9c4e-0512258ecbdb",
+  "prevId": "d79ad1b7-eb9b-482d-a381-b1d1049864d6",
+  "tables": {
+    "zenbu-app_persistedSingleton": {
+      "name": "zenbu-app_persistedSingleton",
+      "columns": {
+        "currentProjectId": {
+          "name": "currentProjectId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "currentWorkspaceId": {
+          "name": "currentWorkspaceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "zenbu-app_tag": {
+      "name": "zenbu-app_tag",
+      "columns": {
+        "tagId": {
+          "name": "tagId",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fromProjectId": {
+          "name": "fromProjectId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "workspaceId": {
+          "name": "workspaceId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "zenbu-app_tag_workspaceId_zenbu-app_workspace_workspaceId_fk": {
+          "name": "zenbu-app_tag_workspaceId_zenbu-app_workspace_workspaceId_fk",
+          "tableFrom": "zenbu-app_tag",
+          "tableTo": "zenbu-app_workspace",
+          "columnsFrom": [
+            "workspaceId"
+          ],
+          "columnsTo": [
+            "workspaceId"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "zenbu-app_workspace": {
+      "name": "zenbu-app_workspace",
+      "columns": {
+        "workspaceId": {
+          "name": "workspaceId",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "backgroundImageUrl": {
+          "name": "backgroundImageUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

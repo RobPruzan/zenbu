@@ -20,18 +20,18 @@ import { trpc } from "src/lib/trpc";
 import { cn } from "src/lib/utils";
 import { Project } from "zenbu-daemon";
 
-export const ProjectContext = createContext<{
-  projectId: string;
-  setProjectId: Dispatch<SetStateAction<string>>;
-}>(null!);
+// export const ProjectContext = createContext<{
+//   projectId: string;
+//   setProjectId: Dispatch<SetStateAction<string>>;
+// }>(null!);
 
 
-export const useProjectContext = () => useContext(ProjectContext)
-export const WorkspaceContext = createContext<{
-  workspaceId: string;
-  setWorkspaceId: Dispatch<SetStateAction<string>>;
-}>(null!);
-export const useWorkspaceContext = () => useContext(WorkspaceContext)
+// export const useProjectContext = () => useContext(ProjectContext)
+// export const WorkspaceContext = createContext<{
+//   workspaceId: string;
+//   setWorkspaceId: Dispatch<SetStateAction<string>>;
+// }>(null!);
+// export const useWorkspaceContext = () => useContext(WorkspaceContext)
 
 export type LeftSidebarRoute = "projects" | "experiments" | "chat";
 export type RightSidebarRoute = never;

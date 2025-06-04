@@ -2,6 +2,7 @@
 import {
   ReactElement,
   useContext,
+  useDeferredValue,
   useEffect,
   useRef,
   useState,
@@ -21,6 +22,7 @@ import {
 import { useMakeRequest } from "src/components/devtools-overlay";
 import { motion } from "framer-motion";
 import { cn } from "src/lib/utils";
+import { useGetProject } from "./[workspaceId]/hooks";
 
 const snapshot = { kind: "off" as const };
 
@@ -38,7 +40,7 @@ export const IFrameWrapper = ({
   // const { inspectorState, setInspectorState } = useInspectorStateContext();
   const { inspector } = useChatStore();
 
-  const { iframe } = useTransitionChatStore();
+  // const { iframe } = useTransitionChatStore();
 
   const makeRequest = useMakeRequest();
 
@@ -89,9 +91,11 @@ export const IFrameWrapper = ({
       document.removeEventListener("click", handleMouseClick);
     };
   }, []);
-  const project = useTransitionChatStore(
-    (project) => project.iframe.state.project,
-  );
+  // const project = useTransitionChatStore(
+  //   (project) => project.iframe.state.project,
+  // );
+  const project = useDeferredValue(useGetProject().project);
+
   if (project.status !== "running") {
     throw new Error("todo");
   }
@@ -123,6 +127,7 @@ export const IFrameWrapper = ({
             className={cn("w-full h-full select-none")}
             style={mobile ? { width: "390px", height: "844px" } : undefined}
             src={`http://localhost:${project.port}`}
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox"
             title={project.name}
           />
         </Container>

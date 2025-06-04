@@ -12,4 +12,3 @@ export const pluginRPC = hc<AppType>("http://localhost:5001/");
  * allows us to deploy the next server on a serverless platform
  */
 export const daemonRPC = hc<DaemonAppType>("http://localhost:40000/");
-

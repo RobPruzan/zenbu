@@ -7,10 +7,10 @@ import { FitAddon } from "xterm-addon-fit";
 
 export function XTerm({
   isOpen,
-  toggleOpen
+  toggleOpen,
 }: {
   isOpen: boolean;
-  toggleOpen: Dispatch<SetStateAction<boolean>>
+  toggleOpen: Dispatch<SetStateAction<boolean>>;
 }) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -101,7 +101,7 @@ export function XTerm({
           keydownHandler = (e: KeyboardEvent) => {
             if (e.key.toLowerCase() === "j" && e.metaKey) {
               e.preventDefault();
-              toggleOpen(prev => !prev);
+              toggleOpen((prev) => !prev);
             }
           };
           node.addEventListener("keydown", keydownHandler);

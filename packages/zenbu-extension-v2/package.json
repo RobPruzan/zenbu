@@ -33,11 +33,19 @@
     "commands": [
       {
         "command": "zenbu.openSidebar",
-        "title": "Open Zenbu Sidebar"
+        "title": "Zenbu: Open Sidebar"
       },
       {
         "command": "zenbu.openInEditor",
-        "title": "Open Zenbu in Editor"
+        "title": "Zenbu: Open in Editor Panel"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "zenbu.openInEditor",
+        "key": "ctrl+shift+z",
+        "mac": "cmd+shift+z",
+        "when": "editorTextFocus"
       }
     ]
   },

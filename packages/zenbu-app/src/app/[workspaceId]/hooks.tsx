@@ -3,10 +3,30 @@
 import { useParams } from "next/navigation";
 import { useRef, useState, useMemo, useEffect } from "react";
 import { trpc } from "src/lib/trpc";
-import { useWorkspaceContext } from "../v2/context";
+// import { useWorkspaceContext } from "../v2/context";
+
+export const useGetProject = () => {
+  const [[projects, projectId]] = trpc.useSuspenseQueries((t) => [
+    t.daemon.getProjects(),
+    t.persistedSingleton.getCurrentProjectId(undefined, {
+      refetchInterval: 1500, // we will be reactive in the future this is just hacky for a poc
+    }),
+  ]);
+
+  const project = projects
+    .filter((project) => project.status === "running")
+    .find((project) => project.name === projectId);
+  if (!project) {
+    throw new Error("Invariant");
+  }
+
+  return { project, url: `http://localhost:${project.port}` };
+};
 
 export const useUploadBackgroundImage = () => {
-  const { workspaceId } = useWorkspaceContext();
+  // const { workspaceId } = useWorkspaceContext();
+  const [workspaceId] =
+    trpc.persistedSingleton.getCurrentWorkspaceId.useSuspenseQuery();
 
   const setBackgroundImageMutation =
     trpc.workspace.setBackgroundImage.useMutation();
@@ -118,6 +138,6 @@ export const useThumbnailDim = ({
   return {
     iframeW,
     iframeH,
-    thumbnailContainerHeight
+    thumbnailContainerHeight,
   };
 };

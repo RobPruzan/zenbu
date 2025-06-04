@@ -14,6 +14,7 @@ import { act, useEffect, useState } from "react";
 import { ChildToParentMessage } from "zenbu-devtools";
 import { trpc } from "src/lib/trpc";
 import { iife } from "src/lib/utils";
+import { useGetProject } from "src/app/[workspaceId]/hooks";
 /**
  *
  * will need that framer motion stuff yippy
@@ -44,10 +45,11 @@ export const BetterToolbar = () => {
   const projectsQuery = trpc.daemon.getProjects.useQuery();
   const projects = projectsQuery.data ?? [];
 
-  const url = useChatStore((state) => state.iframe.state.url);
-  const currentProjectName = projects.find(
-    (project) => `http://localhost:${project.port}` === url,
-  )?.name;
+  // const url = useChatStore((state) => state.iframe.state.url);
+  const { url, project } = useGetProject();
+  // const currentProjectName = projects.find(
+  //   (project) => `http://localhost:${project.port}` === url,
+  // )?.name;
 
   return (
     <div className="absolute bottom-2 left-2">
@@ -71,11 +73,11 @@ export const BetterToolbar = () => {
           //   return <Console />;
           // }
           case "console": {
-            if (!currentProjectName) {
+            if (!project.name) {
               return <Console />;
             }
             // for ease of use
-            return <ProcessStatsChart name={currentProjectName} />;
+            return <ProcessStatsChart name={project.name} />;
           }
           case "network": {
             return (

@@ -9,7 +9,7 @@ import { Workspace } from "./workspace";
 import { WorkspaceChat } from "./workspace-chat";
 import { TopBar } from "./workspace-top-bar";
 import { cn } from "src/lib/utils";
-import { useWorkspaceContext, WorkspaceContext } from "../v2/context";
+// import { useWorkspaceContext, WorkspaceContext } from "../v2/context";
 import { useState } from "react";
 
 export default function Page() {
@@ -32,12 +32,7 @@ export default function Page() {
 
   return (
     <>
-      <WorkspaceContext
-        value={{
-          setWorkspaceId: setWorkspaceId,
-          workspaceId,
-        }}
-      >
+      
         <div
           className={cn([
             "flex flex-col h-[100vh] w-[100vw] relative py-2",
@@ -71,7 +66,7 @@ export default function Page() {
           </div>
           {/* <BottomBar/> */}
         </div>
-      </WorkspaceContext>
+      
     </>
   );
 }

@@ -19,6 +19,12 @@ export const workspace = createTable("workspace", {
   createdAt: createdAtCol(),
 });
 
+
+export const persistedSingleton = createTable("persistedSingleton", {
+  currentProjectId: text("currentProjectId"),
+  currentWorkspaceId: text("currentWorkspaceId")
+})
+
 export const tag = createTable("tag", {
   tagId: primaryIdCol("tagId"),
   fromProjectId: text("fromProjectId").notNull(),

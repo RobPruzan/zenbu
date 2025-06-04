@@ -9,7 +9,7 @@ import { useUploadBackgroundImage } from "./hooks";
 import { useState, useEffect } from "react";
 import { ResponsiveContainer, Area, AreaChart } from "recharts";
 import Link from "next/link";
-import { useWorkspaceContext } from "../v2/context";
+// import { useWorkspaceContext } from "../v2/context";
 
 export const TopBar = () => {
   const workspaces = [
@@ -31,7 +31,8 @@ export const TopBar = () => {
     utils.workspace.getTags.prefetch({ workspaceId: workspace });
   });
 
-  const { workspaceId } = useWorkspaceContext()
+  // const { workspaceId } = useWorkspaceContext()
+  const [workspaceId] = trpc.persistedSingleton.getCurrentWorkspaceId.useSuspenseQuery()
   const uploadBackgroundImage = useUploadBackgroundImage();
 
   return (

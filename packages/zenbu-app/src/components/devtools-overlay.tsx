@@ -21,6 +21,7 @@ import { useChatContext } from "./chat-interface";
 import { ChatInstanceContext, useChatStore } from "./chat-store";
 import { IFRAME_ID } from "src/app/iframe-wrapper";
 import { useWS } from "src/app/ws";
+import { useGetProject } from "src/app/[workspaceId]/hooks";
 
 interface Props {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
@@ -68,10 +69,11 @@ export function DevtoolsOverlay() {
   const lastElementRef = useRef<Element | null>(null);
 
   const sendMessage = useIFrameMessenger();
-  const project = useChatStore((state) => state.iframe.state.project);
+  // const project = useChatStore((state) => state.iframe.state.project);
+  const { project } = useGetProject();
   const { socket } = useWS({ projectName: project.name });
   const makeRequest = useMakeRequest();
-  const { inspector, eventLog, chatControls } = useChatStore();
+  const { inspector, chatControls } = useChatStore();
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent<ChildToParentMessage>) => {
@@ -128,7 +130,8 @@ export function DevtoolsOverlay() {
   const { setMessages, setInput } = useChatContext();
   // why did i do this again? I definitely had a reason
   const store = ChatInstanceContext.useContext();
-  const url = useChatStore((state) => state.iframe.state.url);
+  // const url = useChatStore((state) => state.iframe.state.url);
+  const { url } = useGetProject();
 
   const replay = useWS<any>({
     url: "http://localhost:6969",
@@ -139,7 +142,9 @@ export function DevtoolsOverlay() {
     const getState = store.getState;
     const canvas = canvasRef.current;
     const iframe = document.getElementById(IFRAME_ID)! as HTMLIFrameElement;
-    if (!canvas || !iframe) { return };
+    if (!canvas || !iframe) {
+      return;
+    }
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;

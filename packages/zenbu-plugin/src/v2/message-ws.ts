@@ -314,6 +314,8 @@ export const injectWebSocket = (server: HttpServer) => {
                 }),
               },
             });
+            console.log('awaiting stream');
+            
 
             const stream = Stream.fromAsyncIterable<
               TextStreamPart<Record<string, any>>,

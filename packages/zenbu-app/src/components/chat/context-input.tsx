@@ -17,6 +17,8 @@ import { ContextItem } from "../slices/context-slice";
 import { iife } from "src/lib/utils";
 import { ClientEvent } from "zenbu-redis";
 import { trpc } from "src/lib/trpc";
+import { useGetProject } from "src/app/[workspaceId]/hooks";
+import { utils } from "prettier/doc.js";
 
 interface MentionMenuProps {
   onSelect: (item: string) => void;
@@ -83,8 +85,7 @@ export const ChatTextArea = () => {
   const [filteredItems, setFilteredItems] = useState<string[]>(items);
   const chatInputRef = useRef<HTMLDivElement>(null);
 
-  const { eventLog, inspector, chatControls, context, toolbar } =
-    useChatStore();
+  const { inspector, chatControls, context, toolbar } = useChatStore();
   const { socket } = useWSContext();
   // there should be no sync this was dumb design by grok
   const syncSelectedItems = () => {};
@@ -135,7 +136,8 @@ export const ChatTextArea = () => {
 
     syncSelectedItems();
   };
-  const project = useChatStore((state) => state.iframe.state.project);
+  // const project = useChatStore((state) => state.iframe.state.project);
+  const { project } = useGetProject();
   const insertMention = (mention: string) => {
     const chatInput = chatInputRef.current;
     if (!chatInput) return;
@@ -443,7 +445,7 @@ export const ChatTextArea = () => {
             console.log("sending dis");
 
             actions.setItems([]);
-            eventLog.actions.pushEvent(clientEvent);
+            // eventLog.actions.pushEvent(clientEvent);
 
             utils.project.getEvents.setData(
               { projectName: project.name },

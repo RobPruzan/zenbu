@@ -3,7 +3,6 @@ import { trpc } from "src/lib/trpc";
 import { Editor } from "src/app/v2/editor";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ProjectContext, WorkspaceContext } from "src/app/v2/context";
 
 /**
  * alright so what would I actually need here
@@ -26,10 +25,13 @@ import { ProjectContext, WorkspaceContext } from "src/app/v2/context";
  */
 
 export default function Page() {
-  const { projectName: projectId, workspaceId } = useParams<{
-    projectName: string;
-    workspaceId: string;
-  }>();
+  // const { projectName: projectId, workspaceId } = useParams<{
+  //   projectName: string;
+  //   workspaceId: string;
+  // }>();
+  const [[workspaceId]] = trpc.useSuspenseQueries((t) => [
+    t.persistedSingleton.getCurrentProjectId(),
+  ]);
   const [[workspace]] = trpc.useSuspenseQueries((t) => [
     // t.daemon.getProjects(),
     // need to nest workspace name somehow i guess
@@ -61,35 +63,7 @@ export default function Page() {
       }
       className="relative flex justify-center items-center"
     >
-      <WorkspaceContext
-        value={{
-          setWorkspaceId: (workspaceIdOrFn) => {
-            if (typeof workspaceIdOrFn === "function") {
-              const newWorkspaceId = workspaceIdOrFn(workspaceId);
-              router.push(`/editor/${newWorkspaceId}/${projectId}`);
-            } else {
-              router.push(`/editor/${workspaceIdOrFn}/${projectId}`);
-            }
-          },
-          workspaceId,
-        }}
-      >
-        <ProjectContext
-          value={{
-            projectId,
-            setProjectId: (projectIdOrFn) => {
-              if (typeof projectIdOrFn === "function") {
-                const newProjectId = projectIdOrFn(projectId);
-                router.push(`/editor/${workspaceId}/${newProjectId}`);
-              } else {
-                router.push(`/editor/${workspaceId}/${projectIdOrFn}`);
-              }
-            },
-          }}
-        >
-          <Editor defaultSidebarOpen="chat" />
-        </ProjectContext>
-      </WorkspaceContext>
+      <Editor defaultSidebarOpen="chat" />
     </motion.div>
   );
 }

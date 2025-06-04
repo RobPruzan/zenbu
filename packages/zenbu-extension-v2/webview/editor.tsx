@@ -11,7 +11,7 @@ import React, {
  * need to get rid of the use params, maybe have that controllable by the global state? Like the iframe that has the project set anyways?
  */
 import { flushSync } from "react-dom";
-import { ProjectContext, WorkspaceContext } from "~/app/v2/context";
+// import { ProjectContext, WorkspaceContext } from "~/app/v2/context";
 import { Editor } from "~/app/v2/editor";
 import { Button } from "~/components/ui/button";
 import { api } from "~/trpc/react";
@@ -60,6 +60,7 @@ const EditorContainer = ({
     >
       <div className="h-[45px] flex justify-end w-full gap-x-2 p-1 absolute top-2 right-2">
         <Button
+          // @ts-expect-error wut
           variant={selectedView === "editor" ? "secondary" : "ghost"}
           className="text-xs"
           onClick={() => {
@@ -115,14 +116,15 @@ export const EditorApp = () => {
     "editor"
   );
 
-  const currentProject = projects.at(1);
+  const currentProject = projects.at(0);
 
   const [projectId, setProjectId] = useState(currentProject?.name!);
   const [workspaceId, setWorkspaceId] = useState("home"); // hard coded for now, will have workspaces inside vsc later
+
   if (!currentProject) {
     return (
       <div style={{ padding: "20px" }}>
-        <h1>No projects available</h1>
+        <h1>No projects available in {workspaceId}</h1>
         <p>Please start a project first.</p>
       </div>
     );
@@ -130,29 +132,15 @@ export const EditorApp = () => {
 
   return (
     <Suspense fallback={<>loading editor...</>}>
-      <WorkspaceContext
-        value={{
-          setWorkspaceId,
-          workspaceId,
-        }}
-      >
-        <ProjectContext
-          value={{
-            projectId,
-            setProjectId,
-          }}
-        >
-          <Editor
-            Container={(props) => (
-              <EditorContainer
-                {...props}
-                selectedView={selectedView}
-                setSelectedView={setSelectedView}
-              />
-            )}
+      <Editor
+        Container={(props) => (
+          <EditorContainer
+            {...props}
+            selectedView={selectedView}
+            setSelectedView={setSelectedView}
           />
-        </ProjectContext>
-      </WorkspaceContext>
+        )}
+      />
     </Suspense>
   );
 };

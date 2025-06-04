@@ -28,19 +28,19 @@ import {
   ToolbarSliceInitialState,
 } from "./slices/toolbar-slice";
 import {
-  createIFrameSlice,
+  // createIFrameSlice,
   IFrameSlice,
   IFrameSliceInitialState,
 } from "./slices/iframe-slice";
 import { useDeferredValue } from "react";
 
 export type ChatInstanceInitialState = {
-  eventLog: EventLogSliceInitialState;
+  // eventLog: EventLogSliceInitialState;
   inspector: InspectorSliceInitialState;
   chatControls: ChatControlsInitialState;
   context: ContextSliceInitialState;
   toolbar: ToolbarSliceInitialState;
-  iframe: IFrameSliceInitialState;
+  // iframe: IFrameSliceInitialState;
 };
 
 /**
@@ -71,26 +71,26 @@ export type ChatInstanceInitialState = {
  */
 
 export type ChatInstanceStore = {
-  eventLog: EventLogSlice;
+  // eventLog: EventLogSlice;
   inspector: InspectorSlice;
   chatControls: ChatControlsSlice;
   context: ContextSlice;
   toolbar: ToolbarSlice;
-  iframe: IFrameSlice;
+  // iframe: IFrameSlice;
 };
 
 export const ChatInstanceContext = createZustandContext(
   (initialState: ChatInstanceInitialState) =>
     createStore<ChatInstanceStore>()(
       immer((...args) => ({
-        eventLog: createEventLogSlice(initialState.eventLog)(...args),
+        // eventLog: createEventLogSlice(initialState.eventLog)(...args),
         inspector: createInspectorSlice(initialState.inspector)(...args),
         chatControls: createChatControlsSlice(initialState.chatControls)(
           ...args,
         ),
         context: createContextSlice(initialState.context)(...args),
         toolbar: createToolbarSLice(initialState.toolbar)(...args),
-        iframe: createIFrameSlice(initialState.iframe)(...args),
+        // iframe: createIFrameSlice(initialState.iframe)(...args),
       })),
     ),
 );
@@ -103,7 +103,9 @@ export function useChatStore<T>(selector?: (state: ChatInstanceStore) => T) {
   return res;
 }
 export function useTransitionChatStore(): ChatInstanceStore;
-export function useTransitionChatStore<T>(selector: (state: ChatInstanceStore) => T): T;
+export function useTransitionChatStore<T>(
+  selector: (state: ChatInstanceStore) => T,
+): T;
 export function useTransitionChatStore<T>(
   selector?: (state: ChatInstanceStore) => T,
 ) {

@@ -167,7 +167,7 @@ export const getProjects = Effect.gen(function* () {
       }
 
       const markerArgument = line.slice(markerIndex);
-      console.log("wut", markerArgument);
+      // console.log("wut", markerArgument);
 
       const { name, port, createdAt } =
         yield* parseProcessMarkerArgument(markerArgument);
@@ -237,7 +237,7 @@ const nuke = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove("projects", { recursive: true });
   yield* fs.makeDirectory("projects");
-})
+});
 
 export const createServer = async (
   redisClient: ReturnType<typeof makeRedisClient>
@@ -266,6 +266,7 @@ export const createServer = async (
           return new Response(exit.value, {
             headers: {
               ["Content-type"]: "text/html",
+              ["Origin-Agent-Cluster"]: "?1",
             },
           });
         }
@@ -387,7 +388,7 @@ export const createServer = async (
       switch (exit._tag) {
         case "Success": {
           const projects = exit.value;
-          console.log("returning", projects);
+          // console.log("returning", projects);
           return opts.json({ projects });
         }
         case "Failure": {
@@ -398,25 +399,27 @@ export const createServer = async (
         }
       }
     })
-    .post("/create-project",
-      
-      async (opts) => {
-      const exit = await Effect.runPromiseExit(
-        spawnProject
-          .pipe(Effect.provide(NodeContext.layer))
-          .pipe(Effect.provideService(RedisContext, { client: redisClient }))
-      );
+    .post(
+      "/create-project",
 
-      switch (exit._tag) {
-        case "Success": {
-          return opts.json({ project: exit.value });
-        }
-        case "Failure": {
-          const error = exit.cause.toJSON();
-          return opts.json({ error });
+      async (opts) => {
+        const exit = await Effect.runPromiseExit(
+          spawnProject
+            .pipe(Effect.provide(NodeContext.layer))
+            .pipe(Effect.provideService(RedisContext, { client: redisClient }))
+        );
+
+        switch (exit._tag) {
+          case "Success": {
+            return opts.json({ project: exit.value });
+          }
+          case "Failure": {
+            const error = exit.cause.toJSON();
+            return opts.json({ error });
+          }
         }
       }
-    });
+    );
 
   const port = 40_000;
   const host = "localhost";

@@ -4,7 +4,7 @@ import { Button } from "src/components/ui/button";
 import { trpc } from "src/lib/trpc";
 import { PlusCircleIcon, TrashIcon } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useWorkspaceContext } from "./context";
+// import { useWorkspaceContext } from "./context";
 
 export const ProjectsSidebar = ({
   inactiveProjects,
@@ -17,7 +17,9 @@ export const ProjectsSidebar = ({
   const createProjectMutation = trpc.daemon.createProject.useMutation();
   const nukeMutation = trpc.daemon.nuke.useMutation();
   // fake workflow for now
-  const { workspaceId } = useWorkspaceContext();
+  // const { workspaceId } = useWorkspaceContext();
+  const [workspaceId] =
+    trpc.persistedSingleton.getCurrentWorkspaceId.useSuspenseQuery();
   return (
     <div className="flex flex-col gap-4 self-start pt-4 px-2 w-full bg-gradient-to-b from-black to-zinc-950 h-full border-r items-center overflow-y-auto">
       <div className="flex justify-evenly">

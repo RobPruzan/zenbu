@@ -11,10 +11,8 @@ import { trpc } from "src/lib/trpc";
 import { Project } from "zenbu-daemon";
 import {
   useSidebarRouterInit,
-  ProjectContext,
   SidebarRouterContext,
   useSidebarRouter,
-  useProjectContext,
 } from "./context";
 import { Preview } from "./preview";
 import { LeftSidebar } from "./left-sidebar";
@@ -42,7 +40,6 @@ import { WithMobileSplit } from "./mobile-split";
 //   ssr: false,
 // });
 
-
 export const Editor = ({
   // projectId,
   Container,
@@ -52,7 +49,9 @@ export const Editor = ({
   Container?: ({ children }: { children: React.ReactNode }) => React.ReactNode;
   defaultSidebarOpen?: "chat";
 }) => {
-  const {projectId} = useProjectContext()
+  // const {projectId} = useProjectContext()
+  const [projectId] =
+    trpc.persistedSingleton.getCurrentProjectId.useSuspenseQuery();
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
   const project = projects.find((project) => project.name === projectId);
   if (!project) {
@@ -75,13 +74,13 @@ export const Editor = ({
     // >
     <ChatInstanceContext.Provider
       initialValue={{
-        iframe: {
-          project: project,
-          url:
-            project.status === "running"
-              ? `http://localhost:${project.port}`
-              : null!,
-        },
+        // iframe: {
+        //   project: project,
+        //   url:
+        //     project.status === "running"
+        //       ? `http://localhost:${project.port}`
+        //       : null!,
+        // },
         toolbar: {
           state: {
             mobileSplit: {
@@ -108,9 +107,9 @@ export const Editor = ({
             kind: "off",
           },
         },
-        eventLog: {
-          events: [],
-        },
+        // eventLog: {
+        //   events: [],
+        // },
         chatControls: {
           input: "",
         },

@@ -1,6 +1,6 @@
-import { useContext, useMemo } from "react";
+import { useContext, useDeferredValue, useMemo } from "react";
 import { Project } from "zenbu-daemon";
-import { useSidebarRouter, ProjectContext } from "./context";
+import { useSidebarRouter } from "./context";
 import { ProjectsSidebar } from "./projects-sidebar";
 import { iife } from "src/lib/utils";
 import {
@@ -10,6 +10,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { AnimatedSidebar } from "./animated-sidebar";
 import { ChatSidebar } from "./chat-sidebar";
+import { useGetProject } from "../[workspaceId]/hooks";
 
 export const LeftSidebar = ({
   allProjects,
@@ -19,10 +20,11 @@ export const LeftSidebar = ({
   measuredSize: { width: number | null; height: number | null };
 }) => {
   const sidebar = useSidebarRouter();
-  const activeProject = useTransitionChatStore(
-    (state) => state.iframe.state.project,
-  );
+  // const activeProject = useTransitionChatStore(
+  //   (state) => state.iframe.state.project,
+  // );
 
+  const activeProject = useDeferredValue(useGetProject().project)
   // if (!sidebar.left) return null;
 
   const inactiveProjects = useMemo(

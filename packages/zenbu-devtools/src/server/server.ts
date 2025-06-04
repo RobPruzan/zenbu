@@ -13,6 +13,7 @@ serve({
     return new Response(content, {
       headers: {
         "Content-Type": "application/javascript",
+        "Content-Length": content.length.toString(),
       },
     });
   },

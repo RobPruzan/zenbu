@@ -8,12 +8,13 @@ import {
   useEffect,
 } from "react";
 import { Project } from "zenbu-daemon";
-import { ProjectContext } from "./context";
+// import { ProjectContext } from "./context";
 import { THUMBNAIL_WIDTH_PX, useThumbnailDim } from "../[workspaceId]/hooks";
 import { height } from "tailwindcss/defaultTheme";
 import { useChatStore } from "src/components/chat-store";
 import { useAppSwitcherState } from "src/components/app-switcher-context";
 import { cn } from "src/lib/utils";
+import { trpc } from "src/lib/trpc";
 
 export const InactiveProjectPreview = ({
   project,
@@ -23,7 +24,8 @@ export const InactiveProjectPreview = ({
   measuredSize: { width: number | null; height: number | null };
 }) => {
   const { notifyProjectChange } = useAppSwitcherState();
-  const iframeActions = useChatStore((state) => state.iframe.actions);
+  // const iframeActions = useChatStore((state) => state.iframe.actions);
+
   const toolbarActions = useChatStore((state) => state.toolbar.actions);
 
   const { iframeH, iframeW, thumbnailContainerHeight } = useThumbnailDim({
@@ -52,9 +54,18 @@ export const InactiveProjectPreview = ({
     setShowBorder(true);
   }, []);
 
+  const setCurrentProjectIdMutation =
+    trpc.persistedSingleton.setCurrentProjectId.useMutation();
+
   return (
     <ViewTransition share="stage-manager-anim" name={`preview-${project.name}`}>
       <div
+        onMouseLeave={() => {
+          setShowBorder(true);
+        }}
+        onMouseEnter={() => {
+          setShowBorder(false);
+        }}
         onClick={() => {
           startTransition(() => {
             toolbarActions.setIsDrawing(false);
@@ -63,8 +74,8 @@ export const InactiveProjectPreview = ({
               kind:
                 inspector.state.kind === "inspecting" ? "off" : "inspecting",
             });
-            iframeActions.setState({
-              project,
+            setCurrentProjectIdMutation.mutate({
+              currentProjectId: project.name,
             });
           });
         }}
@@ -80,6 +91,20 @@ export const InactiveProjectPreview = ({
         title={`Switch to ${project.name}`}
       >
         <iframe
+          // onLoad={(e) => {
+          //   if (e.target.contentWindow) {
+          //     try {
+          //       // Force refresh if stuck
+          //       if (e.target.contentWindow.location.href === 'about:blank') {
+          //         setTimeout(() => {
+          //           e.target.src = e.target.src + '&t=' + Date.now();
+          //         }, 100);
+          //       }
+          //     } catch (err) {
+          //       // Cross-origin, probably fine
+          //     }
+          //   }
+          // }}
           src={`http://localhost:${project.port}`}
           title={`${project.name} (thumbnail)`}
           style={{
@@ -88,6 +113,7 @@ export const InactiveProjectPreview = ({
             transform: `scale(var(--thumbnail-scale))`,
             transformOrigin: "top left",
           }}
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox"
           className="border pointer-events-none absolute top-0 left-0"
         />
       </div>

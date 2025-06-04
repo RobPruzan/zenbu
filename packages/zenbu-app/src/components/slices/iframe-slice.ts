@@ -17,17 +17,17 @@ export type IFrameSlice = {
   };
 };
 
-export const createIFrameSlice =
-  (initialState: IFrameSliceInitialState): SliceCreator<IFrameSlice> =>
-  (set, get) => ({
-    state: initialState,
-    actions: {
-      setState: (inspectorState) =>
-        set((state) => {
-          state.iframe.state = {
-            ...state.iframe.state,
-            ...inspectorState,
-          };
-        }),
-    },
-  });
+// export const createIFrameSlice =
+//   (initialState: IFrameSliceInitialState): SliceCreator<IFrameSlice> =>
+//   (set, get) => ({
+//     state: initialState,
+//     actions: {
+//       setState: (inspectorState) =>
+//         set((state) => {
+//           state.iframe.state = {
+//             ...state.iframe.state,
+//             ...inspectorState,
+//           };
+//         }),
+//     },
+//   });

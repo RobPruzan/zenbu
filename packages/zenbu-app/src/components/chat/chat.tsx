@@ -22,6 +22,8 @@ import { TRANSITION_MESSAGE } from "zenbu-plugin/src/v2/shared-utils";
 import { useIFrameMessenger } from "src/hooks/use-iframe-listener";
 import { useMakeRequest } from "../devtools-overlay";
 import { AnimatePresence, motion } from "framer-motion";
+import { Button } from "../ui/button";
+import { useGetProject } from "src/app/[workspaceId]/hooks";
 
 export const WSContext = createContext<{
   socket: Socket<any, any>;
@@ -40,8 +42,7 @@ export function Chat({
   };
   chatGradient?: string;
 }) {
-  const { eventLog, inspector, chatControls, context, toolbar } =
-    useChatStore();
+  const { inspector, chatControls, context, toolbar } = useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(
     null,
   ) as React.MutableRefObject<HTMLTextAreaElement>;
@@ -49,7 +50,8 @@ export function Chat({
   const [isAtBottom, setIsAtBottom] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const project = useChatStore((state) => state.iframe.state.project);
+  // const project = useChatStore((state) => state.iframe.state.project);
+  const { project } = useGetProject();
   const [rawEvents] = trpc.project.getEvents.useSuspenseQuery({
     projectName: project.name,
   });
@@ -153,7 +155,7 @@ export function Chat({
       timestamp: Date.now(),
       id: nanoid(),
     };
-    eventLog.actions.pushEvent(clientEvent);
+    // eventLog.actions.pushEvent(clientEvent);
     console.log("sending", chatControls.state.input);
     chatControls.actions.setInput("");
     console.log("sending at", project.name);
@@ -193,7 +195,7 @@ export function Chat({
         socket,
       }}
     >
-      <div className="flex h-full flex-col relative overflow-hidden ">
+      <div className="flex flex-col relative overflow-hidden h-full">
         <div className="absolute inset-0 z-0 overflow-hidden">
           <div
             className={cn([
@@ -307,7 +309,7 @@ export function Chat({
               <div className="flex items-center justify-end px-4 py-2 border-t border-border/50 bg-accent/5 gap-x-2">
                 {slots?.inputArea}
                 <div className="flex items-center gap-2">
-                  <button
+                  {/* <button
                     onClick={sendMessage}
                     disabled={!chatControls.state.input.trim()}
                     className={cn(
@@ -320,7 +322,11 @@ export function Chat({
                   >
                     <span>Send</span>
                     <SendIcon className="ml-1.5 h-3 w-3" />
-                  </button>
+                  </button> */}
+                  <Button variant={"outline"} size={"sm"}>
+                    Send
+                    <SendIcon className="ml-1.5 h-3 w-3" />
+                  </Button>
                 </div>
               </div>
             </div>

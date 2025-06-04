@@ -17,10 +17,12 @@ import { Input } from "../ui/input";
 import { flushSync } from "react-dom";
 
 export function Header({ onCloseChat }: { onCloseChat: () => void }) {
-  const url = useChatStore((state) => state.iframe.state.url);
-  const name = useChatStore((state) => state.iframe.state.project.name);
+  // const url = useChatStore((state) => state.iframe.state.url);
+  const { project, url } = useGetProject();
+
+  // const name = useChatStore((state) => state.iframe.state.project.name);
   const [copied, setCopied] = useState(false);
-  const iframe = useChatStore((state) => state.iframe);
+  // const iframe = useChatStore((state) => state.iframe);
 
   const handleCopy = () => {
     if (url) {
@@ -32,12 +34,11 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
 
   const [editUrl, setEditUrl] = useState(false);
   return (
-    <div className="relative z-10 border-b border-border/50 bg-background backdrop-blur-xl">
-      <div className="flex gap-x-1 items-center justify-between h-12 px-3">
-        <span className="text-xs truncate font-bold">{name}</span>
+    <div className="flex gap-x-1 items-center justify-between h-12 px-3 border-b" >
+        <span className="text-xs truncate font-bold">{project.name}</span>
         <div className="flex-1" />
         <div className="flex-1 flex items-center justify-end gap-2">
-          <Button
+          {/* <Button
             onClick={() => {
               window.open(
                 "cursor://file//Users/robby/bun-react-test",
@@ -49,7 +50,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
           >
             <Cursor />
             Open in Cursor
-          </Button>
+          </Button> */}
           {/* <Button
             onClick={() => {
               onCloseChat();
@@ -67,7 +68,6 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
           </Button> */}
         </div>
       </div>
-    </div>
   );
 }
 
@@ -112,6 +112,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
 
 import * as React from "react";
 import type { SVGProps } from "react";
+import { useGetProject } from "src/app/[workspaceId]/hooks";
 const Cursor = (props: SVGProps<SVGSVGElement>) => (
   <svg
     height="1em"

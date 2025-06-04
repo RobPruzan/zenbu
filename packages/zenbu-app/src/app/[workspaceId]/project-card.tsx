@@ -15,7 +15,7 @@ import { Project } from "zenbu-daemon";
 import { useSortable } from "@dnd-kit/sortable";
 import { motion } from "framer-motion";
 import { trpc } from "src/lib/trpc";
-import { useWorkspaceContext } from "../v2/context";
+// import { useWorkspaceContext } from "../v2/context";
 export const ProjectCard = ({
   project,
   style = {},
@@ -23,7 +23,8 @@ export const ProjectCard = ({
   project: Project & { url: string | null };
   style?: React.CSSProperties;
 }) => {
-  const { workspaceId } = useWorkspaceContext()
+  // const { workspaceId } = useWorkspaceContext()
+  const [workspaceId] = trpc.persistedSingleton.getCurrentWorkspaceId.useSuspenseQuery()
   const {
     attributes,
     listeners,
