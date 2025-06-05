@@ -12,16 +12,16 @@ export const useGetProject = () => {
       refetchInterval: 1500, // we will be reactive in the future this is just hacky for a poc
     }),
   ]);
-  // const fuckIt = trpc.persistedSingleton.setCurrentProjectId.useMutation();
-  //   .mutate({ currentProjectId: "zesty-comet-911" });
+  const fuckIt = trpc.persistedSingleton.setCurrentProjectId.useMutation();
+    // .mutate({ currentProjectId: "zesty-comet-911" });
   const nuke = trpc.daemon.nuke.useMutation()
 
   const project = projects
     .filter((project) => project.status === "running")
     .find((project) => project.name === projectId);
   if (!project) {
-    nuke.mutate()
-    // fuckIt.mutate({ currentProjectId: "zesty-comet-911" });
+    // nuke.mutate()
+    // fuckIt.mutate({ currentProjectId: "noble-lemur-227" });
     throw new Error(
       "Invariant" + JSON.stringify(projects) + "\n\n\n" + projectId,
     );

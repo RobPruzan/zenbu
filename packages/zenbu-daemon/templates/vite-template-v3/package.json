@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "inject-messenger": "bun run src/inject-messenger.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -16,6 +17,7 @@
     "lucide-react": "^0.475.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7"
   },

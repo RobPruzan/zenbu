@@ -7,7 +7,7 @@ import { DaemonAppType } from "zenbu-daemon";
 export const pluginRPC = hc<AppType>("http://localhost:5001/");
 
 /**
- * why are we using an rpc to communicate to the daemon when its on the same device?
+ * you must think why are we using an rpc to communicate to the daemon when its on the same device?
  * we may want to deploy the next server to a public URL, and keeping a network boundary
  * allows us to deploy the next server on a serverless platform
  */

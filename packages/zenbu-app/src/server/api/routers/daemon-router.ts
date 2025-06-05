@@ -23,9 +23,13 @@ export const daemonRouter = createTRPCRouter({
 
     switch (exit._tag) {
       case "Success": {
+        console.log("RETURNING SUCCESS");
+
         return exit.value;
       }
       case "Failure": {
+        console.log("bruh", exit.cause.toJSON());
+
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: exit.toString(),
