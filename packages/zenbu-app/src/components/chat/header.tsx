@@ -32,8 +32,7 @@ export function Header({ onCloseChat }: { onCloseChat: () => void }) {
     }
   };
   const router = useSidebarRouter();
-  console.log('router wut', router);
-  
+  console.log("router wut", router);
 
   const [editUrl, setEditUrl] = useState(false);
   return (

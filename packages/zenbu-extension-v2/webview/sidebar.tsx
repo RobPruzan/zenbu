@@ -3,10 +3,11 @@ import { Button } from "~/components/ui/button";
 import { vscodeAPI } from "./rpc/webview-rpc";
 import { api } from "~/trpc/react";
 import { ChatSidebar } from "~/app/v2/chat-sidebar";
-import { cn } from "~/lib/utils";
+import { cn, iife } from "~/lib/utils";
 import { LeftSidebar } from "~/app/v2/left-sidebar";
 import { trpc } from "./shims/trpc-shim";
 import { Header } from "~/components/chat/header";
+import { useSidebarRouter } from "~/app/v2/context";
 
 export const SidebarApp = () => {
   // Example tRPC query - get all workspaces
@@ -28,44 +29,9 @@ export const SidebarApp = () => {
     [projects]
   );
 
-  return (
-    // <ChatSidebar
-    //   slots={{
-    //     inputArea: (
-    //       <>
-    //         {/* <button
-    //           className={cn(
-    //             "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
-    //             "bg-accent/10 border hover:bg-accent/20 text-foreground",
-    //             "transition-all duration-300"
-    //           )}
-    //           onClick={async () => {
-    //             await vscodeAPI.openExternal(
-    //               "http://localhost:3000/editor/home/groovy-viper-370"
-    //             );
-    //           }}
-    //         >
-    //           Open In Browser
-    //         </button> */}
-    //         {/* <button
-    //           onClick={async () => {
-    //             await vscodeAPI.openInEditor();
-    //           }}
-    //           className={cn(
-    //             "inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-[11px] font-light",
-    //             "bg-accent/10 border hover:bg-accent/20 text-foreground",
-    //             "transition-all duration-300"
-    //           )}
-    //         >
-    //         </button> */}
+  const router = useSidebarRouter();
 
-    //         <Button variant={"outline"} size={"sm"}>
-    //           Open Preview
-    //         </Button>
-    //       </>
-    //     ),
-    //   }}
-    // />
+  return (
     <div className="flex flex-col h-screen w-screen">
       <Header
         onCloseChat={() => {
@@ -73,19 +39,32 @@ export const SidebarApp = () => {
         }}
       />
       <div className="flex flex-col h-[calc(100%-48px)]">
-        <ChatSidebar
-          chatGradient="from-[#070808] to-[#090909]"
-          className="border-r border-border/50"
-        />
-        {/* 
-      <LeftSidebar
-        allProjects={runningProjects}
-        // doesn't matter
-        measuredSize={{
-          height: 100,
-          width: 100,
-        }}
-      /> */}
+        {iife(() => {
+          switch (router.left) {
+            case "chat": {
+              return (
+                <ChatSidebar
+                  chatGradient="from-[#070808] to-[#090909]"
+                  className="border-r border-border/50"
+                />
+              );
+            }
+            case "projects": {
+              return (
+                <div className="flex flex-col gap-y-4 items-center p-4">
+                  {runningProjects.map((project) => (
+                    <div className="w-[260px] h-[195px] border rounded-md shadow-xl overflow-hidden">
+                      <iframe
+                        src={`http://localhost:${project.port}`}
+                        className="w-[866px] h-[650px] transform scale-[0.3] origin-top-left"
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+          }
+        })}
       </div>
     </div>
   );
