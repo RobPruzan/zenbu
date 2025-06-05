@@ -38,13 +38,16 @@ export const daemonRouter = createTRPCRouter({
     .input(
       z.object({
         workspaceId: z.string(),
+        pathToSymlinkAt: z.string(),
       }),
     )
     .mutation(async (opts) => {
       const exit = await Effect.runPromiseExit(
         Effect.gen(function* () {
           const { project } = yield* Effect.tryPromise(() =>
-            daemonRPC["create-project"].$post().then((res) => res.json()),
+            daemonRPC["create-project"]
+              .$post({ json: { pathToSymlinkAt: opts.input.pathToSymlinkAt } })
+              .then((res) => res.json()),
           );
           return project;
         }),

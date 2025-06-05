@@ -6,14 +6,11 @@ export function createExtensionRPC(
   webview: vscode.Webview,
   context: vscode.ExtensionContext
 ) {
-  // Extension-side implementations
   const extensionFunctions: ExtensionRPC = {
-    // Commands
     executeCommand: async (command, ...args) => {
       return await vscode.commands.executeCommand(command, ...args);
     },
 
-    // Window API
     showInformationMessage: async (message, ...items) => {
       return await vscode.window.showInformationMessage(message, ...items);
     },
@@ -26,22 +23,18 @@ export function createExtensionRPC(
       return await vscode.window.showWarningMessage(message, ...items);
     },
 
-    // Quick Pick
     showQuickPick: async (items, options) => {
       return await vscode.window.showQuickPick(items, options);
     },
 
-    // Input Box
     showInputBox: async (options) => {
       return await vscode.window.showInputBox(options);
     },
 
-    // Open External
     openExternal: async (uri) => {
       return await vscode.env.openExternal(vscode.Uri.parse(uri));
     },
 
-    // Custom commands
     openInEditor: async () => {
       await vscode.commands.executeCommand("zenbu.openInEditor");
     },
@@ -50,7 +43,6 @@ export function createExtensionRPC(
       await vscode.commands.executeCommand("zenbu.openSidebar");
     },
 
-    // State management
     getState: async () => {
       return context.globalState.get("zenbuState", {});
     },
@@ -59,7 +51,6 @@ export function createExtensionRPC(
       await context.globalState.update("zenbuState", state);
     },
 
-    // Workspace
     getWorkspaceFolders: async () => {
       const folders = vscode.workspace.workspaceFolders;
       return folders ? folders.map((f) => f.uri.fsPath) : [];
@@ -70,6 +61,14 @@ export function createExtensionRPC(
         vscode.Uri.parse(uri)
       );
       await vscode.window.showTextDocument(doc);
+    },
+
+    getWorkspacePath: async () => {
+      const folders = vscode.workspace.workspaceFolders;
+      if (folders && folders.length > 0) {
+        return folders[0].uri.fsPath;
+      }
+      throw new Error("No workspace folder found");
     },
   };
 

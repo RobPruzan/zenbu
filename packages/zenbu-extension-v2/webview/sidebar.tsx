@@ -17,8 +17,11 @@ export const SidebarApp = () => {
   //   error,
   // } = api.workspace.getWorkspaces.useQuery();
 
+  // todo, run in parallel
   const [projectId] =
     trpc.persistedSingleton.getCurrentProjectId.useSuspenseQuery();
+  const [workspaceId] =
+    trpc.persistedSingleton.getCurrentWorkspaceId.useSuspenseQuery();
   const [projects] = trpc.daemon.getProjects.useSuspenseQuery();
   const project = projects.find((project) => project.name === projectId);
   if (!project) {
@@ -30,6 +33,7 @@ export const SidebarApp = () => {
   );
 
   const router = useSidebarRouter();
+  const createProjectMutation = trpc.daemon.createProject.useMutation();
 
   return (
     <div className="flex flex-col h-screen w-screen">
@@ -52,6 +56,17 @@ export const SidebarApp = () => {
             case "projects": {
               return (
                 <div className="flex flex-col gap-y-4 items-center p-4">
+                  <Button
+                    variant={"ghost"}
+                    onClick={async () => {
+                      createProjectMutation.mutate({
+                        workspaceId,
+                        pathToSymlinkAt: await vscodeAPI.getWorkspacePath(),
+                      });
+                    }}
+                  >
+                    Create Project
+                  </Button>
                   {runningProjects.map((project) => (
                     <div className="w-[260px] h-[195px] border rounded-md shadow-xl overflow-hidden">
                       <iframe

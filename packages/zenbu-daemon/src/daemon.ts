@@ -417,9 +417,20 @@ export const createServer = async (
     .post(
       "/create-project",
 
+      zValidator(
+        "json",
+        z.object({
+          pathToSymlinkAt: z.string(),
+        })
+      ),
+
       async (opts) => {
+        console.log("will link to", opts.req.valid("json").pathToSymlinkAt);
+
         const exit = await Effect.runPromiseExit(
-          spawnProject
+          spawnProject({
+            pathToSymlinkAt: opts.req.valid("json").pathToSymlinkAt,
+          })
             .pipe(Effect.provide(NodeContext.layer))
             .pipe(Effect.provideService(RedisContext, { client: redisClient }))
         );
@@ -590,10 +601,10 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
       return yield* new ChildProcessError();
     }
 
-    const text = yield* Effect.tryPromise(() =>
-      fetch(`http://localhost:${assignedPort}`)
-    );
-    console.log("fuck", text);
+    // const text = yield* Effect.tryPromise(() =>
+    //   fetch(`http://localhost:${assignedPort}`)
+    // );
+    // console.log("fuck", text);
 
     const runningProject: RunningProject = {
       pid,
@@ -718,29 +729,44 @@ export type Project =
 
 // should be careful since its k:v can def have a memory leak if not paying attention/ tests
 
-const spawnProject = Effect.gen(function* () {
-  const { name, createdAt } = yield* createProject;
-  console.log("creating project", name);
+const spawnProject = ({ pathToSymlinkAt }: { pathToSymlinkAt: string }) =>
+  Effect.gen(function* () {
+    const { name, createdAt } = yield* createProject;
+    console.log("creating project", name);
 
-  const project = yield* runProject({
-    name,
-    createdAt,
+    const project = yield* runProject({
+      name,
+      createdAt,
+    });
+    console.log("running project", project);
+
+    yield* publishStartedProject(name);
+    const { client } = yield* RedisContext;
+
+    const fs = yield* FileSystem.FileSystem;
+    yield* fs.makeDirectory(`${pathToSymlinkAt}/zenbu-links`, {
+      recursive: true,
+    });
+    const projectLinkDir = `${pathToSymlinkAt}/zenbu-links/${project.name}`;
+    console.log("symlinked at:", projectLinkDir);
+
+    const absoluteProjectPath = yield* fs.realPath(project.cwd);
+    console.log("absolute project path:", absoluteProjectPath);
+
+    yield* fs.symlink(absoluteProjectPath, projectLinkDir).pipe(
+      Effect.match({
+        onFailure: (e) => {
+          console.log("fail", e);
+        },
+        onSuccess: (d) => {
+          console.log("succes", d);
+        },
+      })
+    );
+    console.log("linked!", absoluteProjectPath, projectLinkDir);
+
+    return project;
   });
-  console.log("running project", project);
-
-  // publishing is for alerting to create a new warm instance which we aren't doing yet I think?
-  // wait no it was to start tracking it correctly even if it dies we can re-up it
-  yield* publishStartedProject(name);
-  console.log("published project", name);
-  const { client } = yield* RedisContext;
-  const ug = yield* client.effect.get(name);
-  console.log("what is this", ug);
-
-  const projects = yield* getProjects;
-  console.log("fucjker", projects);
-
-  return project;
-});
 
 //
 
