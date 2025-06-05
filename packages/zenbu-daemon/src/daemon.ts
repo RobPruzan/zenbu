@@ -505,7 +505,7 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
       stdio: ["ignore", "pipe", "pipe"],
       detached: true,
       // do we want to forward env? Maybe? Maybe not?
-      env: { ...process.env, PORT: assignedPort.toString() }, // port gets red by the inner process, needs to be able to read process forwarded from parent process
+      env: { ...process.env, port: assignedPort.toString() }, // port gets red by the inner process, needs to be able to read process forwarded from parent process
     });
 
     // surprised we can access this synchronously ngl
