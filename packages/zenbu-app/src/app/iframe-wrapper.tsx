@@ -23,6 +23,7 @@ import { useMakeRequest } from "src/components/devtools-overlay";
 import { motion } from "framer-motion";
 import { cn } from "src/lib/utils";
 import { useGetProject } from "./[workspaceId]/hooks";
+import { trpc } from "src/lib/trpc";
 
 const snapshot = { kind: "off" as const };
 

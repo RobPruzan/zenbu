@@ -68,6 +68,8 @@ export const Workspace = ({
 
     t.workspace.getTags({ workspaceId: workspace.workspaceId }),
   ]);
+  console.log('projects came back', projects);
+  
   const projectsWithUrl = projects
     .map((project) => ({
       ...project,
@@ -76,9 +78,9 @@ export const Workspace = ({
           ? `http://localhost:${project.port}`
           : null,
     }))
-    .filter((project) =>
-      tags.some((tag) => tag.fromProjectId === project.name),
-    );
+    // .filter((project) =>
+    //   tags.some((tag) => tag.fromProjectId === project.name),
+    // );
 
   console.log("uh", tags);
 

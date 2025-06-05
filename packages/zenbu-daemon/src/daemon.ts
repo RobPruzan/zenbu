@@ -31,7 +31,8 @@ export const getCreatedAt = (name: string) =>
     return res.createdAt;
   });
 const execPromise = util.promisify(exec);
-const RUN_SERVER_COMMAND = ["node", "index.js"];
+// const getCommand = (port: number) =>
+//   `bun install && bun run dev --port ${port}`.split(" ");
 const ADJECTIVES = [
   "funny",
   "silly",
@@ -147,12 +148,14 @@ export const getProjects = Effect.gen(function* () {
   );
   const execResult = yield* Effect.tryPromise(() => execPromise(command));
   const lines = execResult.stdout.trim().split("\n");
+  console.log("lines coming back", lines);
 
   const projectOptions = lines.map((line) =>
     Effect.gen(function* () {
       if (!line) {
         return Option.none();
       }
+
       const psPidMatch = line.trim().match(/^(\d+)\s+/);
 
       if (!psPidMatch) {
@@ -166,11 +169,15 @@ export const getProjects = Effect.gen(function* () {
         return Option.none();
       }
 
-      const markerArgument = line.slice(markerIndex);
-      // console.log("wut", markerArgument);
+      const process = yield* parseProcessMarkerArgument(line).pipe(
+        Effect.match({ onSuccess: (v) => v, onFailure: () => null })
+      );
+      if (!process) {
+        console.log("no!");
 
-      const { name, port, createdAt } =
-        yield* parseProcessMarkerArgument(markerArgument);
+        return Option.none();
+      }
+      const { createdAt, name, port } = process;
 
       // todo: don't hard code
       const projectPath = `projects/${name}`;
@@ -179,6 +186,7 @@ export const getProjects = Effect.gen(function* () {
       return Option.some({ name, port, cwd: projectPath, pid, createdAt });
     })
   );
+  console.log("options", yield* Effect.all(projectOptions));
 
   const projects = yield* Effect.all(projectOptions).pipe(
     Effect.map((opts) =>
@@ -189,11 +197,13 @@ export const getProjects = Effect.gen(function* () {
       }))
     )
   );
+  // console.log("lines derived", lines);
 
   const killedProjects = projectNames.filter(
     (projectName) =>
       !projects.some((runningProject) => runningProject.name === projectName)
   );
+  console.log("project names", projectNames, "vs projects", projects);
 
   const killedProjectsMetaEffects = killedProjects.map((name) =>
     Effect.gen(function* () {
@@ -206,8 +216,11 @@ export const getProjects = Effect.gen(function* () {
       };
     })
   );
+  console.log("killing meta effects");
+
   const killedProjectsMeta = yield* Effect.all(killedProjectsMetaEffects);
   const allProjects: Array<Project> = [...projects, ...killedProjectsMeta];
+  // console.log("projects", allProjects);
 
   return allProjects;
 });
@@ -221,6 +234,8 @@ const killAllProjects = Effect.gen(function* () {
     Effect.gen(function* () {
       const { client } = yield* RedisContext;
       process.kill(project.pid);
+      console.log("killing fucks");
+
       yield* client.effect.set(project.name, {
         kind: "status",
         status: "killed",
@@ -377,7 +392,7 @@ export const createServer = async (
       return opts.json({ exit: exit.toJSON() });
     })
     .post("/get-projects", async (opts) => {
-      console.log("get projects request");
+      // console.log("get projects request");
 
       const exit = await Effect.runPromiseExit(
         getProjects
@@ -458,7 +473,9 @@ const createProject = Effect.gen(function* () {
   const name = generateRandomName();
   const projectPath = `projects/${name}`;
   yield* fs.makeDirectory(projectPath);
-  yield* fs.copy("templates/node-project", projectPath);
+  yield* fs.copy("templates/vite-template-v3", projectPath);
+  console.log("copied");
+
   const existing = yield* fs.readFileString(`${projectPath}/index.html`);
   yield* fs.writeFileString(
     `${projectPath}/index.html`,
@@ -466,6 +483,8 @@ const createProject = Effect.gen(function* () {
   );
   const createdAt = Date.now();
   yield* setCreatedAt(name, createdAt);
+  console.log("created", name, projectPath);
+
   return { name, projectPath, createdAt };
 });
 
@@ -499,22 +518,82 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
       port: assignedPort,
       createdAt,
     });
-    const args = [...RUN_SERVER_COMMAND.slice(1), markerArgument];
-    const child = spawn(RUN_SERVER_COMMAND[0], args, {
+    const installChild = spawn("bun", ["install"], {
       cwd: actualCodePath,
       stdio: ["ignore", "pipe", "pipe"],
-      detached: true,
-      // do we want to forward env? Maybe? Maybe not?
-      env: { ...process.env, port: assignedPort.toString() }, // port gets red by the inner process, needs to be able to read process forwarded from parent process
     });
 
-    // surprised we can access this synchronously ngl
+    yield* Effect.async<void, ChildProcessError>((resume) => {
+      installChild.stdout?.on("data", (data) => {
+        console.log("Install stdout:", data.toString());
+      });
+
+      installChild.stderr?.on("data", (data) => {
+        console.log("Install stderr:", data.toString());
+      });
+
+      installChild.on("close", (code) => {
+        if (code === 0) {
+          resume(Effect.void);
+        } else {
+          console.log("Install process failed with code:", code);
+          resume(Effect.fail(new ChildProcessError()));
+        }
+      });
+
+      installChild.on("error", (error) => {
+        console.log("Install process error:", error);
+        resume(Effect.fail(new ChildProcessError()));
+      });
+    });
+
+    console.log("spawning at", assignedPort);
+    const child = spawn(
+      "node",
+      [
+        `/Users/robby/zenbu/packages/zenbu-daemon/projects/${name}/node_modules/.bin/vite`,
+        "--port",
+        assignedPort.toString(),
+        "--force",
+        // markerArgument,
+      ],
+      {
+        cwd: actualCodePath,
+        stdio: ["ignore", "pipe", "pipe"],
+        detached: true,
+        env: { ...process.env },
+      }
+    );
+
+    child.on("spawn", () => {
+      if (child.pid) {
+        process.title = markerArgument;
+      }
+    });
+
+    child.stdout?.on("data", (data) => {
+      console.log(`Project ${name} stdout:`, data.toString());
+    });
+
+    child.stderr?.on("data", (data) => {
+      console.log(`Project ${name} stderr:`, data.toString());
+    });
+
+    child.on("error", (error) => {
+      console.log("Child process error:", error);
+    });
+
     const pid = child.pid;
+    console.log("pid we got back", pid);
+
     if (!pid) {
       return yield* new ChildProcessError();
     }
 
-    // todo: forward stdout,stderr stream
+    const text = yield* Effect.tryPromise(() =>
+      fetch(`http://localhost:${assignedPort}`)
+    );
+    console.log("fuck", text);
 
     const runningProject: RunningProject = {
       pid,
@@ -545,15 +624,15 @@ const publishStartedProject = (name: string) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
     // this state is used so we know at startup how to restore state
-    client.effect.set(name, {
+    yield* client.effect.set(name, {
       kind: "status",
       status: "running",
     });
   });
 
-const parseProcessMarkerArgument = (markerArgument: string) =>
+const parseProcessMarkerArgument = (processTitle: string) =>
   Effect.gen(function* () {
-    const match = markerArgument.match(
+    const match = processTitle.match(
       /zenbu-daemon:project=(.+):assigned_port=(\d+):created_at=(\d+)/
     );
     if (!match) {
@@ -641,15 +720,25 @@ export type Project =
 
 const spawnProject = Effect.gen(function* () {
   const { name, createdAt } = yield* createProject;
+  console.log("creating project", name);
 
   const project = yield* runProject({
     name,
     createdAt,
   });
+  console.log("running project", project);
 
   // publishing is for alerting to create a new warm instance which we aren't doing yet I think?
   // wait no it was to start tracking it correctly even if it dies we can re-up it
   yield* publishStartedProject(name);
+  console.log("published project", name);
+  const { client } = yield* RedisContext;
+  const ug = yield* client.effect.get(name);
+  console.log("what is this", ug);
+
+  const projects = yield* getProjects;
+  console.log("fucjker", projects);
+
   return project;
 });
 
@@ -681,6 +770,7 @@ const killProject = (name: string) =>
     }
 
     process.kill(project.pid);
+    console.log("killing for some reason");
 
     yield* client.effect.set(project.name, {
       kind: "status",

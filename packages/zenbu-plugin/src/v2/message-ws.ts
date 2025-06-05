@@ -236,14 +236,15 @@ export const injectWebSocket = (server: HttpServer) => {
                         const exists = yield* fs.exists(path);
                         if (!exists) {
                           // i wonder if we should just provide the models the internal errors and let it iterate?
-                          return yield* new FileReadError({
-                            error: "File does not exist",
-                            meta:
-                              "Try again, here is the tree of the file system:" +
-                              execSync(`tree ${project.cwd}`, {
-                                encoding: "utf-8",
-                              }),
-                          });
+                          yield* fs.writeFileString(path, "");
+                          // return yield* new FileReadError({
+                          //   error: "File does not exist",
+                          //   meta:
+                          //     "Try again, here is the tree of the file system:" +
+                          //     execSync(`tree ${project.cwd}`, {
+                          //       encoding: "utf-8",
+                          //     }),
+                          // });
                         }
 
                         // const events = yield* client.effect.getChatEvents(roomId);

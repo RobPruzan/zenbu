@@ -7,6 +7,9 @@ import { injectWebSocket } from "./inject-websocket";
 
 const redisClient = makeRedisClient();
 
+// @ts-ignore
+process.redisClient = redisClient;
+
 process.on("beforeExit", async () => {
   const effect = Effect.gen(function* () {
     const projects = yield* getProjects;

@@ -12,12 +12,17 @@ export const useGetProject = () => {
       refetchInterval: 1500, // we will be reactive in the future this is just hacky for a poc
     }),
   ]);
+  // const _ = trpc.persistedSingleton.setCurrentProjectId
+  //   .useMutation()
+  //   .mutate({ currentProjectId: "zesty-comet-911" });
 
   const project = projects
     .filter((project) => project.status === "running")
     .find((project) => project.name === projectId);
   if (!project) {
-    throw new Error("Invariant");
+    throw new Error(
+      "Invariant" + JSON.stringify(projects) + "\n\n\n" + projectId,
+    );
   }
 
   return { project, url: `http://localhost:${project.port}` };
