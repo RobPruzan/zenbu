@@ -1,8 +1,1 @@
-```
-npm install
-npm run dev
-```
-
-```
-open http://localhost:3000
-```
+core principal: All servers should spin up instantly, and tear down gracefully. The frontend assumes a server is as light as a markdown file, so if the servers not implemented well, that will be directly reflected in the app
