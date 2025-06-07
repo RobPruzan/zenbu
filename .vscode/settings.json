@@ -8,6 +8,7 @@
     "parallelizable",
     "pqueue",
     "Screenshotting",
-    "Shadcn"
+    "Shadcn",
+    "viewports"
   ]
 }

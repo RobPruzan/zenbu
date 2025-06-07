@@ -104,8 +104,12 @@ export const injectWebSocket = (server: HttpServer) => {
     };
     socket.on(
       "message",
-      async (e: { event: ClientEvent; projectName: string }) => {
-        const { event, projectName } = e;
+      async (e: {
+        event: ClientEvent;
+        projectName: string;
+        workspaceProjectPath: string;
+      }) => {
+        const { event, projectName, workspaceProjectPath } = e;
         console.log("got message");
 
         const exit = await Effect.runPromiseExit(
@@ -135,6 +139,7 @@ export const injectWebSocket = (server: HttpServer) => {
               roomId,
               socket,
               ioServer,
+              workspaceProjectPath,
             });
 
             let record = yield* client.effect.getOrElse(
@@ -185,7 +190,16 @@ export const injectWebSocket = (server: HttpServer) => {
               messages: [
                 {
                   role: "system",
-                  content: `You are a coding architect, you maintain the flow of\
+                  content: `
+                  You are an AI assistant inside of vscode or a vscode fork\
+
+                  You are making apps/tools, which are react apps rendered in iframes,\
+                  and the iframes are webviews in vscode.
+
+                  You should always make the app full screen, and minimize unnecessary\
+                  titles/headers, as this has to fit in a tight viewport\ 
+                  
+                  You are a coding architect, you maintain the flow of\
                   the conversation, interpret the users intent, and then use\
                   your writeCode tool to request a specialized coder model to\
                   implement the changes you want, you never write code yourself\
@@ -193,6 +207,42 @@ export const injectWebSocket = (server: HttpServer) => {
                   You have full context of the codebase, so this allows you to\
                   know precisely what the user is referring to when they ask for\
                   a change, they assume you understand everything about the codebase\
+
+                  The user will be making a devtool for a project they are working on. Your\
+                  main workspace will be the devtool but sometimes you may need data from the project\
+                  they are working on. The only way to get that data is to manually insert code which\
+                  pushes data from the users project to the devtool we are making\
+                  luckily I have made some useful abstractions in the src/lib/utils file\
+                  which is the useMessage hook. That's how we listen to messages sent from the users program\
+                  then, when modifying the users program, the coder model must inject this snippet into the users\
+                  project:
+const ingestUrl = "http://localhost:6001/ingest";
+export const sendMessage = async (name: string, data: any) => {
+  const res = await fetch(ingestUrl, {
+    method: "POST",
+    body: JSON.stringify({
+      name,
+      data,
+    }),
+  });
+  return res.json();
+};
+
+                  calling that function, the message will be sent directly to the useMessage listener, I already\
+                  wrote the backend logic to make that work.\
+
+                  Remember you are the architect model, and the coder model will also be given this info, so\
+                  just instruct the coder model when to ingest data from the product, and it will infer the context\
+
+                  The path is ${workspaceProjectPath}
+
+
+                  Here is an index of the users vscode workspace so you know the file path the coder model should write the\
+                  ingest data code at:
+                    ${yield* getCodebaseIndexPrompt(workspaceProjectPath)}
+
+
+                    Remember this is the index of the users codebase that is only for ingesting data, not the app codebase that you will be managing
                   `,
                 } satisfies CoreMessage,
                 {
@@ -449,7 +499,8 @@ const writeCode = ({
 }) =>
   Effect.gen(function* () {
     const { client } = yield* RedisContext;
-    const { socket, project, ioServer } = yield* MessageContext;
+    const { socket, project, ioServer, workspaceProjectPath } =
+      yield* MessageContext;
     const fs = yield* FileSystem.FileSystem;
 
     const events = yield* client.effect
@@ -478,6 +529,20 @@ const writeCode = ({
         {
           role: "system",
           content: `
+            You are an AI assistant inside of vscode or a vscode fork\
+
+            You are making apps/tools, which are react apps rendered in iframes,\
+            and the iframes are webviews in vscode.
+
+            You should always make the app full screen, no padding around the sides (the page should take up the entire parent container, which is 100vh 100vw) and minimize unnecessary\
+            titles/headers, as this has to fit in a tight viewport\
+
+            The viewport will be an editor, or a sidebar. Ideally it should be\
+            responsive for both viewports, and all the sizes in between\
+
+            Make sure its tight/dense, which is optimal for devtools
+
+
             After you request a coder model to write code for a change, you will\
             be allowed to start writing code for the change requested in the next turn.\
             You will know you can write code when you see CODER MODE ACTIVATED\
@@ -501,6 +566,41 @@ const writeCode = ({
             The apply model needs to type every individual character, so this\
             makes him want to kill himself. And you don't want him to kill\
             himself\          
+
+
+            The user will be making a devtool for a project they are working on. Your\
+                  main workspace will be the devtool but sometimes you may need data from the project\
+                  they are working on. The only way to get that data is to manually insert code which\
+                  pushes data from the users project to the devtool we are making\
+                  luckily I have made some useful abstractions in the src/lib/utils file\
+                  which is the useMessage hook. That's how we listen to messages sent from the users program\
+                  then, when modifying the users program, the coder model must inject this snippet into the users\
+                  project:
+const ingestUrl = "http://localhost:6001/ingest";
+export const sendMessage = async (name: string, data: any) => {
+  const res = await fetch(ingestUrl, {
+    method: "POST",
+    body: JSON.stringify({
+      name,
+      data,
+    }),
+  });
+  return res.json();
+};
+
+                  calling that function, the message will be sent directly to the useMessage listener, I already\
+                  wrote the backend logic to make that work.\
+
+                  Remember that you need to manually write that function in the users code, it will not already be there\
+
+
+                  Here is an index of the users codebase that you should only modify for getting data:
+                  ${yield* getCodebaseIndexPrompt(workspaceProjectPath)}
+
+                 Remember this is the index of the users codebase that is only for ingesting data, not the app codebase that you will be developing
+
+                 NEVER WRITE COMMENTS
+                  
             `,
         },
         ...messages,
@@ -508,7 +608,11 @@ const writeCode = ({
           role: "system",
           content: `CODER MODE ACTIVATED: You have successfully turned yourself into a\
             highly skilled coder model. You may write the code that you wanted\
-            to implement now. You must only make changes for ${path}. Here is the\
+            to implement now. You must only make changes for ${path}. 
+            
+            In the case the user is asking for a devtool 
+            
+            Here is the\
             latest file contents: ${existingFileContent}
             `,
         },
@@ -737,6 +841,7 @@ export const MessageContext = Context.GenericTag<{
   roomId: string;
   requestId: string;
   ioServer: Server;
+  workspaceProjectPath: string;
 }>("ProjectContext");
 
 const typeCheck = Effect.gen(function* () {

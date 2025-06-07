@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { trpc } from "src/lib/trpc";
 import { Button } from "~/components/ui/button";
 
 interface Props {
@@ -25,6 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
+
     this.setState({ errorInfo });
   }
 

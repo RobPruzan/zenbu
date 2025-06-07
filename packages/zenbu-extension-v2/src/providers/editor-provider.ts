@@ -36,7 +36,6 @@ export class EditorProvider {
       }
     );
 
-    // Set up BiRPC
     this._rpc = createExtensionRPC(this.panel.webview, this.context);
 
     this.panel.webview.html = this._getHtmlForWebview(this.panel.webview);
@@ -49,9 +48,9 @@ export class EditorProvider {
 
   protected _getHtmlForWebview(webview: vscode.Webview): string {
     const isDev = process.env.NODE_ENV === "development";
+    // i don't think this is being used
 
     if (isDev) {
-      // Development mode with Vite HMR
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,7 +75,6 @@ export class EditorProvider {
 </html>`;
     }
 
-    // Production mode
     const scriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, "dist", "webview", "editor.js")
     );

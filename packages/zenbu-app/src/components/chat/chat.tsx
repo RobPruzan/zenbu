@@ -35,12 +35,14 @@ export function Chat({
   onCloseChat,
   slots,
   chatGradient,
+workspaceProjectPath
 }: {
   onCloseChat: () => void;
   slots?: {
     inputArea?: React.ReactNode;
   };
   chatGradient?: string;
+  workspaceProjectPath: string
 }) {
   const { inspector, chatControls, context, toolbar } = useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(
@@ -298,7 +300,7 @@ export function Chat({
         >
           <div className="flex flex-col text-xs">
             <div className="relative min-h-[50px] w-full bg-background/5">
-              <ChatTextArea />
+              <ChatTextArea workspaceProjectPath={workspaceProjectPath} />
             </div>
 
             <div className="flex items-center justify-end px-4 py-2 border-t border-border/50 bg-accent/5 gap-x-2">

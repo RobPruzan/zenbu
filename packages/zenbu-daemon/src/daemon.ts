@@ -138,6 +138,12 @@ const NOUNS = [
   "pirate",
 ];
 
+const getLines = Effect.gen(function* () {
+  const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep || true`;
+  const execResult = yield* Effect.tryPromise(() => execPromise(command));
+  return execResult;
+});
+
 export const getProjects = Effect.gen(function* () {
   const command = `ps -o pid,command -ax | grep 'zenbu-daemon:project=' | grep -v grep || true`;
   const fs = yield* FileSystem.FileSystem;
@@ -148,7 +154,6 @@ export const getProjects = Effect.gen(function* () {
   );
   const execResult = yield* Effect.tryPromise(() => execPromise(command));
   const lines = execResult.stdout.trim().split("\n");
-  console.log("lines coming back", lines);
 
   const projectOptions = lines.map((line) =>
     Effect.gen(function* () {
@@ -159,6 +164,8 @@ export const getProjects = Effect.gen(function* () {
       const psPidMatch = line.trim().match(/^(\d+)\s+/);
 
       if (!psPidMatch) {
+        console.log("no pid match");
+
         return Option.none();
       }
 
@@ -166,6 +173,8 @@ export const getProjects = Effect.gen(function* () {
       const markerIndex = line.indexOf("zenbu-daemon:project=");
 
       if (markerIndex === -1) {
+        console.log("no marker index");
+
         return Option.none();
       }
 
@@ -173,7 +182,7 @@ export const getProjects = Effect.gen(function* () {
         Effect.match({ onSuccess: (v) => v, onFailure: () => null })
       );
       if (!process) {
-        console.log("no!");
+        console.log("no process");
 
         return Option.none();
       }
@@ -183,10 +192,13 @@ export const getProjects = Effect.gen(function* () {
       const projectPath = `projects/${name}`;
       // todo: return stdout
 
+      console.log("RETURNING SOME SHOULD NOT BE DONE", name);
+
       return Option.some({ name, port, cwd: projectPath, pid, createdAt });
     })
   );
-  console.log("options", yield* Effect.all(projectOptions));
+
+  console.log("lines", lines);
 
   const projects = yield* Effect.all(projectOptions).pipe(
     Effect.map((opts) =>
@@ -197,16 +209,16 @@ export const getProjects = Effect.gen(function* () {
       }))
     )
   );
-  // console.log("lines derived", lines);
 
   const killedProjects = projectNames.filter(
     (projectName) =>
       !projects.some((runningProject) => runningProject.name === projectName)
   );
-  console.log("project names", projectNames, "vs projects", projects);
 
   const killedProjectsMetaEffects = killedProjects.map((name) =>
     Effect.gen(function* () {
+      console.log("killing", name);
+
       return {
         status: "killed" as const,
         // todo: don't hardcode here
@@ -216,11 +228,14 @@ export const getProjects = Effect.gen(function* () {
       };
     })
   );
-  console.log("killing meta effects");
 
   const killedProjectsMeta = yield* Effect.all(killedProjectsMetaEffects);
   const allProjects: Array<Project> = [...projects, ...killedProjectsMeta];
-  // console.log("projects", allProjects);
+
+  console.log(
+    "all projects",
+    allProjects.filter((p) => p.status === "running")
+  );
 
   return allProjects;
 });
@@ -234,7 +249,6 @@ const killAllProjects = Effect.gen(function* () {
     Effect.gen(function* () {
       const { client } = yield* RedisContext;
       process.kill(project.pid);
-      console.log("killing fucks");
 
       yield* client.effect.set(project.name, {
         kind: "status",
@@ -257,7 +271,6 @@ const nuke = Effect.gen(function* () {
 export const createServer = async (
   redisClient: ReturnType<typeof makeRedisClient>
 ) => {
-  console.log("Starting server...");
   await Effect.runPromise(
     Effect.gen(function* () {
       yield* restoreProjects;
@@ -300,15 +313,28 @@ export const createServer = async (
       ),
       async (opts) => {
         const { name } = opts.req.valid("json");
+        console.log("start project request", name);
         const exit = await Effect.runPromiseExit(
           Effect.gen(function* () {
             // this will probably throw a nasty error if you use this incorrectly
+            console.log(
+              "projects before",
+              (yield* getProjects).filter((p) => p.status === "running")
+            );
             const createdAt = yield* getCreatedAt(name);
             const project = yield* runProject({ name, createdAt });
+            console.log("running", project);
+
             yield* redisClient.effect.set(name, {
               kind: "status",
               status: "running",
             });
+
+            console.log(
+              "projects now",
+              (yield* getProjects).filter((p) => p.status === "running")
+            );
+
             return project;
           })
             .pipe(Effect.provide(NodeContext.layer))
@@ -347,8 +373,6 @@ export const createServer = async (
             return opts.json({ success: true });
           }
           case "Failure": {
-            console.log("what", exit.cause);
-
             const error = exit.cause.toJSON();
             return opts.json({ error });
           }
@@ -392,8 +416,6 @@ export const createServer = async (
       return opts.json({ exit: exit.toJSON() });
     })
     .post("/get-projects", async (opts) => {
-      // console.log("get projects request");
-
       const exit = await Effect.runPromiseExit(
         getProjects
           .pipe(Effect.provide(NodeContext.layer))
@@ -403,12 +425,9 @@ export const createServer = async (
       switch (exit._tag) {
         case "Success": {
           const projects = exit.value;
-          // console.log("returning", projects);
           return opts.json({ projects });
         }
         case "Failure": {
-          console.log("get fucked", exit.toJSON());
-
           const error = exit.cause.toJSON();
           return opts.json({ error });
         }
@@ -425,8 +444,6 @@ export const createServer = async (
       ),
 
       async (opts) => {
-        console.log("will link to", opts.req.valid("json").pathToSymlinkAt);
-
         const exit = await Effect.runPromiseExit(
           spawnProject({
             pathToSymlinkAt: opts.req.valid("json").pathToSymlinkAt,
@@ -485,7 +502,6 @@ const createProject = Effect.gen(function* () {
   const projectPath = `projects/${name}`;
   yield* fs.makeDirectory(projectPath);
   yield* fs.copy("templates/vite-template-v3", projectPath);
-  console.log("copied");
 
   const existing = yield* fs.readFileString(`${projectPath}/index.html`);
   yield* fs.writeFileString(
@@ -494,7 +510,6 @@ const createProject = Effect.gen(function* () {
   );
   const createdAt = Date.now();
   yield* setCreatedAt(name, createdAt);
-  console.log("created", name, projectPath);
 
   return { name, projectPath, createdAt };
 });
@@ -518,17 +533,19 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
     const actualCodePath = `projects/${name}`;
 
     const exists = yield* fs.exists(actualCodePath);
-    console.log("exists?", exists, actualCodePath);
+    // console.log("exists?", exists, actualCodePath);
 
     if (!exists) {
       return yield* new GenericError();
     }
 
-    const markerArgument = yield* getProcessTitleMarker({
+    const title = yield* getProcessTitleMarker({
       name,
       port: assignedPort,
       createdAt,
     });
+    console.log("projects before install", yield* getLines);
+
     const installChild = spawn("bun", ["install"], {
       cwd: actualCodePath,
       stdio: ["ignore", "pipe", "pipe"],
@@ -558,29 +575,56 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
       });
     });
 
-    console.log("spawning at", assignedPort);
+    console.log("projects after install", yield* getLines);
+    // console.log("spawning at", assignedPort);
+
+    // Use our wrapper script that can accept the marker argument
+    const wrapperPath =
+      "/Users/robby/zenbu/packages/zenbu-daemon/src/vite-wrapper.js";
     const child = spawn(
       "node",
-      [
-        `/Users/robby/zenbu/packages/zenbu-daemon/projects/${name}/node_modules/.bin/vite`,
-        "--port",
-        assignedPort.toString(),
-        "--force",
-        // markerArgument,
-      ],
+      [wrapperPath, "--marker", title, "--port", assignedPort.toString()],
       {
         cwd: actualCodePath,
         stdio: ["ignore", "pipe", "pipe"],
         detached: true,
-        env: { ...process.env },
+        env: {
+          ...process.env,
+        },
       }
     );
 
-    child.on("spawn", () => {
-      if (child.pid) {
-        process.title = markerArgument;
-      }
+    yield* Effect.async<void, ChildProcessError>((resume) => {
+      child.on("spawn", () => {
+        if (child.pid) {
+          child.pid;
+          // process.title = title;
+        }
+        resume(Effect.void);
+      });
+
+      child.on("error", (error) => {
+        resume(Effect.fail(new ChildProcessError()));
+      });
     });
+
+    /**
+     * 
+     * 
+projects after install {
+  stdout: '61040 zenbu-daemon:project=clever-cloud-311:assigned_port=61935:created_at=1749167812963     \n',
+  stderr: ''
+}
+projects after spawn {
+  stdout: '61040 zenbu-daemon:project=cosmic-dragon-668:assigned_port=62486:created_at=1749169741827     \n',
+  stderr: ''
+}
+
+
+why the fuck is spawning another vite server killing the original???????
+
+
+     */
 
     child.stdout?.on("data", (data) => {
       console.log(`Project ${name} stdout:`, data.toString());
@@ -594,8 +638,13 @@ const runProject = ({ name, createdAt }: { name: string; createdAt: number }) =>
       console.log("Child process error:", error);
     });
 
+    child.on("close", () => {
+      console.log("closing", name);
+    });
+
     const pid = child.pid;
-    console.log("pid we got back", pid);
+    // child.
+    // console.log("pid we got back", pid);
 
     if (!pid) {
       return yield* new ChildProcessError();
@@ -731,16 +780,21 @@ export type Project =
 
 const spawnProject = ({ pathToSymlinkAt }: { pathToSymlinkAt: string }) =>
   Effect.gen(function* () {
+    console.log("projects a", yield* getProjects);
+
     const { name, createdAt } = yield* createProject;
-    console.log("creating project", name);
+    console.log("created", name);
+    console.log("projects b", yield* getProjects);
+
+    // console.log("creating project", name);
 
     const project = yield* runProject({
       name,
       createdAt,
     });
-    console.log("running project", project);
 
     yield* publishStartedProject(name);
+    console.log("projects c", yield* getProjects);
     const { client } = yield* RedisContext;
 
     const fs = yield* FileSystem.FileSystem;
@@ -748,22 +802,19 @@ const spawnProject = ({ pathToSymlinkAt }: { pathToSymlinkAt: string }) =>
       recursive: true,
     });
     const projectLinkDir = `${pathToSymlinkAt}/zenbu-links/${project.name}`;
-    console.log("symlinked at:", projectLinkDir);
 
     const absoluteProjectPath = yield* fs.realPath(project.cwd);
-    console.log("absolute project path:", absoluteProjectPath);
 
     yield* fs.symlink(absoluteProjectPath, projectLinkDir).pipe(
       Effect.match({
         onFailure: (e) => {
-          console.log("fail", e);
+          // console.log("fail", e);
         },
         onSuccess: (d) => {
-          console.log("succes", d);
+          // console.log("succes", d);
         },
       })
     );
-    console.log("linked!", absoluteProjectPath, projectLinkDir);
 
     return project;
   });
@@ -784,6 +835,8 @@ export const getProject = (name: string) =>
 
 const killProject = (name: string) =>
   Effect.gen(function* () {
+    console.log("killing", name);
+
     /**
      * technically doing a get projects then filtering is the same wrapper operation I can do
      */
@@ -796,7 +849,6 @@ const killProject = (name: string) =>
     }
 
     process.kill(project.pid);
-    console.log("killing for some reason");
 
     yield* client.effect.set(project.name, {
       kind: "status",

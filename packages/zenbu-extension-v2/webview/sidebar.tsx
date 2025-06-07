@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { vscodeAPI } from "./rpc/webview-rpc";
 import { api } from "~/trpc/react";
@@ -35,6 +35,15 @@ export const SidebarApp = () => {
   const router = useSidebarRouter();
   const createProjectMutation = trpc.daemon.createProject.useMutation();
 
+  const [workspaceProjectPath, setWorkspaceProjectPath] = useState(
+    null as unknown as string
+  );
+
+  useEffect(() => {
+    iife(async () => {
+      setWorkspaceProjectPath(await vscodeAPI.getWorkspacePath());
+    });
+  }, []);
   return (
     <div className="flex flex-col h-screen w-screen">
       <Header
@@ -48,6 +57,7 @@ export const SidebarApp = () => {
             case "chat": {
               return (
                 <ChatSidebar
+                  workspaceProjectPath={workspaceProjectPath}
                   chatGradient="from-[#070808] to-[#090909]"
                   className="border-r border-border/50"
                 />

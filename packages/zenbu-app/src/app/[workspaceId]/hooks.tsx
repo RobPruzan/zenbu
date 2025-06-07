@@ -13,15 +13,15 @@ export const useGetProject = () => {
     }),
   ]);
   const fuckIt = trpc.persistedSingleton.setCurrentProjectId.useMutation();
-    // .mutate({ currentProjectId: "zesty-comet-911" });
-  const nuke = trpc.daemon.nuke.useMutation()
+  // .mutate({ currentProjectId: "zesty-comet-911" });
+  const nuke = trpc.daemon.nuke.useMutation();
 
   const project = projects
     .filter((project) => project.status === "running")
     .find((project) => project.name === projectId);
   if (!project) {
     // nuke.mutate()
-    // fuckIt.mutate({ currentProjectId: "noble-lemur-227" });
+    // fuckIt.mutate({ currentProjectId: "fluffy-meerkat-833" });
     throw new Error(
       "Invariant" + JSON.stringify(projects) + "\n\n\n" + projectId,
     );
@@ -29,6 +29,9 @@ export const useGetProject = () => {
 
   return { project, url: `http://localhost:${project.port}` };
 };
+
+
+// export
 
 export const useUploadBackgroundImage = () => {
   // const { workspaceId } = useWorkspaceContext();

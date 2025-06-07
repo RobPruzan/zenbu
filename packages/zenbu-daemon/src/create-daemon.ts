@@ -5,7 +5,7 @@ import { createServer, getProjects } from "./daemon";
 import { NodeContext } from "@effect/platform-node";
 import { injectWebSocket } from "./inject-websocket";
 
-const redisClient = makeRedisClient();
+const redisClient = makeRedisClient({ tcp: true });
 
 // @ts-ignore
 process.redisClient = redisClient;

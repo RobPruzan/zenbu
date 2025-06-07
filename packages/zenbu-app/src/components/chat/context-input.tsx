@@ -72,7 +72,11 @@ const MentionMenu = ({
   );
 };
 
-export const ChatTextArea = () => {
+export const ChatTextArea = ({
+  workspaceProjectPath,
+}: {
+  workspaceProjectPath: string;
+}) => {
   const items = ["react-scan", "console", "network", "localstorage"];
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const {
@@ -138,8 +142,8 @@ export const ChatTextArea = () => {
   };
   // const project = useChatStore((state) => state.iframe.state.project);
   const { project } = useGetProject();
-  console.log('project fetched', project);
-  
+  console.log("project fetched", project);
+
   const insertMention = (mention: string) => {
     const chatInput = chatInputRef.current;
     if (!chatInput) return;
@@ -453,9 +457,15 @@ export const ChatTextArea = () => {
               { projectName: project.name },
               (prev) => (prev ? [...prev, clientEvent] : [clientEvent]),
             );
+            if (!workspaceProjectPath) {
+              throw new Error("bruh");
+            }
+            console.log("the path is", workspaceProjectPath);
+
             socket.emit("message", {
               event: clientEvent,
               projectName: project.name,
+              workspaceProjectPath,
             });
             target.textContent = "";
           }

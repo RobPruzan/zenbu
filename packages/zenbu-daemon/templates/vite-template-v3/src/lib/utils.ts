@@ -80,7 +80,10 @@ type Args = {
 export const useMessage = (
   cb: (e: { name: string; data: unknown }) => void
 ) => {
-  const { socket } = useWS({ roomName: "extensions" });
+  const { socket } = useWS({
+    roomName: "extensions",
+    url: "http://localhost:6001",
+  });
 
   useEffect(() => {
     if (!socket) {

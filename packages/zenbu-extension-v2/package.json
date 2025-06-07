@@ -51,6 +51,7 @@
   },
   "scripts": {
     "dev": "concurrently \"npm run dev:extension\" \"npm run dev:webview\" \"npm run dev:cursor\"",
+    "serve": "bun run --watch /Users/robby/zenbu/packages/zenbu-extension-v2/src/kyju-bridge/entrypoint.ts",
     "dev:extension": "NODE_ENV=development tsup --watch",
     "dev:webview": "vite",
     "dev:cursor": "NODE_ENV=development cursor --extensionDevelopmentPath=$PWD",

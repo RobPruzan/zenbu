@@ -1,9 +1,11 @@
 import * as vscode from "vscode";
 import { SidebarProvider } from "./providers/sidebar-provider";
 import { EditorProvider } from "./providers/editor-provider";
+import { createServer } from "./kyju-bridge/create-server";
+
+let server: null | Awaited<ReturnType<typeof createServer>>;
 
 export function activate(context: vscode.ExtensionContext) {
-  // Register sidebar provider
   const sidebarProvider = new SidebarProvider(context.extensionUri, context);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -12,10 +14,8 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // Create editor provider instance
   const editorProvider = new EditorProvider(context.extensionUri, context);
 
-  // Register commands
   context.subscriptions.push(
     vscode.commands.registerCommand("zenbu.openSidebar", () => {
       vscode.commands.executeCommand("workbench.view.extension.zenbu-sidebar");
@@ -27,6 +27,17 @@ export function activate(context: vscode.ExtensionContext) {
       editorProvider.openInEditor();
     })
   );
+
+  // console.log("creating server!!");
+  // process.exit();
+
+  // createServer().then((created) => {
+  //   server = created;
+  // });
 }
 
-export function deactivate() {}
+export function deactivate() {
+  // console.log("deactivate server!!");
+
+  // server?.close();
+}
