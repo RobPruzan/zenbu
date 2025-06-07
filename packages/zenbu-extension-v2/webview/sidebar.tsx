@@ -44,6 +44,11 @@ export const SidebarApp = () => {
       setWorkspaceProjectPath(await vscodeAPI.getWorkspacePath());
     });
   }, []);
+
+  const setCurrentProjectIdMutation =
+    trpc.persistedSingleton.setCurrentProjectId.useMutation();
+  const [currentProjectId, stuff] =
+    trpc.persistedSingleton.getCurrentProjectId.useSuspenseQuery();
   return (
     <div className="flex flex-col h-screen w-screen">
       <Header
@@ -78,11 +83,31 @@ export const SidebarApp = () => {
                     Create Project
                   </Button>
                   {runningProjects.map((project) => (
-                    <div className="w-[260px] h-[195px] border rounded-md shadow-xl overflow-hidden">
+                    <div
+                      className={cn([
+                        "w-[260px] relative h-[195px] border rounded-md shadow-xl overflow-hidden",
+                        currentProjectId === project.name && "border-red-500",
+                      ])}
+                    >
                       <iframe
                         src={`http://localhost:${project.port}`}
                         className="w-[866px] h-[650px] transform scale-[0.3] origin-top-left"
                       />
+                      <Button
+                        className="absolute bottom-2 -translate-x-1/2 left-1/2"
+                        variant={"outline"}
+                        onClick={() => {
+                          setCurrentProjectIdMutation
+                            .mutateAsync({
+                              currentProjectId: project.name,
+                            })
+                            .then(() => {
+                              stuff.refetch();
+                            });
+                        }}
+                      >
+                        {project.name}
+                      </Button>
                     </div>
                   ))}
                 </div>
